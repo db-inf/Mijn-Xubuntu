@@ -1,0 +1,2128 @@
+= TeX-LaTeX know-how =
+:description: vergeetachtige weetjes over Tex en LaTex, begonnen als samenvatting van "A guide to LaTeX Document preparation for beginners and advanced users ~ Kopka H, Daly PW (ed.4 2003).pdf"
+
+= LaTeX =
+== documentatie ==
+
+- Quickstart shortcut $, b.v. `$packagenaam`
+
+- file:///usr/share/doc/texstudio/html/latex2e.html
+
+- LaTeX2e
+	$ texdoc latex2e
+	OF
+	Quickstart : `$latex2e`
+
+- LaTeX sources docu :
+	$ texdoc source2e
+	OF
+	Quickstart : `$source2e`
+
+- standard documentclasses (article, book, report, etc) :
+	$ texdoc classes
+	OF
+	Quickstart : `$classes`
+
+== broncode ==
+
+=== werkingsprincipe ===
+
+1. LaTeX wordt 'vertaald' naar primitieve TeX-opdrachten en tekens
+	- LaTeX is meer correct een 'format', een bewaarde (cfr. Java Serialization) toestand van de TeX processor
+2. TeX deelt de invoer onder in tokens :
+	- character tokens : (ASCII) character code + categorie code (0-15), zie sectie "TeX \catcode"
+		- wchlk. wordt utf8-invoer eerst vertaald naar ASCII t.b.v. TeX, zie sectie "TeX `"
+	- command tokens : escape \ (of andere cat. 0) +
+		- alle letters (cat. 11) tot eerste niet-letter (daarom beteket evt. spatie na zo'n command token gewoon "einde token", en wordt die niet bewaard)
+		OF
+		- 1 niet-letter (cat. 12), evt. spatie na zo'n command token is niet nodig om command af te sluiten, blijft gewoon spatie
+	- parameter token : hash # (of andere cat. 6) + cijfer 1-9 (#1 - #9)
+3. Na uitvoering alle macro's, expansies en opdrachten maakt TeX 3 soorten lijsten :
+	- math lijsten van de tekens tss. $...$ (of andere cat. 3) : hieruit worden formules gemaakt
+	- horizontale lijst van tekens cat 11 en 12, glue, penalties (puntensysteem om de tekens op 1 lijn te houden) e.a. horizontale boxes
+		- hieruit worden de paragrafen gemaakt, gescheiden door \par opdrachten
+	- verticale lijst van paragrafen (\par ... \par) e.a. verticale boxen :
+		- hieruit worden de bladzijden gemaakt
+		- paragraaf opgedeeld in lijnen is een verticale lijst van horizontale boxes: lijnen, glue en penalties (d.w.z. puntensysteem om lijnen bij elkaar te houden)
+		- teken cat. 11 of 12 zet de processor terug in horizontale mode
+
+=== draft ===
+
+- documentclass[draft]{klasse} : If the LaTeX line-breaking mechanism does not function properly and text must stick out into the right margin, then this is marked with a thick black bar, to make it noticeable.
+	- tegengestelde : [final] (is default)
+	- OPM : documentclass-opties wordt ook doorgegeven aan elke \usepackage, die er hun eigen ding mee doen, b.v. tenzij die zelf een tegen-optie zoals [final] hebben
+		>>> https://tex.stackexchange.com/questions/49277/what-does-the-draft-mode-change
+			changes (final disables markup of changes, and list of changes)
+			cryptocode (disables syntax highlighting to reduce compilation time)
+			flowfram (show frame, typeblock and margin bounding boxes)
+			graphics (draw frames instead of including images)
+			graphicx (draw frames instead of including images)
+			hyperref (disable all linking features)
+			listings (don’t include external files)
+			listofsymbols (final suppresses printing of macro names and unused symbols)
+			mfpic (assume every latex run to be the first one)
+			microtype (disable all features)
+			pdfcomment (final suppresses the comments)
+			pdfpages (don’t include external file but print a frame box)
+			pgf (similar to graphics/x: all images will be replaced by empty rectangles)
+			showkeys (draft shows the labels, the default option)
+			showlabels (draft shows the labels, the default option)
+			thumbs (thumbs' width=2pt, thumbs' text=black, thumbs' color=grey)
+			todonotes (with obeyDraft package only enabled in draft mode)
+			varioref (turn warnings in error messages)
+		<<<
+
+=== commentaar ===
+
+- begint met % (herhalen op elke nieuwe lijn)
+	- letterlijke % printen met \%
+	- also use % to suppress implied blanks at the end of a line, e.g. in user definitions where unexpected blanks can creep in between otherwise invisible declarations with arguments
+
+- package verbatim heeft \begin{comment}\end{comment} voor grotere commentaarblokken
+	- OPGELET: wschlk. wordt tekst op zelfde lijn na \end{comment} weggegooid, net zoals na \end{verbatim}
+
+=== commando ===
+
+- \? met ? geen letter (cat. 12, zie sectie "TeX \catcode")
+	- spatie na \? blijft behouden
+OF
+- \naam met naam : enkel letters (cat. 11, zie sectie "TeX \catcode")
+	- dus commandonaam eindigt met eerste niet-letter, b.v. met spatie, cijfer, {}, []
+	- spatie na \naam blijft niet behouden
+	- hoofdletters =/= kleine letters
+	- tussen LaTeX commando's `\makeatletter` en `\makeatother` mag ook `@` voorkomen in naam van commando, want is daar catcode 11 (letter); dit wordt gebruikt om bepaalde LaTeX commando's te definiëren die niet bestemd zijn voor normaal gebruik
+	- *-vorm kan met licht verschillende werking geprogrammeerd zijn, ngl. het commando
+		\naam*
+	- parameters
+		- optionele tss. [], in vaste volgorde, gescheiden door komma's
+		- verplichte tss. {}, in vaste volgorde, gescheiden door komma's
+		- spaties en 1 newline zijn toegelaten tss. parameters
+	- voor sommige commando's is de parameter de tekst waarop het commando werkt, b.v.
+		\emph{benadrukt}
+
+=== parameter ===
+
+- de facto standaards voor opgave parameters :
+		[naam=waarde]
+		- voor true/false: `=true` is default, d.w.z.
+			[naam] == [naam=true], anders [naam=false]
+		- meerdere waarden tss. {} :
+			[naam={waarde1,waarde2}]
+			
+=== environment ===
+
+- met naam : (moet vooraf gedefiniëerd zijn)
+	\begin{naam} ... \end{naam}
+	- naam van meeste declaraties is zowel te gebruiken
+		- als declaratie-commando `\naam`
+		- als environment `\begin{naam} ... \end{naam}`
+
+- zonder naam :
+	{...}
+
+- declaraties in een environment worden afgezet aan het einde van die environment
+	- sommige hebben door hun aard echter globale effecten, zulke worden niet uitgezet, b.v.
+		\pagenumbering
+		\setcounter
+
+=== numerieke waarde ===
+
+- numerieke waarde in LaTeX is meestal een "length register".
+	- zie sectie "lengte-commandos"
+
+- tellers gebruiken :
+	- teller maken :
+		\newcounter{mijnteller}[andereteller]
+			- initiëel 0
+			- alleen letters, ZONDER \ want is geen commando
+			[andereteller] : mijnteller begint terug van 0 wanneer andereteller incrementeert
+	- waarde wijzigen :
+		\setcounter{mijnteller}{waarde}
+		\addtocounter{mijnteller}{waarde} : verhoogt met waarde
+		\stepcounter{mijnteller} : verhoogt met 1
+		\refstepcounter{mijnteller} : zoals vorige, maar zichtbaar voor ? 'referencing mechanism'
+	- waarde gebruiken in andere numerieke commandos, b.v. om andere teller te wijzigen, of om een lengte ermee te vermenigvuldigen:
+		\value{mijnteller}
+	- waarde typesetten :
+		\themijnteller : print the formatted string related to the counter
+			- d.w.z. met evt. bijhorend label (b.v. "Chapter 5")
+		\arabic{mijnteller} : print the counter using arabic numbers
+			- may therefor be used as a value too
+		\roman{mijnteller} : print the counter using lowercase roman notation
+		\Roman{mijnteller} : ... uppercase
+		\alph{mijnteller} : print the counter as a...z
+		\Alph{mijnteller} : print the counter as A...Z
+		\fnsymbol{mijnteller} : print the counter as footnote symbols * † ‡ § ¶ ∥ ∗∗ †† ‡‡ spatie ...
+
+- tellers eigen aan LaTeX :
+	- For document structure 	
+		part
+		chapter
+		section
+		subsection
+		subsubsection
+		paragraph
+		subparagraph
+		page 
+	- For floats 	
+		equation
+		figure
+		table 
+	- For footnotes 
+		footnote
+		mpfootnote 
+	- For the enumerate environment 
+		enumi
+		enumii
+		enumiii
+		enumiv
+
+=== lengte-commandos ===
+
+- register toekennen aan een naam :
+	\newlength{\naam}
+- dat register een waarde geven
+	\setlength{\naam}{waarde}
+	- {waarde} : aantal en eenheid
+		- decimaal `.` of `,` naar keuze
+		- cm, mm, in, pt, em (breedte 'M'), ex (hoogte 'x'), ...
+	- b.v. \setlength{\naam}{0.5cm}
+
+- rubber lengte :
+	\setlength{\naam}{voorkeur plus maxtoename minus maxafname}
+		- voorkeur, maxtoename en maxafname : getal + eenheid
+
+=== escape en speciale tekens ===
+
+- `\`  is escape character om 1-teken-commando's `#` `$` `~` `_` `^` `%` `{` en `}` als het teken zelf in te voeren
+
+- standaard alleen ASCII-invoer, andere encoding :
+	\usepackage[utf8]{inputenc}
+
+- pdf als uitvoerdoel heeft ook nog encoding-beperkingen :
+	\usepackage[T1]{fontenc}
+		- voorkomt "OT1 encoding should not be used for French"
+		- changes the font encoding in the PDF, ook nodig voor splitsen van woorden met accentletters
+
+=== opdeling in bestanden ===
+
+- herbruikbare of stabiele stukken code of tekst
+	\input{bestand}
+	- bestand wordt ingelezen als deel van het moederdocument; wordt altijd meegecompileerd
+	- tijdelijk niet meecompileren (b.v. een hoofdstuk) door de \input in commentaar te zetten, maar dan wordt het ook niet meegeteld voor bladzijdenummering enz.
+
+- deel (b.v. hoofstuk) van het document :
+	\include{bestand}
+	- bestand wordt ingelezen als apart deeldocument, begint op nieuw blad
+	- tijdelijk enkel bepaalde delen mee compileren :
+		\includeonly{bestand1 bestand2 ...}
+		- enkel de ``\include``s voor bestand1, bestand2, ... worden gecompileerd, van de andere ``\include``d bestanden wordt enkel de `aux` uit een eerdere compilatie gebruikt om bladzijdenummering en verwijzingen van het hele document juist te houden
+
+==== hoofddocument ====
+
+- TeXstudio bepaalt zelf welk het hoofddocument is dat gecompileerd moet worden; als er meerdere mogelijk zijn (b.v. test met 2 verschillende sets opmaak) neemt hij wschlk. de laatst geladen van de 2
+	- TeXstudio voorkeur in \include-bestand zelf zetten met magic comment :
+		% !TeX root = testsidenotes
+	- TeXstudio voorkeur voor de duur van de sessie instellen, voor alle bestanden :
+		Options -> Root Document -> Set Current Document As Explicit Root
+		OF
+		rechtsklikken op bestand in bestandenlijst, "set as explicit root"
+
+== semantische delen ==
+		
+=== documentclass ===
+
+- documentatie standard documentclasses (article, book, report, etc) :
+	$ texdoc classes
+	OF
+	Quickstart : `$classes`
+
+- geïnstalleerde classes (hebben extensie .cls) :
+	$ find $(kpsewhich --var-value TEXMFDIST) $(kpsewhich --var-value TEXMFLOCAL) -name *.cls |sort -u
+
+- font-sizes gedefiniëerd in LaTeX : 10, 11 en 12pt
+	- The default size is 10pt. The ext- classes and the extsizes package provide a few more sizes.
+	- sommige packages gebruiken intern zelfs alleen het laatste cijfer (0, 1, 2)
+	- andere fontsizes met de [scale=x.xx] optie van het fontpackage, b.v. :
+		\usepackage[scale=.95]{merriweather}
+		
+==== opties ====
+
+- Als de documentatie niet voldoet, kijk in de broncode. Om b.v. alle opties en hun werking te kennen, zoek "\DeclareOption", b.v. :
+	\DeclareOption{oneside}{\@twosidefalse \@mparswitchfalse} : dit betekent dat de optie [oneside] de waarde twosidefalse zet, en mparswitchfalse (vermoedelijk margin-paragraaf na elke blz. switchen naar de andere kant)
+
+- Any options given in the \documentclass command that are unknown by the selected document class are passed on to the packages loaded with \usepackage. A warning message is printed only if neither the class nor any of the packages understand one or more of them.
+
+- De Nederlandse Tex Gebruikersgroep (ntg) (zie sectie "NL document classes") documenteert dat als de optie niet in de .cls gedeclareerd staat, dat hun .cls dan een stijlbestand met de naam optie.sty probeert te laden
+
+=== NL document classes ===
+
+- documentatie in "/opt/texlive/2016/texmf-dist/doc/latex/ntgclass" (Nederlandse Tex Gebruikersgroep)
+
+- het cijfer-suffix is een stijl
+	- 1 of geen : klassiek zoals latex
+	- 2 : (enkel artikel) eigenzinnig
+	- 3 : /parindent 0, /parskip niet (zie sectie "aanduiding paragraaf")
+	>>>
+	 "/opt/texlive/2016/texmf-dist/tex/latex/ntgclass/artikel1.cls"
+	 "/opt/texlive/2016/texmf-dist/tex/latex/ntgclass/artikel2.cls"
+	 "/opt/texlive/2016/texmf-dist/tex/latex/ntgclass/artikel3.cls"
+	 "/opt/texlive/2016/texmf-dist/tex/latex/ntgclass/boek.cls"
+	 "/opt/texlive/2016/texmf-dist/tex/latex/ntgclass/boek3.cls"
+	 "/opt/texlive/2016/texmf-dist/tex/latex/ntgclass/brief.cls"
+	 "/opt/texlive/2016/texmf-dist/tex/latex/ntgclass/rapport1.cls"
+	 "/opt/texlive/2016/texmf-dist/tex/latex/ntgclass/rapport3.cls"
+	<<<
+	- OPM: geen leeg boek beginnen met al 2 opeenvolgende \part; daar moet een \chapter tussen
+	- CONFLICT boek met hyperref als \part nodig, zie sectie "package hyperref"
+
+- termen in deze class zijn standaard in 't Engels, zouden met documentclass-optie [dutch] vertaald moeten worden :
+	>>>
+		\newcommand*\contentsname{Contents}
+		\newcommand*\listfigurename{List of Figures}
+		\newcommand*\listtablename{List of Tables}
+		\newcommand*\bibname{Bibliography}
+		\newcommand*\indexname{Index}
+		\newcommand*\figurename{Figure}
+		\newcommand*\tablename{Table}
+		\newcommand*\partname{Part}
+		\newcommand*\chaptername{Chapter}
+		\newcommand*\appendixname{Appendix}
+		\newcommand*\seename{see}
+		\newcommand*\andname{and}
+	<<<
+	- als dat niet zo is, b.v. voor `\and`, zelf expliciet doen, b.v. :
+		\renewcommand*{\andname}{en}
+	- OPM : documentie artdoc.pdf spreekt nog van documentstijlen e.d. i.p.v. documentclass e.d., recentere info in /opt/texlive/2016/texmf-dist/doc/latex/ntgclass/classdoc.pdf
+
+=== onderverdelingen ===
+
+	level 	opdracht
+	0 of -1	\part : niet genummerd
+				- anders behandeld dan andere onderverdelingen
+				- level -1 als documentclass \chapter (level 0) toelaat, anders level 0
+	  0		\chapter : alleen class report of book
+	  1		\section
+	  2		\subsection
+	  3		\subsubsection
+	  4		\paragraph
+	  5		\subparagraph
+	- *-vormen : enkel voor opmaak van titel; onderverdelingen worden niet genummerd, en komen niet in inhoudstafel
+		- b.v. inleiding, voorwoord, over de auteur, ...
+		- zie sectie "inhoudstafel" om die toch in de inhoudstafel te krijgen
+	- argumenten : [toctitle]{title}
+		- toctitle : alternatieve (meestal kortere) titel voor inhoudstafel en bovenaan elk blad
+			- NIET bij *-vormen
+	- nummering onderverdeling bepaalt, voor zover ik kan nagaan, de hoeveelheid dat paragrafen inspringen (als ze inspringen, i.p.v. aangeduid door interlinies)
+
+Andere delen :
+	\appendix
+		- zet chaptercounter (book en report) of section counter (article) terug op 0 (zie sectie "nummering")
+		- veranderd type nummering naar hoofdletters A, B, ...
+		- vervangt hoofding "Chapter" door "Appendix"
+	\frontmatter (book)
+		- inleiding en inhoudstafel
+		- blz. Romeins genummerd (impliciet `\pagenumbering{roman}`)
+			- OPM : expliciete \pagenumbering{arabic} nummert wel met decimale cijfers, maar frontmatter blijft afz. nummering
+		- chapters niet genummerd, maar wel in \tableofcontents
+		- is NIET optie [voorwerk] van documentclass boek (zie sectie "NL document classes" : die zet alleen titelpagina of niet
+	\mainmatter
+		- de tekst
+	\backmatter
+		- bibliografie, index, colophon
+		- chapters niet genummerd
+
+=== inhoudstafel ===
+
+- afdrukken :
+	\tableofcontents : drukt alle genummerde onderverdelingen (beter : alle niet-*-onderverdelingen, want ook de standaard niet-genummerde niet-* van \frontmatter) af als opgemaakte lijst
+		- wordt altijd gemaakt met het .toc-bestand dat gemaakt werd tijdens de vorige compilatie
+
+- ook :
+	\listoffigures : .lof-bestand
+	\listoftables : .lot-bestand
+		- vermeldingen in deze tabellen komen van de \caption opdrachten
+
+- extra vermeldingen maken in inhoudstafel :
+	\addcontentsline{ext}{secname}{entry text}
+	OF
+	\addtocontents{ext}{entry text}
+		- adds text (or formatting commands) directly to the file that generates the table of contents or list of figures or tables
+		- {ext} : extension of the file on which information is to be written:
+			- toc : table of contents
+			- lof : list of figures
+			- lot : list of tables
+		- {secname} : chapter, section, ..., bepaalt de opmaak
+		- {entry text} : kan b.v. ook \newpage-opdracht bevatten
+	
+==== nummering ====
+
+- elke onderverdeling van een level, tot op level \secnumdepth, wordt genummerd, en terug op 0 gezet bij nieuwe onderverdeling van hoger level. Defaults: 
+	\setcounter{secnumdepth}{2} : book  en report
+	\setcounter{secnumdepth}{3} : article
+- *-vorm : elke onderverdeling (uitg. \part) heeft een *-vorm, waarmee die onderverdeling niet genummerd wordt, en niet in de inhoudstafel komt, b.v.
+	\section{Sectie}\subsection*{Subsectie}
+	>>>
+	3 Sectie
+	Subsectie
+	<<<
+- nummering van volgende onderverdeling v.e. level wijzigen, b.v. :
+	\setcounter{subsection}{8} : volgende subsection krijgt nr. 8 + 1 = 9
+
+- zie sectie "package hyperref" om geprinte blz.-nrs (romeins, decimaal, ...) ook te gebruiken in de pdf-lezer (niet in simpele zoals mupdf, zathura, Master Pdf Editor noch (windows) Foxit Reader, Foxit Editor of, wel in Evince, Atril, (windows) Sumatra ...)
+
+=== verwijzingen ===
+
+- \label{labelnaam} definiëert een plaats in de tekst
+
+- \ref{labelnaam} wordt (in b.v. documentclass "artikel1") vervangen door laagste onderverdelingsnr. waar \label{labelnaam} gedfiniëerd is (zie sectie "nummering" \secnumdepth)
+
+- \pageref{labelnaam} wordt (in b.v. documentclass "artikel1") vervangen door blz. waar \label{labelnaam} gedfiniëerd is
+
+- zie sectie "math"
+- zie sectie "package hyperref" om snelkoppeling te maken van verwijzingen
+
+=== verbatim ===
+
+- \texttt{tekst} genoeg als het alleen maar om het lettertype gaat, en niet om b.v. gereserveerde LaTeX characters te printen zonder escapes e.d.
+
+- tekst inline tss. "" letterlijk en in teletype-font typesetten, b.v. als hij gereserveerde LaTeX chars bevat :
+	\verb"tekst"
+		- tekst en de delimiters moeten allemaal op 1 lijn
+		- als de tekst zelf een `"` bevat, een willekeurig ander teken als delimiters gebruiken, b.v. :
+			\verb+tekst "met" aanhalingstekens+
+	\verb*"\opdracht1 \opdracht2"
+		- * maakt spaties zichtbaar als ␣
+
+- als environment (met nieuwe lijn voor en na) :
+	\begin{verbatim}
+		literal-text
+	\end{verbatim}
+
+- OPM: zowel \verb als {verbatim} zijn nogal verstorend, en kunnen daardoor niet gebruikt worden binnenin macros; b.v. niet in \parbox{...}, maar wel binnen het equivalente \begin{minipage}...\end{minipage}
+
+- alternatieven :
+	package alltt, shortvrb, verbatim, listings
+
+- zie ook sectie "package url" :
+	- urls
+	- bestandspaden
+
+=== lijsten ===
+
+- alternatief : package enumerate
+
+- alternatief volledig maatwerk met list environment :
+	\begin{list}{stnd lbl}{list decl} item list \end{list}
+	- evt. voor heel document zelfde type lijst definieren :
+		\newenvironment{mijnlijststijl}{\begin{list}{stnd lbl}{list decl} item list \end{list}}
+
+- 3 soorten, kunnen 6 diep genest worden (maar slechts tot 4 diep labels)
+
+- ongenummerde lijst, label voor list items 1ste niveau is zwarte bol
+	\begin{itemize}
+		\item tekst
+		...
+	\end{itemize}
+	- niveaulabels \labelitemi , \labelitemii , \labelitemiii , \labelitemiv herdefiniëren als b.v. :
+		\renewcommand{\labelitemiii}{+}
+		- in preamble of in environment
+		
+- genummerde lijst
+	\begin{enumerate}
+		\item tekst
+		...
+	\end{enumerate}
+	- niveaulabels \labelenumi , \labelenumii , \labelenumiii , \labelenumiv herdefiniëren als b.v. :
+		\renewcommand{\labelenumii}{\Alph{enumi}.\arabic{enumii}}
+		- in preamble of in environment
+		
+- definitie-lijst, label voor list items is de term in vet, geen andere item labels
+	\begin{description}
+		\item[term] tekst
+		...
+	\end{description}
+		
+- expliciete labels als optie, werken niet door in volgende items :
+	\item[+]
+	\item[2.1:]
+
+- OPM : o.a. de environments center, flushleft, flushright, quote, quotation en verse zijn intern als list environment gedefiniëerd, met 1 vast labelloos item
+
+=== tabellen ===
+
+- eenvoudige tabellen zoals met tabstop van typemachine :
+	- \begin{tabbing} ...\end{tabbing}
+		- \\ : begin nieuwe lijn
+		- \= : stel nieuwe tabstop in op huidige positie (typisch op 1ste lijn)
+			- in vervolglijn wijzigt dit de huidige tabstop wanneer we nog niet tot laatste ingestelde tabstop gesprongen zijn met />
+			- mag in de tekst staan (b.v. hoofdingen)
+			- gebruik horizontale spatiëring (zie sectie "typografie" "spaties") voor precisie
+		- \> : spring naar volgende eerder ingestelde tabstop, typisch enkel na 1ste lijn
+			- springt ook terug als tekst al voorbij die tabstop is
+		- b.v.
+			\begin{tabbing}
+				kop1\quad\=kop2\qquad\=kop3\hspace{5em}\=kop4\\
+				cel1\>cel2\>cel3\>cel4\\
+				...
+			\end{tabbing}
+	- gevorderd gebruik :
+		- \kill : i.p.v. \\ aan het einde van die 1ste lijn om ze niet te typesetten (b.v. lijn met enkel spatiebreedtes \hspace*{} en \=)
+		- \+ : zet marge alle volgende lijnen 1 tabstop meer naar rechts
+		- \- : zet marge alle volgende lijnen 1 tabstop meer naar links
+		- \< : zet marge van deze lijn 1 tabstop naar links
+		- \pushtabs : verwijder maar onthoud alle ingestelde tabstops van huidige tabbing environment
+		- \poptabs : herstel vorige nog niet gepopte pushtabs van huidige tabbing environment
+		- \> left text \' right text : zet 'left text' een kleine spatie links van de tabstop gekozen door \>, en 'right text' rechts daarvan
+			- \setlength{\tabbingsep}{lengte} om breedte van die kleine spatie in te stellen
+		- \` : lijnt rest van de lijn rechts uit (als die rest van de lijn nog \> tabstops heeft, raakt uitlijning in de war)
+	- OPM : LaTex doet automatische page breaks in tabbing env., maar geen expliciete :
+		>>>
+			\newpage and \clearpage are not allowed, \pagebreak is ignored. To force a page break, specify a very large interline spacing at the end of the line where the break should occur (for example, \\[10cm]). This forces automatic page break, and the spacing disappears at the start of the new page.
+		<<<
+	- OPM : Each line of text is effectively within a { } pair, so that any size or font declarations remain in force only for that one line.
+	- geen geneste tabbing environments
+	- OPM : no automatic line breaking within the tabbing environment. Each line continues until terminated by a \\ command. The text could extend beyond the right margin of the page.
+	- OPM : \hfill, \hrulefill, and \dotfill have no effect inside a tabbing environment, since no stretching takes place here (zelfs niet met \`); WEL in {tabular} en {array}
+
+- volwassen tabellen :
+	\begin{tabular}[pos]{cols}
+	OF
+	\begin{tabular*}{width}[pos]{cols}
+	OF (ALLEEN math mode)
+	\begin{array}[pos]{cols}
+		koltekst-1 & koltekst-2 ...\\
+		koltekst-1 & koltekst-2 ...\\
+	\end{tabular} (OF {tabular*} OF {array})
+	- {tabular*} vereist ergens in {cols} een @{\extracolsep{\fill}} (zie verder)
+	- alle 3 maken eig. een minipage, d.w.z. kunnen in een lijn met andere tekst geschikt worden
+	- [pos] :  t, b of c (default), vert. uitlijning t.o.v. baseline rest van de lijn
+	- {cols} : lijst kolomformaten, met elk minstens een type en optioneel een scheiding
+		- type kolom
+			- l, r of c : horz. uitlijning binnen kolom
+			- p{width} : kolom is een parbox[t]{width}{text}, met vaste breedte en tekstterugloop
+		- type voorafgegaan en/of gevolgd door 0 of meer kolom-scheidingen :
+			- | : lijn tss. kolommen of aan rand tabel
+			- @{text} : vaste tekst, witruimte of wat dan ook, b.v. :
+				- @{ euro }|
+				- @{\hspace{2em}} : extra witruimte van 2em breed na deze kolom
+				- @{\extracolsep{2em}} : extra witruimte voor alle volgende kolommen
+					- evt. volgende \extracolsep vervangt deze, is niet cumulatief
+				- @{\extracolsep\fill} : witruimte naar behoeven om {tabular*} op gewenste breedte te brengen
+		- *{num}{cols} : formaat cols wordt num keer herhaald, b.v. [|l|*{2}{|c|}] zelfde als [|l||c||c|]
+	- rijen gescheiden door \\ of \tabularnewline
+	- koltekst-n : staat impliciet tss. {}, vormt dus eigen environment
+		- gescheiden door '&'
+		- speciale koltekst :
+			\hline : horz. lijn over breedte tabellen
+				- enkel als eerste van een rij
+				- evt. meerdere worden met kleine tussenruimte getrokken (niet als er b.v. \cline tussen staat), en vert. lijnen worden daar onderbroken
+			\cline{m - n} : horz. lijn van kolom m tot n (inbegrepen)
+				- enkel als eerste van een rij
+				- meerdere op zelfde kolommen zijn hoogstens samen wat dikker
+			\multicolumn{num}{col}{text} : cfr. colspan= van html
+				- {num} : text neemt de plaats in van 'num' kolommen in de {cols}-specificatie,
+				- {col} : eigen kolomformaat voor deze cel (zie {cols} hierboven)
+				- enkel als eerste van een rij of direct na '&'
+			\vline : verticale lijn zo hoog als rij
+		- OPM : If a p-type column contains \raggedright or \centering, the \\ forces a new line within the column entry and not the end of the whole row. If this occurs in the last column, then \\ cannot be used to terminate the row; instead one must use \tabularnewline to end such a row.
+	- tabelstijlen BUITEN de {tabular} e.d. wijzigen met \setlength, globaal of lokaal :
+		- \tabcolsep : half the width between columns in {tabular} and {tabular*}
+		- \arraycolsep : half the width between columns in {array}
+		- \arrayrulewidth : thickness of vert. and horz. lines
+		- \doublerulesep : separation between lines of double rule
+		- \arraystretch : distance between rows; a multiplying factor (default 1). To set a new value :
+			\renewcommand{\arraystretch}{value}
+
+- uitbreidingen op {tabular} e.d. o.a. in package array, dcolumn, tabularx, delarray, longtable
+
+- tabellen zwevend maken (zodat bladschikking ze desnoods op volgende blz. zet)  met {table} environment:
+	\begin{table}
+		hoofding\\ tabel\\ voettekst
+	\end{table}
+		- tabel : {tabbing}, {tabular}, ..., eigenlijk om het even wat, komt in evt. index van tabellen
+		- {table} komt bovenaan blad, indien mogelijk (geen andere {table}, hoofdstukkop o.i.d. dat voorrang heeft), anders onderaan of bovenaan volgend blad.
+		- rest van de tekst wordt onder of boven {table} geschikt in overblijvende ruimte.
+	- andere parameters : zie sectie "figuren"
+	
+=== genummerde benoemde tekstblokken ===
+
+- EERST nieuwe soort tekstblokken definiëren :
+	\newtheorem{bloksoort}{bloksoortnaam}[nummeringsniveau]
+		- bloksoort : naam voor bloksoort met eigen nummering, wordt niet getypeset
+		- bloksoortnaam : getypeset in vet, voor het volgnummer
+		- nummeringsniveau : niveau waarbinnen genummerd wordt vanaf 1 (book, chapter, section, ..., zie sectie "onderverdelingen"), default hele document.
+		- volledige prefix van blok is "'bloksoortnaam' 'nummer van nummeringsniveau'.'bloknr'"
+			- b.v. blok 2 in section 5.3 wordt "Blok 5.3.2"
+	OF
+	\newtheorem{bloksoort}[nummerAlsSoort]{bloksoortnaam}
+		- nummerAlsSoort : gebruik dezelfde nummering als die eerder gedefinieerde bloksoort
+
+- DAN die tekstblokken invoeren
+	\begin{bloksoort}[extra title]
+	text
+	\end{bloksoort}
+		[extra title] optioneel, wordt getypeset in vet na bloksoortnaam en nr.
+
+- more powerful theorem tools :
+	- zie ook package amsthm
+	- zie ook package theorem
+
+== typografie ==
+
+=== microtype ===
+
+- gevorderde technieken om tekst over lijn te schikken, vermindert koppeltekens
+	\usepackage[final]{microtype}
+		- werkt goed met default opties
+		- OPM : optie [final] is op zich niet nodig, maar zonder die werkt microtype niet zolang de documnetclass de optie [draft] heeft (zie sectie "draft")
+
+=== spaties ===
+
+- spaties aan begin van lijn vallen weg
+- spaties na command naam vallen weg
+	- spatie na \ als in "\ " valt niet weg
+	- `{}` na command zetten om spatie te behouden
+- 1 newline geldt als spatie
+	- dus afgekapte lijn die geen spatie mag worden, beëindigen met % ("TeX comments hide space"), b.v. om leesbare broncode te krijgen
+- opeenvolgende spaties in broncode worden samengevoegd tot 1 spatie in uitvoer
+
+- 1 of meer lege lijnen (i.e. 2 of meer opeenvolgende newlines) duiden paragraaf aan
+	- `\par` doet hetzelfde
+
+- non-breaking space : houdt woorden voor en na op dezelfde lijn
+	`~`
+	- worden niet samengevoegd
+
+- bredere spatie na zinnen is standaard, zoals in angelsaksische typografie :
+	- in niet-angelsaksische typografie is de bredere spatie niet gebruikelijk. Uitzetten :
+		\frenchspacing
+		- geldig tot \nonfrenchspacing
+	- spatie na een zin-beëindigend leesteken (`.`, `!`, `?`) volgend op een kleine letter, wordt breder uitgevoerd, om zinnen/zinsdelen visueel te scheiden. If a sentence-ending period is immediately followed by a right parenthesis or bracket, or right single or double quote, then the intersentence space follows that parenthesis or quote.
+		- Om dit te voorkomen, b.v. na afkortingen, expliciete spatie `\ `  of `~` (non-breaking) opgeven na het leesteken (of aanhalingsteken of sluitend haakje dat erop volgt): die worden niet verbreed, b.v.
+		"Goed bevestigen (b.v. met vijzen, nagels enz.)\ aan de muur."
+	- `.` na een hoofdletter wordt door LaTeX zelf al als een afkortingspunt herkend, zonder bredere spatie.
+		- als zulke `.` toch een zin afsluit, dan laten voorafgaan door het commando `\@`, b.v. :
+			"Onze burgemeester was Vilain XIIII\@. Een schurk."
+
+- In math environment, LaTeX ignores the spaces that you use in the source, and instead puts in the spacing according to the normal rules for mathematics texts. Many math mode spacing definitions are expressed in terms of the math unit mu given by 1em = 18mu, where the em is taken from the current math symbols family
+
+- expliciete breedte van spatie :
+	- math mode only :
+		\; OF \thickspace : Normally 5.0mu plus 5.0mu.
+		\: OF \> OF \medspace : Normally 4.0mu plus 2.0mu minus 4.0mu.
+		\! : negative thin space. Normally -3mu
+	- math mode and text mode.
+		\, OF  \thinspace : Normally 3mu
+			- smalle spatie, b.v. voor woorden tss. enkel aanhalingsteken in zinnen tss. dubbele aanhalingstekens, om een kleine spatie tss. de enkele en de dubbele te krijgen (zie sectie "aanhalingstekens"). v.b.
+				"''\,`woorden' en `letters'\,''"
+			- NON breaking (is eig. geen spatie, maar een TeX kerning-opdracht)
+		\quad : 18mu = 1em. often used for space surrounding equations or expressions, for instance for the space between two equations inside a displaymath environment
+		\qquad : 2 quads = 36mu = 2em
+	- spatie op maat :
+		\hspace{breedte} : no-op aan begin lijn
+		OF
+		\hspace*{breedte} : ook aan begin lijn
+
+- uitvulspatie :
+	\hspace*{\fill} : zo breed mogelijk, ook aan begin van lijn
+	\hspace{\fill} : zo breed mogelijk, maar niet indien aan begin van lijn
+	OF (synoniem)
+	\hfill
+	- voorbeelden :
+		"\hspace*{fill}rechts uitgelijnd"
+		"links uitgelijnd\hfill{}rechts uitgelijnd"
+		"links\hfill{}Midden\hfill{}rechts"
+
+- uitvulpuntjes of onderlijn
+	\dotfill
+	\hrulefill
+
+- LaTeX laat elke paragrafen behalve de 1ste inspringen; 1ste ook laten inspringen :
+	\usepackage{indentfirst}
+	
+=== interlinies ===
+
+- 1 nieuwe lijn in broncode is spatie, 2 of meer (d.w.z. 1 of meer lege lijnen) beginnen een nieuwe paragraaf
+	\par : ook nieuwe paragraaf
+
+- nieuwe lijn beginnen in uitvoer (wordt niet uitgevuld over breedte)
+	\newline : gewoon nieuwe lijn
+	\\[interlinie] : interlinie is lengtemaat, zet zoveel interlinie voor volgende lijn, die echter niet overdraagt naar volgende blz.
+	\\*[interlinie] : houdt lijn, interlinie en volgende lijn op dezelfde blz., desnoods alles op de volgende
+
+- aanbevolen begin van nieuwe lijn, waar ze normaal niet zou voorkomen :
+	\linebreak[aanbev] : afgebroken lijn wordt zoals andere uitgevuld in de breedte
+	- aanbev : sterkte van de aanbeveling om een nieuwe lijn te beginnen, op schaal van 0 tot 4 (default)
+		[0] : lijn afbreken mag hier
+		...
+		[4] of niets : lijn afbreken moet hier
+
+- liever geen nieuwe lijn hier :
+	\nolinebreak[aanbev]
+	- aanbev : sterkte van de aanbeveling om geen nieuwe lijn te beginnen, op schaal van 0 tot 4 (default)
+
+- tekst op zelfde lijn houden :
+	\mbox{tekst}
+
+- afstand tss. lijnen :
+	baselineskip : afh. van fontgrootte, laatste waarde voor paragraaf wordt voor de hele paragraaf gebruikt. Wijzingen, b.v. :
+		\setlength{\baselineskip}{15pt}
+		- wordt herzet bij elke wijziging fontsize; algemeen te wijzigen met een decimale vermenigvuldigingsfactor :
+			\renewcommand{\baselinestretch}{factor}
+			- wordt effectief bij volgende wijziging fontsize; hack om direct te activeren b.v.
+				\small\normal
+
+- extra witruimte
+	- tss. paragrafen of na de huidige lijn
+	\vspace{vspace} : vspace of tot nieuw blad
+	\vspace*{vspace} : vspace zelfs bij begin nieuw blad, en desnoods op volgend blad laten doorlopen
+	- vspace kan ook \fill zijn : neemt zoveel witruimte als mogelijk :
+		\vspace{\fill}
+		OF
+		\vfill
+
+- nieuwe bladzijde uitvoeren (of kolom met documentclass[twocolumn] of \twocolumn)
+	- tss. paragrafen of na huidige lijn
+	\newpage : zonder verticale uitvulling van regels op blad
+	\pagebreak[aanbev] : met verticale uitvulling van regels op blad
+	\nopagebreak[aanbev] : liever geen pagebreak hier
+		- aanbev : sterkte van de aanbeveling om geen nieuwe lijn te beginnen, op schaal van 0 tot 4 (default)
+	\clearpage : zoals \newpage, maar geen nieuwe kolom, desnoods lege rechterkolom, en zet ook alle tabellen, afbeeldingen, figuren die hangende zijn, op nieuwe bladzijde en indien nodig bijkomende bladzijden
+	\cleardoublepage : desnoods lege 2de blz. met documentclass[twoside]
+
+- tekstblok op blz. een klein beetje hoger maken om nieuwe blz. te vermijden (enkel voor deze blz.)
+	\enlargethispage{size} 
+	\enlargethispage*{size} : verkleint evt. ook interlinie een beetje
+
+=== aanduiding paragraaf ===
+
+- bepaald door \parskip (interlinie) en \parindent (inspringen)
+
+- LaTeX standaard is paragrafen, behalve 1ste (UK, US, Nederland), te laten inspringen met waarde van \parindent
+	- parindent wordt stamdaard ingesteld tot gelijke hoogte van onderverdelingstitels (dus voorbij de maximale breedte v.d. nummering van die onderverdelingen)
+		- expliciet wijzigen met \setlength{\parindent}{lengte-commando}
+	- franse, spaanse e.a. tradities laten 1ste paragraaf wel inspringen, behalve misschien als titel erboven gecentered is.
+		- zie sectie "package indentfirst"
+	- tcolorbox
+		- zet in zijn environment \parindent == 0, dus standaard geen inspringen
+			- zie sectie "package tcolorbox" voor vb. om dit wel te doen
+
+- expliciet per paragraaf :
+	\indent
+	\noindent
+
+=== woordsplitsing ===
+- zie ook sectie "koppeltekenachtigen"
+
+- \showhyphens{tekst} print tekst in log met koppelteken op elke splitsingsplaats
+
+- In TeX ingebouwd voor het Engels (hyphenation)
+	- zie sectie "package babel" voor andere talen :
+
+- minimum lengte van splitsbare lettergreep
+	- 1ste woord paragraaf wordt niet gesplitst
+	- in babel dutch, english, french : 2 vooraan, 3 achteraan woord
+		>>> \providehyphenmins{\CurrentOption}{\tw@\thr@@} <<<
+	- in babel german : 2 en 2
+	- aan te passen met \lefthyphenmin=99 en \righthyphenmin=99, maar is nog niet gelukt bij mij
+
+- aanbevolen tekstbreedte om rechte kantlijnen te hebben door woordsplitsing, zonder te grote variatie in witruimte : minstens 60-70 tekens (en meer voor talen met lange woorden en lettergrepen, zoals NL en DE); margetekst is meestal niet breed genoeg voor goede én mooie volledige uitlijning; gebruik daar package ragged2e, package microtype en \RaggedRight
+
+- verkeerd of onterecht niet gesplitste woorden :
+	- geef in de tekst zelf de gewenste splitsingsplaats met eigen shorthand `"=`
+		- zie sectie "koppeltekenachtigen"
+	0 geef in de tekst zelf de gewenste splitsingsplaats met `\-`
+		- verhindert automatische splitsing elders in het woord
+	- lijst met hoe verkeerd of niet gesplitste woorden wel gesplitst mogen worden :
+		\babelhyphenation[taal]{woord-split-sing let-ter-gre-pen}
+			- enkel Engels : \hyphenation{woord-split-sing let-ter-gre-pen}
+		- gescheiden door spatie
+		- zonder [taal] : voor alle talen, b.v. eigennamen
+		- b.v. in apart bestand :
+			\input{woordsplitsingen.tex}
+		- NIET voor woorden met een apostroph,
+			- zie sectie "afkappingsteken"
+			- b.v. \babelhyphenation{... com-man-do's ...} geeft foutboodschap
+				- die misleidend pas verschijnt bij \begin{document} : "Not a letter. \begin{document}"
+				OF
+				- op het aux-bestand : "Not a letter. \select@language{dutch}"
+		- werkt NIET voor woorden in de tekst begrensd door onjuist aanhalingsteken : die worden niet herkend als het woord uit de \babelhyphenation-regels
+			- zie sectie "aanhalingstekens"
+
+=== koppeltekenachtigen ===
+
+- koppelteken (kort streepje) : woordsplitsing of scheiding van deelwoorden van samenstelling (b.v. father-in-law)
+	- automatisch (zacht)
+	- expliciet zacht (enkel zichtbaar wanneer gesplitst) : `\-`
+	- expliciet hard : `-`
+
+- expliciet hard en zacht koppelteken verhinderen verdere automatische splitsing van woord
+	- babelhyphen{soft|hard|nobreak|...} laat andere breaking oportunities in een woord ongemoeid; in sommige babel-talen is dit voorgedefiniëerd, maar niet alle noch hetzelfde, daarom zelf expliciet :
+		\usepackage{babel}
+			- [vreemdetaal1,vreemdetaal2,...,hoofdtaal] : hier of beter na documentclass
+		\useshorthands*{"}
+			- definiëert `"` als shorthand marker
+			- de * laat de shorthand beginnend met '"' taalwisselingen overleven
+		\defineshorthand{"=}{\babelhyphen{soft}}
+		\defineshorthand{"-}{\babelhyphen{hard}}
+		\defineshorthand{"~}{\babelhyphen{nobreak}} : OPM. LaTex definiëert `~` als non-breaking space
+		\defineshorthand{"_}{--\babelhyphen{empty}} : n-dash (zie verder) waarna splitsen mag, zonder extra koppelteken
+		- extra splitsingsregels : zie sectie "package babel"
+
+- n-dash – (halflang streepje) : scheidingsteken voor getalreeks
+	- NL : "half kastlijntje" tss. spaties
+		- gedachtestreepje of aandachtstreepje
+		- als pauzeteken of als scheidingsteken voor tussenzin iets sterker dan een komma
+		- ter inleiding van een directe rede, in plaats van aanhalingstekens, in tekst met veel dialogen:
+			– Huil je? vroeg ze.
+			– Nee, hoezo? antwoordde hij.
+	- Ubuntu : "Compose"--. (niet de - van num. toetsenbord)
+	- expliciet : `--`
+		- OPM: schrijf n-dash tss. woorden met eigen shorthand `"_` (--\babelhyphen{empty}) , want `--` verhindert normale splitsingen in een woord
+
+- m-dash — : leesteken
+	- NL : "(heel) kastlijntje"
+	- Ubuntu : "Compose"--- (niet de - van num. toetsenbord)
+	- expliciet : `---`
+
+- min-teken : in formules
+	- expliciet : `$-$`
+
+- veel uitvulling tussen woorden toelaten, voor minder woordsplitsingen :
+	\begin{sloppypar} text \end{sloppypar}
+	OF
+	\sloppy : in een environment of in document preamble
+		- tijdelijk ongedaan maken (en terug woorden splitsen om zo weinig mogelijk uit te vullen) :
+			\fussy
+
+=== afkappingsteken ===
+
+- het accentteken `'` wordt door o.a. LaTeX vertaald naar de echte apostroph `’` (Linux : [Compose] ' >)
+	- als afkappingsteken
+	- als enkel aanhalingsteken
+	- OPM. : `\'` is een 1-letter commando voor accent aigue, b.v. \'e geeft é, zie sectie "typografie" "accenten"
+
+- woordsplitsing rekent afkappingsteken niet (' noch ’) als deel van het woord. Samen met de regel dat lettergrepen van 1 of 2 letters niet afgesplitst worden, zorgt dat ervoor dat b.v. "commando's" niet gesplitst wordt als "comman-do's"
+	- gemakkelijkste oplossing: expliciet de mogelijke splitsingsplaats met `\-` aangeven in de tekst, b.v.
+		comman\-do's
+	- HACK : \lccode`\'=39 (zie sectie "TeX \message" voor andere vormen)
+		- OPM : In dutch nog geen problemen kunnen vinden, maar niet-0 lccode van `'` instellen kan problemen geven bij gebruik van `'` als aanhalingsteken
+			- in Engels met niet-0 lccode voor `'` : `masters''` kan dan gesplitst worden als `mas-ter-s''`
+			- in Duits met niet-0 lccode voor `/` : `und/oder` als `un-d/o-der`
+		- OPM : nog geen manier gevonden om dit probleem te omzeilen door de apostrof `’` te gebruiken i.p.v. het accent `'`, want apostrof is geen ASCII, kan dus niet in TeX ingegeven worden, en \lccode is een TeX opdracht
+		- geeft `'` een niet-nul lowercase waarde (zie sectie "TeX \lccode"); het woordsplitsingsalgoritme zet blijkbaar (en zoals te verwachten) de tekst om naar lowercase vooraleer de splitsingsregels toe te passen. Aangezien niet-letters lccode == 0 hebben, bepalen die de woordgrenzen. Door `'` ook een niet-nul waarde te geven, wordt het afkappingsteken gewoon als deel van het woord gezien en mee gesplitst. Met deze hack kan het afkappingsteken (eig. alleen de `'`, niet ')zelfs
+		- hiermee kan de `'` ook gebruikt worden in eigen splitsingsregels \babelhyphenation
+		>>> https://tex.stackexchange.com/questions/164084/listings-and-babel-with-some-languages-are-breaking-hyphenation
+			As far as hyphenation is concerned, TeX considers a word as a sequence of characters of category code 11 or 12 having nonzero \lccode. So a zero \lccode stops hyphenation. On the other hand, if / is assigned code 47 [of in dit geval, ' code 39], it is considered and hyphenation patterns can be found. Since
+		<<<
+		- zie ook https://tex.stackexchange.com/questions/165020/hyphenation-of-words-containing-apostrophes
+			>>>
+			... characters with a non zero \lccode are those that TeX considers as forming words, when hyphenation is tried.
+			<<<
+
+=== aanhalingstekens ===
+
+- `"` is een teken voor typmachines, wordt niet gebruikt in boekdruk
+	- wordt in vele babel-talen (zie sectie "package babel") gedefiniëeerd als 'actief' (commando-) teken, voor 'shorthands', zijnde extra 1-letter-opdrachten naast de gebruikelijke `\x` 1-letter-0opdrachten
+
+- het gebruik van aanhalingstekens is afhankelijk van het taalgebied
+	>>> https://en.wikibooks.org/wiki/LaTeX/Text_Formatting#Quote-marks
+	For left bottom quote and European quoting style you need to use T1 font encoding enabled by:
+		\usepackage[T1]{fontenc}
+	<<<
+
+- in het Nederlands gebruikt men hangende omgekeerde komma's, onder om te openen, boven om te sluiten
+	- opgelet: babel doet woordsplitsingen van woorden die grenzen aan aanhalingstekens alleen goed als het die van het taalgebied zijn
+	- enkel voor aanduiding bijzonder woord en voor aanhaling in aanhaling
+		`woord'
+	- dubbel voor aanhalingen
+		\usepackage[dutch]{babel}
+			- definieert de shortcut `"` voor vanalles, maakt o.a. van de enkele aanhalingstekens "`..."' (bovenaan) Nederlandse dubbele aanhalingstekens ,,tekst'' :
+				"`Aangehaalde tekst"'
+		- NIET ,,tekst'' zoals in sommige LaTeX-handleidingen staat: zet gewoon dubbele komma
+			- dit blijkt toch wel te werken met mijn /deftalen-macros \zeinl, \zeifr, ... (zie geschiedenis Bosmansen), wschlk. omdat die de tekst in \foreignlanguage{}-argument zetten
+	- smalle spatie tss. enkele en dubbele aanhalingstekens :
+		\,
+		- zie sectie "spaties"
+	- zie "Righting English That's Gone Dutch (Joy Burrough-Boenisch)" https://books.google.be/books?id=fs472dICNgMC&pg=PA41&redir_esc=y#v=onepage&q&f=false
+
+=== superscript voor rangtelwoorden (1ste, 2de, ...) ===
+
+- babel doet dit niet, zelf doen
+
+- in FR wel, in NL en EN niet, in DE gewoon een . (1. 2.)
+
+=== voetnootnummering en leesteken ===
+
+- zet zijnoot/voetnoot altijd na leestekens (zeker na .)
+
+=== accenten ===
+
+- 1-lettercommando's om een accent op de volgende letter te zetten:
+	- wordt als apart teken getypeset, kan daardoor op elke letter, b.v. medeklinker met accent, of m-cedille
+	- in tabbing env. hebben \=, \‘, en \’ een andere betekenis, en moeten ze voorafgegaan worden door een a (voor accent) : \a=, \a‘,  \a’
+	- \' : aigue
+	- \` : grave
+	- \" : trema
+	- \^ : circonflex
+	- \~ : tilde
+	- \= : streepje
+	- \. : puntje boven
+	- \c : cedille
+		- na de accentcommando's die zelf een letter zijn, moet de geaccentueerde letter tss. {}, b.v. '\c{c}' : c-cedille
+	- \H : dubbele aigue
+	- \u : boogje boven
+	- \v : omgekeerde circonflex
+	- \t{ab} : verbindend boogje boven de leters a en b
+	- \d : puntje onder (dot)
+	- \b : streepje onder (=/= underscore)
+	- \r : rondje ° boven
+	- in principe (lijkt bij mij vanzelf te gebeuren) moet de punt van een geaccentueerde i of j verwijderd worden door de vorm \i en \j te gebruiken
+		- OPM: \i en \j zijn commando's, eten dus spaties erna op, tenzij het commando gevolgd wordt door {}
+
+- met UTF-8 kunnen de gebruikelijke letters met accent gewoon als tekst ingevoerd worden
+	
+=== ligatuur ===
+
+- ff, fi, ffl, ffi : zonder ligatuur uitvoeren door `\/` met ertussen
+
+- met babel dutch :
+	- "y : ij
+	- "Y : IJ
+
+=== nadruk ===
+
+- normale typografische nadruk wordt gelegd door italics te gebruiken :
+	\em tekst\em
+	OF
+	{\em tekst}
+	OF
+	\emph{tekst}
+		- \emph doet "italic correction" : beetje extra ruimte na italic en voor rechtop
+	- \em en \emph zijn toggles: nadruk binnen nadruk is terug rechtop, etc., daarom is dit NIET hetzelfde als \textit of \itshape
+
+=== relatieve tekstgrootte ===
+
+- in volgorde :
+	\tiny        	: smallest
+	\scriptsize  	: very small
+	\footnotesize	: smaller
+	\small       	: small
+	\normalsize  	: normal
+	\large       	: large
+	\Large 			: larger
+	\LARGE 			: even larger
+	\huge  			: still larger
+	\Huge  			: larges
+
+== fontkeuze ==
+
+- good math fonts are in short supply, so choices are limited if you want matching math typesetting
+	- font activated for text processing does not influence math mode : special symbol fonts are used for this. b.v. formula in bold :
+		\boldmath tekst\unboldmath
+			- both declarations must be made outside of math mode
+	- under NFSS : (\unboldmath and \boldmath are defined in terms of this command)
+		\mathversion{versionname} , met versionname == [normal|bold] 
+	- mathematical alphabet commands wihin math mode :
+		\mathrm{tekst}
+		\mathcal{tekst}
+		\mathnormal{tekst}
+		\mathbf{tekst}
+		\mathsf{tekst}
+		\mathit{tekst}
+		\mathtt{tekst}
+	- New math font alphabets may be defined by the user, e.g. define a slanted math font \mathsl :
+		\DeclareMathAlphabet{\mathsl}{OT1}{cmr}{m}{sl}
+
+- zie http://www.tug.dk/FontCatalogue/
+- zie http://www.cs.put.poznan.pl/csobaniec/software/latex/fonts.html
+
+- zie "A guide to LaTeX Document preparation for beginners and advanced users ~ Kopka H, Daly PW (ed.4 2003).pdf" Appendix A : New Font Selection Scheme (NFSS). Elke fontnaam kan volgende variaties hebben, die onafhankelijk ingesteld worden, geactiveerd door de volgende \selectfont opdracht, en bewaard over \selectfont opdrachten heen :
+	- vorm :
+		\upshape : gewoon
+		\scshape : small caps
+		\itshape : italic
+		\slshape : hellend (=/= italic, maar voor sommige fonts wel)
+			>>>
+			Slanted type is essentially the same as roman, but the letters are slightly skewed, while the letters in italic type are drawn in a different style.
+			<<<
+		- algemeen :
+			\fontshape{form} :form = n, it, sl, sc
+		- OPM : b.v. `\itshape` is gedefiniëerd als `\fontshape{\itdefault}\selectfont`, met `\itdefault` == `it`, dus door `\itdefault` te herdefiniëren is `\itshape` dat ook
+	- familie (variatie) :
+		\rmfamily : roman
+		\sffamily : sans serif
+		\ttfamily : typewriter (teletype)
+		- algemeen :
+			\fontfamily{fam} : fam = rm, sf, tt
+		- NIET gelijk aan de font naam, b.v. "Times Roman" zou in principe een sffamily kunnen hebben
+	- series (gewicht) :
+		\mdseries : middeldik
+		\bfseries : vet
+		- algemeen :
+			\fontseries{weight_width} : b.v. weight_width = ebsc (extrabold_semicondensed), lx (light_expanded), ...
+	- grootte :
+		- zie sectie "documentclass", opties [10pt] (default), [11pt], [12pt]
+		\fontsize{size}{linespacing} : linespacing = \baselineskip
+		- zie sectie "relatieve tekstgrootte"
+	- encoding : vooral in fontpackages zelf gebruikt
+		\fontencoding{encode} 
+	\normalfont zet alles behalve grootte terug gewoon
+		- hangt af van \encodingdefault \shapedefault \familydefault \seriesdefault
+	- fontkeuze met parameters ingesteld zoals hierboven :
+		\selectfont
+	- alles ineens instellen :
+		\usefont{code}{family}{series}{shape}
+	- deze \fontxxx{yyy} opdrachten hebben ook direct actieve varianten `\textyyy{tekst}` met de tekst als parameter, b.v. :
+		Family:
+			\textrm{tekst}
+			\textsf{tekst}
+			\texttt{tekst}
+		Series:
+			\textmd{tekst}
+			\textbf{tekst}
+		Shape:
+			\textup{tekst}
+			\textit{tekst}
+			\textsl{tekst}
+			\textsc{tekst}
+		Other:
+			\textnormal{tekst}
+		en niet te vergeten :
+			\emph{tekst} : default italic, kan anders gedefiniëerd worden
+
+- zelf opdrachtnaam toekennen aan font :
+	\newfont{\fnt}{name scaled factor}
+	OF
+	\newfont{\fnt}{name at size}
+		- fnt : de gekozen opdrachtnaam
+		- name : de originele fontnaam
+		- factor : aantal 1000-sten t.o.v. default grootte
+		- size : bepaal factor zo dat resultaat 'size' groot is
+	OF
+	\DeclareFixedFont{\sss}{encoding}{familie}{weight}{shape}{size}
+
+- al geprobeerd :
+	\usepackage{Alegreya}
+		- stijlvol, wel redelijk 'condensed'
+	\usepackage{accanthis}
+		- modern, goed leesbaar, mooie italic
+	\usepackage{baskervald}
+		- kleine letters maar half zo klein als hoofdletters
+	\usepackage{bera}
+		- mooi en leesbaar, maar serif heeft enkel gesimuleerde italic
+	\usepackage[scaled=0.85]{beramono}
+		- mono-font dat tufte gebruikt, geschaald naar zelfde grootte als mathpazo
+	\usepackage{CormorantGaramond}
+		- veel te hoge uitschieters naar boven, maar b.v. t nauwelijks
+	\usepackage[scale=1.1]{caladea}
+		- ERG MOOI ziet er als een 100-jaar oud boek uit, degelijk, mag wat groter; heeft geen slanted (gebruikt daar italic voor)
+	\usepackage{cmbright}
+		- sansserif, goede schermleesbaarheid
+	\usepackage{dejavu}
+	\usepackage[widespace]{fourier}
+		- mooi, lijnen wel dicht bij elkaar
+		- widespace: gewone blanco's zijn veel te smal
+	\usepackage{droid}
+		- schone volle letters, goed leesbaar
+	\usepackage{gandhi}
+		- italic geen vloeiende lijnen
+	\usepackage{gentium}
+		- mooi maar dicht opeen
+	\usepackage[scaled=0.90]{helvet}
+		- sansserif-font dat tufte gebruikt, geschaald naar zelfde grootte (lijkt mij groter) als mathpazo
+	\usepackage[oldstylenums,light]{kpfonts}
+		- erg volledige familie (qua stijlen) light: display not very good, but print is fine 
+	\usepackage{libertine}
+		- vollere letters, wel dicht op een, waardoor zijnootnummers te dicht bij hoge letters (net zoals bij default font)
+*	\usepackage{librebaskerville}
+		- ZEER mooi en leesbaar
+	\usepackage{librecaslon}
+		- italic is zo schuin dat het slecht leesbaar wordt
+	\usepackage{LobsterTwo}
+		- erg mooi en goed leesbaar script font met goed bijpassende italic en bold
+		- vette letters (!inktgebruik, vgl. [light]{kpfonts})
+		- geen sansserif, dus zelf een bijpassende vinden
+	\usepackage[sc]{mathpazo}
+		- Adobe Palatino, serif-font dat tufte gebruikt
+*	\usepackage[scale=.95]{merriweather}
+		- lekker grote letters ('large x'), bedoeld om op scherm te lezen
+		- goede eenheid met italic en sans (mits scale, alleen voor sans)
+		- zie https://github.com/EbenSorkin/Merriweather
+		- To use, add to the preamble :
+			\usepackage{merriweather}
+			- activatea Merriweather as the main (serifed) text font and MerriweatherSans as the sans font.
+			- Options light, rmlight, sflight, black, rmblack, and sfblack choose the light or heavy weights instead of the regular and bold weights, respectively, for both or single families.
+			- Options scaled=<number> or scale=<number> may be used to scale the MerriweatherSans fonts; the serifed variants are not affected.
+		- To activate Merriweather without MerriweatherSans :
+			\usepackage[rm]{merriweather}
+		- to activate MerriweatherSans without Merriweather :
+			\usepackage[sf]{merriweather} 
+		- To use MerriweatherSans as the main text font :
+			\usepackage[sfdefault]{merriweather}
+			- This re-defines \familydefault, not \rmdefault. 
+	\usepackage[default]{opensans}
+		- ziet er nogal druk en springerig uit
+	\usepackage{paratype}
+		- druk omdat letters bijna volledige lijnhoogte bezetten
+
+- volgende te testen fonts n*
+
+== bladspiegel ==
+
+=== marges ===
+
+- om een kijk te krijgen op de bladspiegel:
+	\usepackage{layout}
+	\layout : voegt blz. in met grafische voorstelling van layout en waarden van de relevante veranderlijken
+
+- kunt alles instellen door relevante LaTeX-veranderlijken een waarde te geven :
+	\setlength{\textwidth}{13cm}
+	\setlength{\textheight}{20.5cm}
+
+- zie sectie "package geometry"
+
+- LaTeX standard \oddsidemargin en \topmargin worden gerekend van een punt op 1 inch (2,54 cm) van top en links; margin van package geometry vanaf 0 cm
+
+=== uitlijning ===
+
+- de LaTeX opdrachten en environments voor uitlijning zijn gebrekkig voor doorlopende tekst, omdat zij minder woordsplitsing veroorzaken dan volledige links-rechts-uitlijning, waardoor de kantlijnen (veel) te gerafeld zijn, doch al iets minder met package microtype. Oplossing :
+	\usepackage[newcommands]{ragged2e}
+		- [newcommands] : herdefiniëert de LaTeX opdrachten en environments zodat ze die van ragged2e gebruiken; default [originalcommands]
+		- [document] : complete document ragged-right by executing a \RaggedRight at \begin{document} and the raggedrightboxes and the footnotes options
+		- [raggedrightboxes] : \parboxes, minipages, \marginpars and p-columns of tabulars and arrays are automatically set using \RaggedRight.
+		-  [footnotes] : sets all footnotes ragged-right by loading the footmisc package with the ragged option.
+		- beperkt nuttig voor documentclass tufte-book : "option clash for package ragged2e" met o.a. de package-opties [newcommands], [document] en [footnotes]
+	- opdrachten en environments :
+		\Centering OF \begin{Center}
+		\RaggedLeft OF \begin{FlushRight}
+		\RaggedRight OF \begin{FlushLeft}
+		\justifying OF \begin{justify} : switches back to justified text after ragged text has been switched on
+		- OPM : de standaard LaTeX commando's zijn dezelfde als deze, maar zonder hoofdletters
+
+- LaTeX (ZONDER \usepackage[newcommands]{ragged2e}) :
+	\begin{flushleft}, begin{center}, begin{flushright}
+	OF
+	\raggedright, \centering, \raggedleft
+		- create a paragraph consisting of lines that are flush to the left-hand margin (centered, right-hand margin) and ragged right (...)
+		- enkel als environment beginnen ze nieuwe paragraaf
+		- environment-namen lijken ook als opdracht te werken (omgekeerde is altijd zo)
+		- als opdracht kunnen ze gebruikt worden in andere environmnet zoals quote of in parbox: "it only changes how LaTeX formats paragraph units. To affect a paragraph unit’s format, the scope of the declaration must contain the blank line \\ or an \end command that ends the paragraph unit."
+	\centerline{text} : a single centered line
+
+- 2-zijdig inspringen :
+	\begin{quote}
+		- alineas aangeduid door extra interlinie
+	\begin{quotation}
+		- alineas aangeduid door inspringen
+	\begin{verse}
+		- beter voor gedichten
+		- alineas aangeduid door extra interlinie, te lange lijnen zo ver mogelijk justified, overschot inspringend op volgende lijn
+	- gescheiden van boven- en onderliggende tekst door extra interlinie
+	- kunnen 6 niveau's genest worden
+	- OPM : zijn intern gedefiniëerd als list environment (zie sectie "lijsten") met vast 1 item, zonder label
+
+- de juiste gewichten voor uitlijning kunnen ingesteld worden met de parameters (en \setlength) :
+	\CenteringLeftskip, \CenteringRightskip, \CenteringParfillskip, \CenteringParindent
+	\RaggedLeftLeftskip, \RaggedLeftRightskip,\RaggedLeftParfillskip, \RaggedLeftParindent
+	\RaggedRightLeftskip, \RaggedRightRightskip, \RaggedRightParfillskip, \RaggedRightParindent
+	\JustifyingParfillskip, \JustifyingParindent
+
+=== LR box ===
+
+- left-right boxes, inhoud wordt horizontaal geschikt zoals letters
+	- nesten mag (vooral nuttig bij kaders)
+	- zonder kader
+		\mbox{text}
+		OF
+		\makebox[width][pos]{text}
+		OF
+		\raisebox{lift}[height][depth]{text}
+	- met kader
+		\fbox{text}
+		OF
+		\framebox[width][pos]{text}
+		- geen raisebox met kader, maar nesten in raisebox of omgekeerd mag
+		- {picture} environment heeft eigen macro \framebox, niet te verwarren
+		- \fboxrule determines the thickness of the frame lines
+		- \fboxsep sets the amount of spacing between the frame and enclosed text
+			- wijzigen met \setlength (zie sectie "lengte-commandos")
+	- natuurlijke breedte en hoogte van de box bepaald door text
+	- [width] : expliciete breedte (length-opdracht); over andere tekst gedrukt als er niet genoeg plaats is
+	- [pos] :
+		c : center (default)
+		l : left justify
+		r : right justify
+		s : stretch it to fill up the full width.
+	- lift : verticale afwijking van baseline, mag negatief zijn (length-opdracht); over andere tekst gedrukt als er niet genoeg plaats is
+	- [height] en [depth] : simuleert box van die hoogte, voor wat betreft schikking van de tekst erbuiten (length-opdracht)
+	- length-opdrachten kunnen berekend worden uit eigen natuurlijke afmetingen van de box
+		\width : natuurlijke breedte van text
+		\height : natuurlijke hoogte boven baseline van text
+		\depth : natuurlijke hoogte onder baseline van text
+		\totalheight : \height + \depth
+		- b.v. [6\height] : zo breed als 6 keer de hoogte
+		- echte berekeningen, zie sectie "handige packages" "rekenen"
+			- package calc : arith­metic on the ar­gu­ments of com­mands \set­counter, \ad­dto­counter, \setlength, and \ad­dtolength
+			- packages calculator and calculus : mapt berekeningsopdrachten naar variabele, zie sectie "package calculator en calculus"
+			- package fp : commando \FPeval
+			- package tikz : commando \tikzmath
+
+- box voor hergebruik :
+	- naam reserveren :
+		\newsavebox{\myboxname}
+	- tekst en evt. expliciete breedte en schikking opgeven :
+		\sbox{\myboxname}{text}
+		OF
+		\savebox{\myboxname}[width][pos]{text}
+		OF
+		\begin{lrbox}{\myboxname}
+			text
+		\end{lrbox}
+	- gebruiken zonder kader :
+		\usebox{\myboxname}
+	- gebruiken met kader :
+		\fbox{\usebox{\myboxname}}
+
+=== paragraph box ===
+
+- inhoud wordt verticaal geschikt als lijnen
+	\parbox[pos][height][inner pos]{width}{text}
+	OF
+	\begin{minipage}[pos][height][inner pos]{width}
+		text
+	\end{minipage}
+	- [pos] : (alleen effect als de box niet alleen in een lijn staat)
+		c : (default) center vertically on the baseline of the external line of text.
+		b : align the bottom edge of the box with the current baseline,
+		t : align the top line of text with the current baseline.
+	- [height] L expliciete hoogte van de box; over andere tekst gedrukt als er niet genoeg plaats is
+		- kan berekend worden met eigen natuurlijke afmetingen \height, \width ... van de box (zie sectie "LR box")
+	- [inner pos] : schikking text over [height]
+		t : push the text to the top of the box,
+		b : shove it to the bottom,
+		c : center it vertically,
+		s : stretch it to fill up the whole box (rubber lengths should be present where the vertical stretching is to take place.)
+
+- verschillen tussen \parbox en {minipage}
+	- \verb en \begin{verbatim} niet in \parbox
+	- \footnote in \parbox krijgt wel nummer in de tekst, maar voetnoot zelf verdwijnt
+		- omweg met via \footnotemark en \footnotetext
+	- \footnote in {minipage} wordt onder in de minipage zelf getoond
+	- {minipage} heeft robuustere bladschikking
+		- the values of \textwidth and \columnwidth are untouched in \parbox, but are changed to the width parameter of a {minipage}
+			- kan vloed hebben in lijn met andere tekst en \parbox met centering, flushleft, flushright, ...
+	- geneste 'paragraph making environments' in {minipage} beginnen terug van niveau 0 (\@listdepth), in \parbox niet (max. niveau van nesten is standaard 6), b.v. quote, quotation, verse, itemize, enumerate, description, list, trivlist, theorem e.a.
+
+- nesten mag, ook in LR box (b.v. \fbox)
+
+- alternatieven :
+	- package fancybox
+		- o.a. \shadowbox{text}, \doublebox{text}, \ovalbox{text}, \Ovalbox{text} 
+	- package tcolorbox
+	
+=== rule boxes ===
+
+\rule[lift]{width}{height}
+	- (zwart) gevulde rechthoek
+		- horz. of vert. lijnen
+		- onzichtbare rule box (breedte of hoogte 0) geschikt als stut voor bladschikking
+
+=== voet- en zijnoten ===
+
+\footnote{footnote text}
+	- \footnote command must immediately follow the word that is to receive the note, without any intervening blanks or spacing. A footnote at the end of a sentence can be given after the period
+	- footnote text printed in smaller typeface at bottom of page, with 1st line indented and preceded by same footnote marker as is inserted in main text
+	- footnote(s) separated from page text by short horizontal line
+	- \footnote command in minipage printed beneath the minipage, not at the bottom of the actual page
+		- The footnote comes after the next \end{minipage} : watch out for nested minipages
+		- minipage footnotes use counter mpfootnote
+		- marker is a raised lower-case letter
+		- ook voor tabular env. in minipage
+	- \footnote command only in normal paragraph mode, not within math or LR modes (i.e. not in LR box, parbox, tabular env. behalve tabular in minipage)
+		- use \footnotemark or \footnotemark[num], to set footnotemark with 'num' or incremented counter, and after end of forbidden mode use \footnotetext{footnote text} or \footnotetext[num]{footnote text} with same 'num'
+			- \footnotetext{footnote text} gebruikt huidige counter, zonder ophogen; als er zo 2 of meer zijn, eerst teller verlagen, en bij elke footnotext ophogen :
+				- \addtocounter{footnote}{dif} : met dif negatief voor 1ste, dif = 1 voor elke volgende
+				- \stepcounter{footnote} : adds 1 to the given counter
+	- footnote numbering is incremented throughout document for the article class, reset to 1 for each new chapter in report and book classes.
+		- \setcounter{footnote}{0}: changes internal footnote counter, that has the name 'footnote'
+		- \footnote[num]{footnote text} : eigen nummering of afwijkend nr 'num', normale counter wordt niet opgehoogd
+	- standard footnote marker is a small, raised number
+		- \renewcommand{\thefootnote}{\number_style{footnote}} met number_style een van counter print commands (hfdstk 4.3.5) : \arabic, \roman, \Roman, \alph, \Alph and (only for footnotes) \fnsymbol (prints counter 1–9 as one of * † ‡ § ¶ k ** †† ‡‡, up to the user to see that the footnote counter is reset to 0 after ‡‡)
+
+\marginpar{note_text}
+	- prints note_text in margin beginning at level of  line where command is given
+		- note at page bottom may extend below last line of regular text
+	- margin note is normally enclosed in a (narrow) parbox, causes difficulties with line breaking
+		- manual line breaks with \\ command
+		- wide margins
+		- just use marginal notes to mark text with a single symbol, e.g. $\Longleftarrow$, or vertical bar like \marginpar{\rule[-17.5mm]{1mm}{20mm}}
+	- marginal notes default in right-hand margin, maar
+		- \documentclass[twoside] : in outer margin
+		- \documentclass[twocolumn] : in outside margins, i.e. left for left column, right for right column
+		- \marginpar[left text]{right text} : variant om b.v. aangepast symbool of uitlijning te gebruiken ngl. de note links of rechts komt
+		- \reversemarginpar : switch positioning of marginal notes (no effect with twocolumn option)
+		- \normalmarginpar restores normal positioning of marginal notes
+
+- style parameters for footnotes and marginal notes
+	\footnotesep : vertical spacing between two footnotes; change with \setlength
+	\footnoterule is the command that draws the horizontal line above the block of footnotes. It should not add any net vertical spacing. To change, e.g.
+		\renewcommand{\footnoterule}{\rule{wth}{hght}\vspace{-hght}}
+			- 0cm for hght produces an invisible line
+			- \vspace{-hght} : om geen vertical spacing toe te voegen
+	\marginparwidth : determines the width of margin box; change with \setlength
+	\marginparsep : separation width between margin box and main text; change with \setlength
+	\marginparpush : smallest vertical distance between two marginal notes; change with \setlength
+
+== math ==
+
+=== math environments ===
+
+- genummerd formuleblok
+	\begin{equation}formula text\end{equation}
+	- horz. gecentreerd
+		- \documentclass[fleqn] : formuleblokken links uitgelijnd
+			- \setlength{\mathindent}{indent} : indentatie voor formuleblokken (a length specification)
+	- volgnr. rechts uitgelijnd
+		- \documentclass[leqno] : volgnr. links uitgelijnd
+	- om elders met het equationnr. te verwijzen naar een vergelijking :
+		- in de \begin{equation} : \label{naam}
+		- verwijzing zelf : \ref{naam}
+		- zie sectie "verwijzingen"
+	- in documentclass book en report : nummering per hoofdstuk, met hoofdstuknr. als prefix
+	- in documentclass article : nummering loopt door over heel artikel
+
+- ongenummerd formuleblok
+	\begin{displaymath}formula text\end{displaymath}
+	OF (korter)
+	\[...\]
+	OF (TeX opdracht)
+	$$...$$
+
+- groep genummerde formules
+	\begin{eqnarray}formula text\end{eqnarray} :
+	OF (ongenummerd)
+	\begin{eqnarray*}formula text\end{eqnarray*}
+	- lijnen gescheiden door \\
+		\nonumber\\ : niet-genummerde lijn
+	- tabelsgewijs uitgelijnd op 1 of 2 '&'-tekens in de lijnen, d.w.z.
+		"left formula & mid formula & right formula \\"
+	  the left formulas appear right justified in a left column, the right formulas left justified in a right column, and the mid formulas centered in between.
+		- Witruimte tss. die kolommen regelen:
+			\arraycolsep : half the width between columns in {array}
+	\lefteqn{eqn} : print eqn in display math style, but pretends that it has zero width. It is typicaly used within an {eqnarray} env. for displaying long equations that require multiple lines:  met \lefteqn (width=0) op 1ste lijn en lege '& &' op de volgende, hebben linker- en middenkolom alleen intercolumn spacing, waardoor de rechterkolom mooi uitgelijnd wordt op de som van die 2 intercolumn spacings. Meer/minder inspringen met \hspace{±depth} tss \lefteqn{…} en \\
+		\begin{eqnarray}
+			\lefteqn{links uitgelijnd in linker kolom}\\
+			& & links uitgelijnd in rechter kolom \\
+			& & ook  links uitgelijnd in rechter kolom
+		\end{eqnarray}
+		>>> vb.
+			a + b =
+				c + d +
+				e + f;
+		<<<
+	- zie ook package eqnarray, definieert env. equationarray voor moeilijkere layouts
+
+- inline formules
+	\begin{math}formula text\end{math} 
+	OF (korter)
+	\(formula text\)
+	OF (TeX opdracht)
+	$formula text$
+	- compactere weergave van sommige symbolen
+		\displaystyle : niet-compacte weergave
+	- kan in \fbox, zelfs met \displaystyle, maar {displaymath}, {equation} en {eqnarray} niet
+
+- kunnen ook in \parbox of \minipage, om formules en tekst als vboxen naast elkaar te schikken
+	- evt. in vbox kleinere \mathindent opgeven met \setlength
+	- b.v. om 1 vergelijkingsnummer aan set formules te geven :
+	>>>
+		\parbox{10cm}{\begin{eqnarray*} ... \end{eqnarray*}} \hfill
+		\parbox{1cm}{\begin{eqnarray}\end{eqnarray}}
+		
+		actual equations in unnumbered {eqnarray*} in a vbox, followed by an empty {eqnarray} in a vbox of 1cm wide that generates the equation number. Both boxes are vertically aligned along their center lines.
+	<<<
+	- zie ook \boxed (package amsmath) (OPM : verwijdert \\ newline)
+
+=== math fontsize ===
+
+- In math mode there are four font sizes that may be chosen, their actual sizes being relative to the basic font size of the document class:
+	\displaystyle
+		- default voor displayed formulas
+	\textstyle
+		- default voor text formulas, {array}, en 1ste niveau \frac, \atop en \choose in \displaystyle
+	\scriptstyle
+		- default voor first sub-, superscript, en 1ste niveau \frac, \atop en \choose in \textstyle
+		- OPM : daarenboven wordt superscript in b.v. noemer van \frac iets lager geprint dan in teller
+	\scriptscriptstyle
+		- default voor later sub-, superscripts; kleiner maakt LaTeX het niet uit zichzelf
+	
+- om vlot zelf grootte te kunnen kiezen, b.v.
+	\newcommand{\DS}{\displaystyle}\newcommand{\TS}{\textstyle} ...
+	
+=== math fontstijl ===
+
+- in math mode worden
+	- spaties niet geprint
+		\, small space		= 3/18 of a quad
+		\: medium space		= 4/18 of a quad
+		\; large space		= 5/18 of a quad
+		\! negative space	= −3/18 of a quad
+	- koppelteken wordt min-teken
+	- letters schuin geprint, in de veronderstelling dat het namen van variabelen zijn
+		>>>
+		since 18th century (Euler?), variables and letter-like symbols are typeset in a slanted or, rather, italicized style [cfr. mijn getypte thesis, waarin de formules handgeschreven waren]
+		<<<
+	- cijfers rechtop
+	- symbolen al naargelang
+	- OPM : scheikunde traditioneel NIET italic, zie \mathrm
+	- is ISO standaard, beschreven, met LaTeX howto, door Beccari (1997)
+		>>>
+		1. Simple variables : italic letters (standaard LaTeX)
+		2. Vectors : bold italic
+			- NOT \vec (italic met pijltje boven)
+			- NOT \mathbf (zet tevens upright)
+			- WEL \boldsymbol from package amsbsy
+			- WEL \bm from package bm
+			- WEL \renewcommand{\vec}[1]{\mbox{\boldmath$#1$}}
+		3. Tensors of 2nd order and matrices : sans serif
+			\mathsf
+			- OPM : best ook italic
+		4. Special numbers e, i and π (pi), and diff. d : upright (ter onderscheid met variables), b.v. met
+			\newcommand{\me}{\mathrm{e}} : for math e
+			\newcommand{\mi}{\mathrm{i}} : for math i
+			\newcommand{\dif}{\mathrm{d}} : for differential operator d
+			- geen oplossing voor π, maar die ziet er sowieso niet als variable uit 
+		5. Number plus dimension : upright, as indivisible unit with smal space \, (is non-breaking) between them
+		<<<
+
+- om functienamen, zoals gebruikelijk, als roman te printen, zijn ze gedefiniëerd als opdracht :
+	\arccos 	\cosh 	\det _	\inf _   	\limsup _	\Pr _ 	\tan
+	\arcsin 	\cot  	\dim 	\ker    	\ln     	\sec  	\tanh
+	\arctan 	\coth 	\exp 	\lg     	\log    	\sin
+	\arg    	\csc  	\gcd _	\lim _   	\max    _	\sinh
+	\cos    	\deg  	\hom 	\liminf _	\min    _	\sup _
+	- '_' hierboven duidt de symbolen aan die een limiet nemen; inline na het symbool, display eronder
+		- vb : \lim_{x\to\infty}
+			\to : zie sectie "wiskundesymbolen" voor pijlen
+
+- \bmod and \pmod{arg} (parenthesized mod), produce the function mod in one of two forms:
+	$ a \bmod b $		⇒	a mod b
+	$ y \pmod{a+b} $	⇒	y (mod a + b).
+
+- With AMS-LaTeX it is possible to define additional function names
+
+- zelf stijl kiezen :
+	- blijft math mode, dus geen spaties, en font noch stijl van text mode (zie sectie "gewone tekst in math")
+		\mathrm : roman (rechtop); Matth roman and text roman generally look very similar but can differ when ligatures and kerning rules are involved.
+			- ook voor b.v. differentiaaloperator in een integraal : \int ... \,\mathrm{d}x
+		\mathsf : sans serif (? of seriff/sanseriff-wissel?)
+		\mathbf : bold font (voor zover beschikbaar, b.v. typisch niet voor Griekse kleine letters en symbolen)
+			\boldmath, te plaatsen vóór de verschillende math env. zet alles in bold
+				- tot \unboldmath (na de math env.)
+					- \unboldmath in b.v. \mbox zet bold uit enkel voor nieuwe math env. in die mbox
+				- behalve sub- en superscript
+				- behalve + : ; ! ? ( ) [ ]
+				- behalve symbols that exist in two sizes
+			- zie ook package bm
+		\mathtt : teletype
+		\mathcal : caligrafisch
+			- alleen hoofdletters A-Z, andere tekens worden onvoorspelbaar vervangen door b.v. symbol font
+		\mathit : text-like italic math font, i.e. spacing/kerning zoals normale italic text
+		\mathnormal : math italic font style (b.v. geen kerning zoals in \mathit)
+			>>> https://tex.stackexchange.com/a/58108
+			difference between math italics (\mathnormal) and ordinary italics (\mathit) is that the latter obey kerning and ligature rules that are of no relevance (and are, in fact, undesirable) for math. This is especially noticeable when using letters such as f which have (in italics mode) both ascenders and descenders. 			
+			<<<
+			- $\mathnormal{a}$ and $a$ give the same result, want letters in math standaard italic
+
+- extra stijlen b.v. :
+	- package amsfonts (also loaded by amssymb) :
+		\mathfrak for Fraktur (!= Gothic) letters, upper and lower case
+		\mathbb for "blackboard bold" uppercase letters
+
+=== gewone tekst in math ===
+
+- NIET \mathrm{} of de andere \mathxx, zie sectie "math fontstijl"
+
+- onderstaande stijlen printen in inline of display math WEL spaties, koppelteken wordt geen minteken , ...
+
+\mbox{LR-mode tekst in math mode} : gewone tekst in huidige tekstfont en -stijl
+	- size is constant and does not change in subscripts, superscripts, fractions, …
+	- in \mbox kunnen geen wiskundesymbolen gebruikt worden
+
+\text of package amstext (or amsmath) : use current text font, size according to current math style.
+	- needs \mathchoice, makes text be set 4 times for all math styles and later, when TeX knows the math style, it chooses the right version.
+
+\textrm : use current text roman font, take encoding, shape and series from current text font
+\textit
+\textbf
+...
+	- size adapted to current math style if package amstext (or amsmath) loaded
+
+\textnormal : use current \normalfont
+	- size adapted to current math style if package amstext (or amsmath) loaded
+
+=== wiskundesymbolen ===
+
+- ALLEEN in math mode, zelfs niet in \mbox{} in math mode
+
+- een paar wiskunde-symbolen die ik zou kunnen gebruiken
+	- meer met package latexsym en package amsfonts, en met package amssymb en de AMS symbol fonts
+
+- binary operators : +, - en
+	± \pm               	† \dagger  	∨ \vee   	⊗ \otimes
+	× \times            	‡ \ddagger 	∧ \wedge 	◦ \circ
+	÷ \div              	∩ \cap     	⊕ \oplus 	• \bullet
+	· \cdot (centerdot) 	∪ \cup        \ominus
+	- OPM : + en - als binary operator "a+b" krijgen meer witruimte dan als unary operator "+5"; als ze als binary bedoeld zijn, maar 1ste operator op een nieuwe lijn, dan laten voorafgaan door lege groep {} om toch autom. de binary witruimte te krijgen. Unary voor haakje "+(" krijgt ook al iets meer witruimte, maar toch nog minder dan binary
+
+- Relations and their negations
+	- \not : doorstreping, ter negatie, van erop volgende relatiesymbool
+		- ∉ \notin geniet voorkeur, verschilt licht van \not\in
+		- werkt niet (goed) voor andere symbolen, b.v. \not a print gewoon als /a
+	≤ \le OF \leq	∈ \in        	⊇ \supseteq    		~=  \cong	≺ \prec  	∼ \sim
+	<< \ll       	≥ \ge OF \geq 	⊥ \perp        		≡ \equiv 	  \preceq  	~_ \simeq
+	⊂ \subset    	>> \gg        	≠ \neq OF \not= 	∝ \propto 	  \succ		|| \parallel OF \|
+	⊆ \subseteq  	⊃ \supset     	~~  \approx       	| \mid OF |	  \succeq
+
+- pijlen
+	← \leftarrow OF \gets 	↔  \leftrightarrow	−→ \longrightarrow     	↑ \uparrow  	\updownarrow
+	⇐ \Leftarrow          	<⇒ \Leftrightarrow	=⇒ \Longrightarrow     	⇑ \Uparrow  	\Updownarrow
+	→ \rightarrow OF \to  	←− \longleftarrow 	←→ \longleftrightarrow	↓ \downarrow	\nearrow (noordoost)
+	⇒ \Rightarrow         	⇐= \Longleftarrow 	⇐⇒ \Longleftrightarrow	⇓ \Downarrow	\swarrow (zuidwest)
+
+- diverse
+	\ \backslash 	∞ \infty    	ℵ \aleph 	∇ \nabla 	♣\clubsuit    	∠ \angle
+	∀ \forall    	∅ \emptyset 	  \hbar   	√ \surd  	♦\diamondsuit
+	∃ \exists     	∂ \partial  	℘ \wp     	T \top   	♥\heartsuit
+	¬ \neg       	|| \|       	’ \prime  	⊥ \bot   	♠\spadesuit
+
+=== math speciale tekens ===
+
+- thematical symbols that are available on the keyboard may be used directly in formulas
+	+ - = < > / : ! ' | [ ] ( )
+	- NIET curly braces {} : die dienen voor groepering, om tekst te behandelen als ware het 1 teken
+
+- Griekse letters
+	\alpha : bij naam 
+	\Gamma : bij naam die begint met hoofdletter
+	- letters niet in de opsomming hieronder (o.a. meeste hoofdletters) zijn hetzelfde als in Latijns alfabet, daar is geen LaTeX commando voor. B.v. hoofdletter rho is gewoon P
+	- lower case 
+	α \alpha  		ε \varepsilon	ι \iota  	ξ \xi   	  \varrho  		φ \phi
+	β \beta   		ζ \zeta      	κ \kappa 	o o     	σ \sigma   		ϕ \varphi
+	γ \gamma  		η \eta       	λ \lambda	π \pi   	ς \varsigma		χ \chi
+	δ \delta  		θ \theta     	µ \mu    	ω \varpi	τ \tau     		ψ \psi
+	  \epsilon		ϑ \vartheta   	ν \nu    	ρ \rho  	υ \upsilon 		ω \omega
+	- upper case
+	Γ \Gamma		Θ \Theta 		Ξ \Xi		Σ \Sigma  	Φ \Phi			Ω \Omega
+	∆ \Delta		Λ \Lambda		Π \Pi		Υ \Upsilon	Ψ \Psi
+	- LaTeX normally sets the upper case Greek letters in Roman (upright) type within a mathematical formula. If they need to be in italics, this can be brought about with the math alphabet command \mathnormal:
+		$\mathnormal{\Gamma\Pi\Phi}$
+	- Greek letters may only be used in math mode. If they are needed in normal text, the command must be enclosed in $. . . $ signs.
+
+- ellipsis
+	\ldots : 'low dots', op basislijn
+		- enkel deze is ook buiten math-mode toegestaan, is dan equiv. aan \dots
+	\cdots : 'center dots', vert. gecentreerd op midden tekst; mooi in b.v. sommen + ··· +
+	\vdots : verticaal
+	\ddots : diagonaal
+
+=== math accenten ===
+
+- The following mathematical accents are available within math mode:
+	â \hat{a}   	ă \breve{a} 	à \grave{a}    	ā \bar{a}
+	ǎ \check{a} 	á \acute{a} 	ã \tilde{a}    	ā> \vec{a}
+	ȧ \dot{a}   	ä \ddot{a}  	å \mathring{a}
+
+- letters i and j should be printed without their dots when they are given an accent :
+	\imath and \jmath
+	
+- \widehat and \widetilde may be placed over parts of a formula:
+	$\widehat{1-x}=\widehat{-y}$
+	$\widetilde{xyz}$
+
+=== breuken ===
+
+\frac{teller}{noemer}
+
+=== wortels ===
+
+\sqrt{kwadraat}
+\sqrt[machts]{getal}
+
+=== binomiaalcoeff ===
+
+{boven \choose onder}
+	- alles tss {} voor \choose is bovenste lijn, na \choose onderste lijn, het geheel tss. grote ()
+	- rare syntax, is TeX opdracht
+	- vb. {n \choose k \quad n-k}
+
+{boven \atop onder} : idem, maar zonder haakjes rond
+
+=== math sub- en superscript ===
+
+_{subscript} : {} mogen weg voor 1-char subscript
+^{superscript} : {} mogen weg voor 1-char superscript
+	- voor indexen, grenzen, machten, etc., is alleen typografisch
+	- kunnen genest worden
+
+- wisselende tensorindexen: plaats 2de e.v. indexen boven of onder leeg symbool {}, b.v.
+	$R_i{}ˆj{}_{kl}$
+
+=== math bovenschrift ===
+
+\stackrel{bovenschrift}{baseline symbol} : bovenschrift kleiner boven baseline symbol; vert. uitlijning op baseline symbol
+
+\stackrel{\textstyle{bovenschrift}}{baseline symbol} : bovenschrift toch even groot maken
+
+=== sommen en integralen ===
+
+- worden groter of kleiner geprint ngl. de context (o.a. inline of display)
+
+\sum_van^tot : sommatie, van-tot inline na het somteken, in displaymode boven en onder
+\prod : product, idem
+\int_van^tot : integraal, van-tot standaard na het integraalteken
+\oint : padintegraal, idem
+
+- afwijkende van-tot plaatsing :
+	- \limits tussen symbool en _van^tot zet van-tot altijd boven en onder, b.v.
+		\int\limits_van^tot : van-tot altijd boven en onder
+	- \nolimits tussen symbool en _van^tot zet van-tot altijd na het teken, b.v.
+		\sum\nolimits_van^tot : van-tot altijd na sommatieteken
+
+- OPM : gebruikelijk bij integralen is een smalle spatie \, voor de d-operator, die in roman getypeset wordt :
+	\int_0^5 f{x}\,\mathrm{d}x
+
+=== math grote haakjes ===
+
+- grootte van o.a. volgende tekens wordt aangepast aan subformule tussen \left en \right :
+	'.' ( ) [ ] \{ \} \langle \rangle / \backslash | \| \lfloor \rfloor \lceil \rceil \...arrow
+	- vb. \left( hoge formule \right)
+	- \left en \right allebei nodig
+	- \left en \right allebei gevolgd door een van de genoemde symbolen, maar moeten niet gepaard zijn
+	- het symbool '.' wordt NIET geprint na \left of \right, om zo een 'open' ongepaard haakje te krijgen
+	- nesten mag
+
+- evt. ook expliciet met TEX opdrachten \big, \Big, \bigg, en \Bigg direct voor haakje of vert. streep op pijl
+
+=== math horz. lijnen en haakjes boven en onder ===
+
+- enkel math mode, behalve \underline ook in textmode
+- nesten mag
+	\underline{...} 
+	\overline{...}
+	\overbrace{...} 
+		\overbrace{...}^{samenvatting} : superscript wordt horz. gecentered boven brace, mag \mbox{...} bevatten
+	\underbrace{...}
+		\underbrace{...}_{samenvatting} : subscript idem
+
+=== math arrays voor matrixen ===
+
+\begin{array}...\end{array}
+	- syntax zie sectie "tabellen"
+	- haakjes zie sectie "math grote haakjes"
+	- rechte lijnen evt. ook als scheidingen in column-definitie, zie sectie "tabellen", maar dan is er helemaal geen witruimte voor en na de matrix array :
+		| draws a vertical line;
+		|| draws two vertical lines next to each other
+	- nesten mag
+	- is vertical box, d.w.z. wordt gewoon in de tekst geschikt zoals elk ander character, zelfs in b.v. sub- of superscript
+	- elementen printed as inline formulas, with smaller form of symbols and parts of fractions in smaller type size
+
+- in tegenstelling tot binomiaalcoeff \choose en \atop, worden array elementen altijd op volle grootte geprint, die van binomiaalcoeff kleiner naar behoefte, zoals bij \frac en \sqrt
+
+=== math instellingen ===
+
+- change with \setlength, all except \jot should be rubber lengths :
+	\arraycolsep
+		- 1/2 of intercolumn spacing for array environment
+	\jot
+		- extra vert. space between rows in {eqnarray} and {eqnarray*} 
+	\mathindent
+		- indentation for math with documentclass[fleqn]
+	\topsep
+		- extra vert. space above and below displayed formulas with documentclass[fleqn]
+		- i.p.v. de 4 "\...below|above...skip" hieronder
+	\abovedisplayskip
+		- extra vert. space above a long displayed formula (i.e. formula closer to left margin than end of preceding line of text)
+	\belowdisplayskip
+		- extra vert. space below a long displayed formula.
+	\abovedisplayshortskip
+		- extra vert. space above a short displayed formula
+	\belowdisplayshortskip
+		- extra vert. space below a short displayed formula
+
+== handige packages ==
+
+=== package mwe ===
+
+- Minimal working example, met afbeeldingen e.d. om mee te experimenteren
+- laadt graphicx, lipsum and blindtext
+
+=== package blindtext ===
+
+Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijsten enz. te zetten
+
+- OPM : "Warning: dutch not defined, using English instead." : kent alleen english, american, french, german, ngerman, latin, catalan
+
+=== package geometry ===
+- package geometry maakt het makkelijker
+	- afmetingen gewoon opgeven als naam=waarde
+	- automatisch centeren door geschikte marges, wanneer ge enkel afmeting tekstblok opgeeft :
+		\usepackage[textwidth=13cm,textheight=20.5cm,...]{geometry}
+		OF
+		[\geometry{textwidth=13cm,textheight=20.5cm,...}]
+		- neemt als standaard de afmeting van het blad (b.v. a4paper ) over van documentclass
+		- neemt als standaard 80% van bladbreedte en 90% van bladhoogte om te bedrukken (tekst + kop + voet), beide gecentreerd
+			- \geometry{scale=0.85} sets width and height to 85% of \paperwidth and \paperheight; ook apart:
+				- \geometry{scale={h,v}}
+				- \geometry{hscale=h,vscale=v}
+	- optie [includemp" om ook zijnoten mee te rekenen in tekstbreedte
+	- optie [reversemp] : the marginal notes appear in the left margin (NIET compatibel met package sidenotes)
+	- optie [showframe] : om tijdelijk begrenzingen van tekst, hoofding, voeting en marge met lijnen te tonen
+	- optie [verbose] :  print calculated values of all the layout parameters to the monitor and to the transcript file
+
+=== package sidenotes ===
+
+- maakt bladindeling zoals van Tufte mogelijk, maar met meer vrijheid (fonts, precieze geometrie e.d.) dan package `tufte-latex` en bijhorende documentclass `tufte-book` en `tufte-article`
+
+- optie [oneside] wordt mogelijk autom. overgenomen van gelijknamige optie vooren voor documentclass; is relevant voor documentclass book (of boek) om, zoals bij documentclass tufte-book, de zijnoten altijd aan de rechterkant van een blz. te zetten, i.p.v. de default die voor een book wisselend L/R is.
+
+- OPM: maak marge-tekst breed genoeg (zie package geometry), en gebruik package microtype en package ragged2e voor beste uitlijning, zelfs met ragged right tekst in de marge
+
+- heeft environmnents voor figuren en tabellen over volledige tekstbreedte (body + marge) :
+	\begin{figure*} ... \end{figure*}
+	\begin{table*} ... \end{tabke*}
+	- OPM: krijgt soms niet goed door (documentclass boek vs. book, oneside vs twoside) aan welke kant de marge nu juist staat, waardoor de hele figuur (op volle breedte) verschuift met de breedte v.d. marge
+		- inspiratie voor oplossing (want het is blijkbaar niet zo simpel als daar gesteld) : zie https://tex.stackexchange.com/questions/169272/sidenotes-package-not-working-with-oneside-option-in-book
+			>>> 
+			"figure* is not designed for option [oneside]. You can do this patch for that. This won't work for twoside" :
+				\makeatletter
+				\let\@sidenotes@adjust\relax
+				\makeatother
+			OF
+				\makeatletter
+				\renewcommand{\@sidenotes@adjust}{%
+					\checkoddpage%
+					\ifoddpage%
+					%
+					\else%
+					%\hspace{\@sidenotes@extrawidth}%    %% this was originally there
+					\fi}
+				\makeatother
+			<<<
+
+=== package multicol ===
+
+- allows up to 10 columns of text
+
+- switch the number of columns in the middle of a page :
+	\begin{multicols}{num cols}[header text][pre space]
+	Text 
+	\end{multicols}
+	- dit in tegenstelling tot LaTeX standaard \twocolumn en \onecolumn, die altijd nieuwe blz. beginnen
+	- versie {multicols*} vult laatste blz. met kolommen helemaal uit, door laatste kolommen desnoods leeg te laten
+
+=== package microtype ===
+
+- zie sectie "microtype"
+
+=== package indentfirst ===
+
+- Make the first line of all sections etc., be indented by the usual paragraph indentation. This should work with all the standard document classes.
+
+- nuttig als b.v. \parindent != 0 gezet in tcolorbox (zie sectie "package tcolorbox"), want die springt ook de 1ste paragraaf in
+
+=== package ragged2e ===
+
+- zie sectie "uitlijning"
+
+=== package babel ===
+
+\usepackage[taal1,taal2,defaulttaal]{babel}
+	- talen gedefiniëerd in bestanden zoals ".../texmf-dist/tex/generic/babel-dutch/dutch.ldf", met o.a.
+		- namen van dagen, maanden, documentonderverdelingen
+		- juiste vorm van aanhalingstekens
+			- in dutch ,,tekst’’ en `woord’
+		- splitsingsregels	
+		- shorthands "\declare@shorthand{dutch} ..." voor b.v. die aanhalingstekens, letters met accenten
+			- in "dutch" beginnen de shorthands met het dubbel aanhalingsteken `"`
+	- omschakelen naar andere taal :
+		\selectlanguange{taal}tekst
+		OF
+		\begin{otherlanguage}{taal}tekst\end{otherlanguage}
+	- tijdelijk beperkt omschakelen naar andere taal, d.w.z. wel woordsplitsing en de "extra" gegevens (is een categorie van babel's taaldefinities, vermoedelijk o.a. shorthands), maar niet vertalingen en datum
+		\foreignlanguage{taal}{tekst}
+		OF
+		\begin{otherlanguage*}{taal}tekst\end{otherlanguage*}
+
+=== package hyperref ===
+
+- om extra pdf-functionaliteit te genereren vanuit LaTeX, vooral t.b.v. papierloos gebruik :
+	- gebruikt blz-nummers zoals afgedrukt (roman of decimaal) in pdf, voor lezers die dat ondersteunen (o.a. Atril, Evince, niet zathura noch mupdf)
+	- maakt interne pdf-snelkoppelingen van verwijzingen zoals \ref, \pageref, voetnoot, \tableofcontents, \index, \glossary, ...
+		- geen snelkoppelingen met package-optie [hidelinks]
+		- [colorlinks] : gekleurde snelkoppelingen i.p.v. gekleurde rechthoeken errond
+	- maakt externe urls in pdf
+		- laadt daarvoor impliciet package url
+		- met urls in bibliografie : zie sectie "package url"
+		- zonder urls in bibliografie mag package url impliet geladen worden door hyperref, met
+			\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
+
+- ALTIJD laatste usepackage "since its job is to redefine many LaTeX commands"
+
+- CONFLICT met andere packages of met documentclass (b.v. met onderverdeling /part in NTG's documentclass boek)
+	- zie mijn "https://github.com/ho-tex/oberdiek/issues/58"
+	- hyperref saboteert (met dummy ongeldige herdefinitie) \MakeUppercase, hetgeen boek wil gebruiken voor \part kop en titel, zie "/home/dirk/Documents/tex/conflict hyperref en boek/mwe.tex"
+		>>> mwe.log
+			! Undefined control sequence.
+			\MakeUppercase ...ppercaseUnsupportedInPdfStrings 													  
+			l.5 	\part{Eerste deel}
+			The control sequence at the end of the top line of your error message was never \def'ed. If you have misspelled it (e.g., `\hobx'), type `I' and the correct spelling (e.g., `I\hbox'). Otherwise just continue, and I'll forget about whatever was undefined.
+		<<<
+	- oorzaak : hyperref herdefinieert 2 commandos die documentclass boek gebruikt
+		>>> /opt/texlive/2016/texmf-dist/tex/latex/hyperref/hyperref.sty
+			\def\MakeUppercase{\MakeUppercaseUnsupportedInPdfStrings}%
+			\def\MakeLowercase{\MakeLowercaseUnsupportedInPdfStrings}%
+		<<<
+		- documentclass boek zet kop en title van part in hoofdletter, book doet dat niet en komt die geherdefinieerde \MakeUppercase dus niet tegen
+	- OPLOSSING : voor of na \usepackage{hyperref} :
+		\makeatletter
+			\let\MakeUppercaseUnsupportedInPdfStrings\@firstofone
+			\let\MakeLowercaseUnsupportedInPdfStrings\@firstofone
+		\makeatother	
+	- LAPMIDDEL : book blijven gebruiken i.p.v. boek
+	0 WORKAROUND werken alleen voor \tableofcontents met 1 \part, niet met 2 of meer :
+		- de opdrachten \MakeUppercaseUnsupportedInPdfStrings en \MakeLowercaseUnsupportedInPdfStrings een definitie geven die wel werkt, best een zinvolle zoals b.v. (en zelfde voor MakeLower...)
+		0 gesofisticeerde opvolger van \MakeUppercase
+				- NIET WERKEND gekregen, verstoort werking van \part in documentclass {boek}
+					\usepackage{textcase}
+					\newcommand{\MakeUppercaseUnsupportedInPdfStrings}[1]{\MakeTextUppercase{#1}}
+			OF
+			- minder gesofisticeerde voorloper van MakeUppercase
+				\newcommand{\MakeUppercaseUnsupportedInPdfStrings}[1]{\uppercase{#1}}
+				OF (in TeX, zoals hyperref zelf het definieert)
+				\def\MakeUppercaseUnsupportedInPdfStrings{\uppercase}
+				- voor of na \usepackage{hyperref}
+			OF
+			- small caps :
+				\newcommand{\MakeUppercaseUnsupportedInPdfStrings}[1]{\scshape{#1}}
+				OF (in TeX, zoals hyperref zelf het definieert)
+				\def\MakeUppercaseUnsupportedInPdfStrings{\scshape}
+				- voor of na \usepackage{hyperref}
+				- evt. ook \def\MakeUppercase{\scshape}
+				- is duidelijker omdat het nog een onderscheid maakt met echte hoofdletter, maar slechts voor zover het gebruikte lettertype small caps heeft of simuleert (o.a. Libertine en [sc]{mathpazo} wel, Merriweather niet)
+	0 slechte workarounds : [implicit=false] of [draft], maar dat schakelt hyperlinks effectief uit, alleen blijven de opdrachten zoals \href bewaard
+
+=== package url  ===
+
+- wordt ook geladen door package hyperref, maar die moet als laatste geladen worden
+	\url{url}
+	\url{e-mailadres}
+	\path{bestandspad}
+		- evt. andere delimiter kiezen, zelfde 1ste als laatse char (\verb-stijl, zie sectie "verbatim")
+	- \urlstyle{style} : tt (default), rm, sf, or same, for typewriter, Roman, sans serif, or unchanged font
+
+- 'woord'-splitsing van lange url of pad :
+	- splitst op niet-letters, maar zonder '-' toe te voegen
+	- optie [hyphens] : splitsen op expliciete '-' in url
+	- optie [obeyspaces,spaces] : splitsen op expliciete ' ' in url
+	- overal splitsen : na package url (of na package hyperref) ook
+		\usepackage{burl}
+	- package url apart laden VOOR bibliografie package met optie [hyphens] ('woord'-splitsing op '-' in een url) om die splitsing ook in bibliografie-urls te doen. b.v. :
+		\usepackage[hyphens]{url}
+			- allows breaks at explicit hyphen characters
+		\usepackage[...]{biblatex}
+		\addbibresource{testdocument.bib}
+
+- A fixed address can be predefined :
+	\urldef{\myurl}\url{myname@mydomain.uk}
+
+- klikbare snelkoppelingen van maken in pdf :
+	zie sectie "package hyperref"
+
+=== package tcolorbox ===
+
+- tcolorbox provides an environment for colored and framed text boxes with a heading line.
+	- de prefix `/tcb/` in de docu is een bestandspad, niet te gebruiken in de LaTeX code
+	- de werking van tcolorbox wordt uitgebreid door libraries te laden :
+	\usepackage{tcolorbox}[library1,...]
+	OF
+	\usepackage{tcolorbox}
+	\tcbuselibrary{library1,...}
+	- veelgebruikte shortcuts voor libraries :
+		many, most, all
+	- gebruik :
+		\begin{tcolorbox}[opties]
+			tekst
+		\end{tcolorbox}
+		OF
+		\newtcolorbox[`init options`]{`name`}[`number`][`default`]{options}
+			- Creates a new environment `name` based on tcolorbox. Basically, \newtcolorbox operates like \newenvironment. This means, the new environment hnamei optionally takes `number` arguments, where `default` is the default value for the optional first argument.		
+			- The `init options` allow setting up automatic numbering
+		OF
+		\tcolorboxenvironment{`name`}{`options`}
+			- An existing environment `name` is redefined to be boxed inside a tcolorbox with the given `options`
+		OF
+		\tcbox[opties]{tekst}
+			- Creates a colored box which is fitted to the width of the given box content.
+		OF
+		\newtcbox[`init options`]{`name`}[`number`][`default`]{options}
+			- Creates a new environment `name` based on tcbox. Basically, \newtcolorbox operates like \newenvironment. This means, the new environment hnamei optionally takes `number`+1 arguments, where `default` is the default value for the optional first argument.
+			- The `init options` allow setting up automatic numbering
+		- a tcolorbox can be split in an upper and a lower part :
+			\tcblower :
+				- trekt horizontale lijn
+				- begint nieuwe 'functionele eenheid', d.w.z. neemt niet de opties voor upper deel over in lower
+			\tcbline
+			- trekt horizontale lijn
+			- blijven in upper deel
+			- vb. 
+				\begin{tcolorbox}[title=Dit is de titel]
+					upper-tekst
+				\tcblower
+					lower-tekst
+				\end{tcolorbox}
+		- opties o.a. (tussen zelfde [] en gescheiden door kommas)
+			title=Dit is de titel
+			colback=yellow!85!red : b.v. kleur of kleur1!percentkleur1!kleur2				
+			coltext=
+			collower=
+			collower=
+			coltitle=
+			colbacktitle=
+			colframe=
+			fontupper=
+			fontlower=
+			subtitle style=options
+			breakable
+			enhanced
+			enhanced jigsaw
+			sidebyside : zet lower part naast upper part, gescheiden door vertikale lijn
+			halign= : justify, left, flush left, center, flush center, ...
+			tabularx : om tabellen in tcolorbox te zetten, samen met o.a. package tabularx
+			tikz : om figuren in tcolorbox te zetten, samen met o.a. package tikz
+			...
+
+- opties instellen voor elke volgende tcolorbox :
+	\tcbset{... opties ...}
+		- meerdere mogelijk, werken cumulatief
+	\tcbsetforeverylayer{... opties ...}
+		- idem, voor elk niveau van geneste tcolorbox
+	
+- extra opdrachten kunnen ingesteld worden 'before' en 'after' title, upper tekst, lower tekst deel :
+	\tcbset{before title={... opdrachten ...}}
+	\tcbset{before upper={... opdrachten ...}}
+	\tcbset{before lower={... opdrachten ...}}
+
+- paragrafen laten inspringen zoals LaTeX standaard :
+	- tcolorbox begint zijn environment met \parindent == 0
+	- tcolorbox herkent niet dat zijn inhoud een aparte reeks paragrafen is, kent dus geen concept van 1ste paragraaf die niet inspringt
+		\noindent : aan begin content, om 1ste paragraaf niet te laten inspringen
+		OF
+		- gebruik "package indentfirst" om 1ste paragraaf van hoofd-tekst ook te laten inspringen
+	- vb. : even ver laten inspringen als buiten de tcolorbox
+		- OPM: eig. zou de marge van de tcolorbox mogen afgetrokken worden van \parindent
+		- OPM : misschien gewoon standaard kleine insprong, of afh. van nummering van tcolorbox zelf
+	\newlength{\huidigeparindent}
+	\setlength{\huidigeparindent}{\parindent}
+	\tcbset{before upper={\parindent\huidigeparindent\noindent}}
+	\tcbset{before lower={\parindent\huidigeparindent\noindent}}
+	OF
+	\newlength{\huidigeparindent}
+	\newenvironment{inspringtcolorbox}[1]{
+		\setlength{\huidigeparindent}{\parindent}
+		\begin{tcolorbox}[
+			#1,
+			before upper={\parindent\huidigeparindent\noindent},
+			before lower={\parindent\huidigeparindent\noindent}
+		]
+	}{
+		\end{tcolorbox}
+	}% #1 : tcolorbox opties
+	...
+	\begin{inspringtcolorbox}{title=mijn titel,andere opties, ...}% deze '%' voorkomt spatie voor tekst
+		tekst
+	\end{inspringtcolorbox}
+
+- Inside the box content, one or more subtitles can be added. In general, a subtitle is a further tcolorbox which inherits some color and geometry options from the enclosing box. It may be customized just like any other tcolorbox
+	\tcbsubtitle[options]{text}
+
+=== rekenen ===
+
+- package calc : arith­metic on the ar­gu­ments of com­mands \set­counter, \ad­dto­counter, \setlength, and \ad­dtolength
+	- eenvoudigste, gebruikt de dagdagelijkse (infix) notatie 'a operator b'
+
+- packages calculator and calculus : mapt berekeningsopdrachten naar variabele, zie sectie "package calculator en calculus"
+
+- package fp : commando \FPeval e.d.
+
+- package tikz : commando \tikzmath
+			
+==== package calculator en calculus ====
+
+- mappen berekeningsopdrachten naar variabele
+
+- beperkte precisie, want gebruikt TeX-voorzieningen voor berekeningen m.b.t. layout :
+	>>>
+	The limitations of classic TEX arithmetic are well known (Knuth, 1990). In short, TEX can operate with integer numbers n restricted by the relation |n| ≤ 2^32 − 1. Noninteger arithmetic is performed on lengths via conversion to a whole number of scaled points (sp). The largest admissible length is 16383.99998 pt ≈ 2^14 pt = 2^30 sp (a point equals 2^16 scaled points). Therefore standard TEX can not manage real numbers greater than 16383.99998. Moreover, considering that the smallest length is one scaled point (1 sp ≈ 0.000015 pt), TEX cannot distinguish between two lengths differing in less than 0.00002 points. With the standard TEX behavior, this is the maximum level of accuracy we can expect.
+	<<<
+	- largest integer is 16383.
+
+- alle resultaten enkel gekend binnen de environment waar ze berekend zijn
+
+- vb. :
+	- \COPY{getal}{\tempA} : zet getal in \tempA
+	- \EXP{2}{\tempA} : zet e^2 in \tempA, waarde typesetten door \tempA in tekst te gebruiken
+	- \DIVIDE{\teller}{\noemer}{\quotient} : zet waarde \teller / \noemer in \quotient
+
+== TeX ==
+
+- TeX-opdrachten zelf kunnen in LaTeX ook gegeven worden, b.v.
+
+=== TeX ` ===
+
+- de numerieke waarde van het volgende (ASCII) teken of \teken, b.v.
+	`a  : backquote gevolgd door een teken a is 97 (0x61)
+	`\a : backquote + backslash gevolgd door een teken a is 97 (0x61)
+	- NIET gedefinieerd buiten ASCII (TeX kent niets anders), zelfs niet met b.v. `\usepackage[utf8]{inputenc}` :
+		>>> \count0=`é
+		! Package inputenc Error: Keyboard character used is undefined
+		<<<
+
+>>> "Wetenschap/Publiceren/TeX by Topic, a TeXnician's reference ~ Eijkhout Victor.pdf chapter 3" 
+	There is an explicit conversion between characters (better: character tokens) and character codes using the left quote (grave, back quote) character `: at all places where TEX expects a number you can use the left quote followed by a character token or a single-character control sequence. Thus both \count`a and \count`\a are synonyms for \count97
+<<<
+
+=== TeX \lccode ===
+
+- get of set lowercase code; dit bepaalt wat het commando \lowercase{tekst} doet: dat zet de tekens van zijn argument om naar hun \lccode waarde. Normaal hebben alle niet-letters 0 als waarde voor \lccode, de kleine letters zichzelf, en de hoofdletters de overeenkomende kleine letter
+
+- get syntax :
+	- 999 : een getal van 0 tot 127
+	- `a
+	- `\a
+	- vb.:
+		- \lccode`A : charnr. van lowercase van A
+
+- set syntax :
+	- \lccode`A=`b : maak b de lowercase van A, b.v.
+		\lccode`A=`b
+		\lowercase{ALFAMAN}
+		>>> blfbmbn <<<
+
+- zie sectie "TeX \the"
+
+=== TeX \uccode ===
+
+- get of set uppercase code; dit bepaalt wat het commando \uppercase{tekst} doet: dat zet de tekens van zijn argument om naar hun \uccode waarde. Normaal hebben alle niet-letters 0 als waarde voor \lccode, de kleine letters zichzelf, en de hoofdletters de overeenkomende kleine letter
+	- zie \lccode
+
+- zie sectie "TeX \the"
+
+=== TeX \catcode ===
+
+- get of set de categorie van een teken van 0--127, zie \lccode
+	- in TeX wordt elk teken van de invoer omgezet, naargelang de encoding/codepage van de invoer, naar een eigen standaard 'encoding', bestaande uit een character code en een categorie code :
+	>>>
+	cat. teken	betekenis
+	 0		\	Escape character; this signals the start of a control sequence.
+	 1		{	Beginning of group
+	 2		}	End of group
+	 3		$	Math shift; opening and closing delimiter for math formulas
+	 4		&	Alignment tab; the col (row) separator in tables made with \halign (\valign)
+	 5	Return	End of line
+	 6		#	Parameter character; this indicates parameters for macros
+				- de parameters zijn genummerd van #1 tot #9
+	 7		_	Superscript in math mode. Also used for charcodes that can't be entered in an input file
+	 8		^	Hochstellung	
+	 9	  null	Ignored and removed from the input, and has no influence on further TEX processing
+	10		' '	Space; space characters receive special treatment
+*	11	a-z A-Z	Letter
+				- Often, macro packages make some ‘secret’ character (for instance @) into a letter, cfr.  \makeatletter
+*	12			Other; for instance, digits and punctuation
+	13		~	Active; active characters function as a TEX command, without preceding `\`
+				- In plain TEX this is only the tie character ~, which is defined to produce an unbreakable space.
+				- babel dutch e.a. maakt ook `"` actief, d.w.z. cat. 13
+	14		%	Comment character
+				- from a comment character onwards, TEX considers the rest of an input line to be comment and ignores it
+	15	  0x127	Invalid character (in ASCII, 0x127 is "delete")
+	<<<
+	- OPM : alleen cat. 11 en 12 worden getypeset
+	
+=== TeX \the ===
+
+- \the\variabele : typeset de waarde van een numerieke variabele. b.v.
+	\the\lccode`A
+		>>> 97 <<< (== 0x61 of 'a')
+	\the\uccode`a
+		>>> 65 <<< (== 0x41 of 'A')
+
+=== TeX \message ===
+
+- print een boodschap naar het log-bestand, b.v.
+	\message{De lccode van quote is \the\lccode`'}
+		>>> De lccode van quote is 0 <<<
+	\lccode`'=39
+	\message{De lccode van quote is \the\lccode`'}
+		>>> De lccode van quote is 39 <<<
+	\lccode`'=`'
+	\message{De lccode van quote is \the\lccode`'}
+		>>> De lccode van quote is 39 <<<
+	\lccode`\'=`\'
+	\message{De lccode van quote is \the\lccode`'}
+		>>> De lccode van quote is 39 <<<
+
+=== TeX \meaning ===
+
+- typeset def. van de opdracht die volgt in de pdf, maar is niet veel soeps, b.v. :
+	>>> \meaning\scshape
+	macro:->\protect \scshape
+	<<<
+
+=== TeX \def en \let ===
+
+- define \foo to have the value that \bar had at the point of definition.
+	\let\foo\bar
+	- \let allows you to copy the content of a command into a new command.
+	- Unlike making a macro that calls the original command, \let allows you to subsequently modify the old command while still retaining its functionality under the new command. It is often used to change the behaviour of an existing command (but not replace it entirely). In such cases \renewcommand may fail, and \let may be required. 
+
+- define \foo to have the value that \bar has at the point of use
+	\def\foo{\bar}
+
+== LaTeX commando's ==
+
+=== LaTeX \makeatletter ===
+
+- hiermee kan @ tijdelijjk gebruikt worden als teken in een commandonaam
+
+- The LaTeX format has the control sequences (zie sectie "TeX \catcode")
+	\def\makeatletter{\catcode‘@=11 }
+	\def\makeatother{\catcode‘@=12 }
+
+== PROGRAMMAS ==
+
+=== help ===
+
+- heb in Xubuntu's xfce quickstart (xfrun4/Super+q) een shortcut $ gedefineerd als "texdoc %s" om hulp bij latex packages te openen, b.v.
+	Super+q $babel
+
+=== dvi of pdf ===
+
+- De compiler _latex_ maakt dvi-bestanden, de compiler _pdflatex_ maakt pdf-bestanden.
+	- zie b.v. https://aty.sdsu.edu/bibliog/latex/LaTeXtoPDF.html
+	- De dvi-compiler _latex_ kan geen jpg, png, ... lezen, alleen eps; iets anders moet eerst ingepakt worden in eps
+		- b.v. met " jpeg2ps"
+		- https://aty.sdsu.edu/bibliog/latex/PSconv.html
+	
+- TexStudio heeft een interne pdf-viewer, met reverse sync (van pdf naar overeenstemmende stuk in de tex-broncode)
+
+- De pdfviewer Zathura heeft ook reverse sync, en laat het pdf-bestand opnieuw bij wijziging
+
+- xdvi is een eenvoudige viewer voor dvi-bestanden
+
+=== Output Redirection ===
+
+>>> http://texstudio.sourceforge.net/manual/current/usermanual_en.html
+	TeXstudio provides limited output redirection capabilities. You can only output to the message panel (> txs:///messages) or suppress output (> /dev/null). The default setting depends on the command. The same targets are allowed for stderr: 2> txs:///messages, 2> /dev/null. Additionally, you can redirect to the same target as stdout by using 2>&1. A typical usecase would be to suppress all output of a command: >/dev/null 2>&1
+<<<

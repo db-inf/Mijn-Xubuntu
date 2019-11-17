@@ -1,0 +1,457 @@
+= Wine en PlayOnLinux (POL) kennis
+:description: wetenswaardigheden over gebruik en installatie van Wine-prefixen
+
+. OPM : %WINEPREFIX% is GEEN environment variable - overal in deze tekst moet %WINEPREFIX% met de hand vervangen worden door de naam van de wineprefix, een map in "~/.PlayOnLinux/wineprefix"
+
+== versie
+
+. XUbuntu komt met een (oude: 1.6.1 64-bits) Wine-versie, maar PlayOnLinux (POL) maakt het gemakkelijk om meerdere versies te installeren, zowel 32- als 64-bits, naargelang de behoeften van elk te installeren programma, en heeft voor een aantal programma's zelfs voorgeteste install-scripts met bijhorende wine-versies (zie https://www.playonlinux.com/en/supported_apps.html). Meerdere versies (o.a. x86 naast x64) gebruiken zonder POL: https://wiki.winehq.org/FAQ#Can_I_install_more_than_one_Wine_version_on_my_system.3F
+
+== Terminologie 
+	- wineprefix is gewoon een map, standaard in /home/%gebruiker%/.wine/ , met het hele wine-windows-systeem: c_drive met ./windows/, ./programfiles/ en ./users/ en evt. andere drives (is dus zowat equivalent van een VM in VirtualBox) 
+	- wine bottle: zelfde als wineprefix
+	- virtual drive: POL-term voor wineprefix, opgeslagen in /home/dirk/.PlayOnLinux/wineprefix/
+
+== PlayOnLinux (POL)
+
+. POL is afhankelijk van de systeem-wine, dus als die verwijderd wordt, is POL ook weg. De config van POL, met alle wine versies en prefixen, blijft gelukkig staan, en POL is rap terug geïnstalleerd
+
+=== Werkwijze van POL:
+	- POL 'tools/Manage Wine versions' bewaart wine-versies in een 'local wine repository': /home/dirk/.PlayOnLinux/wine/linux-x86 en .../linux-amd64); van daar uit wordt dan het gevraagde wine-windows-systeem uitgepakt naar een nieuwe virtual drive/wineprefix.
+	- voor supported programs is alles voorgedefinieerd in een script; als een wine-versie gerapporteerd wordt als werkend, wordt die geïnstalleerd, er geen nieuwere, zodat ge een massa oude wine-versies in uw POL local wine repository krijgt.
+	- POL install maakt telkens een nieuwe virtual-drive/wineprefix, dus een uitgepakte wineversie, ook weer in uw home-directory
+	DUS
+	- nieuwe programma's bij-installeren (eerst backup nemen, b.v. met POL/Plugins/POL Vault) in de virtual drive van een reeds geinstalleerde toepassing, met 'configure/Miscellaneous/Run an .exe file in this virtual drive', of met de hand installeren (pakketten in zip, zonder installer), of overkopiëren van een echte installatie in Windows VM, zoals hieronder gedaan voor Van Dale grote woordenboeken
+	- Na handmatige installatie (of altijd?) 'configure/General/make a new shortcut from this virtual drive' om POL shortcuts (in POL hoofdscherm) te maken (b.v. "NL-FR Van Dale" in /home/dirk/.PlayOnLinux/shortcuts/), plaatst ook een Ubuntu desktop snelkoppeling (desktop configuration file) naar die POL shortcut (met b.v. Exec=/usr/share/playonlinux/playonlinux --run "NL-FR Van Dale" %F)
+	- die desktop shortcuts kunnen achteraf ook bijgemaakt worden vanuit POL hoofdscherm, met een toep. geselecteerd
+
+=== Werken met wine zelf:
+	- wine-commando's zonder de juiste pad (env-variabelen) gebruiken de systeem-wine (/usr/share/wine/), waarvan er een hoop direct een default wineprefix installeren op $HOME/.wine, als die er nog niet was (direct 0.5GB kwijt)
+
+=== .exe in default Wineprefix op te starten door er in Thunar gewoon op te klikken : http://docs.slackware.com/howtos:emulators:binfmt_misc
+	OPM: werkt waarschijnlijk niet voor meerdere wine-versies, dus ook niet met POL (zie b.v. https://www.winehq.org/pipermail/wine-devel/2015-June/108096.html "For binfmt-misc to be workable a few things need to be known: what version of wine, what wineprefix, what setting overrides. None of these can be done by environmental vars because binfmt-misc might be directly executing the file.")
+
+== wine default prefix $HOME/.wine vermijden
+
+Opletten om niet telkens per ongeluk wine op te starten en een default prefix aan te maken: wine zet bestandsassociaties op basis van .extensie in /home/dirk/.local/share/applications/mimeinfo.cache, zodat b.v. voor tekst-bestanden wine's notepad wordt opgestart. Daarvoor wordt de default wine-server geladen, en die maakt de default wineprefix aan als die nog niet bestaat. Dat zijn direkt een 3-400 MB in mijn home-map. Die worden daar gezet door wine, dat bij elke opstart van een programma in wine dat de creatie van een wineprefix veroorzaakt, winemenubuilder.exe aanroept met de parameter -a om , dat bestandsassociaties van windows programmas uit de wineprefix linux bestands
+
+ Daarom:
+	********************************************
+	** wine file association hijack vermijden **
+	*********************************************
+"PlayOnLinux deliberately disables winemenubuilder.exe, so that the program can control more easily the wine version assigned to each shortcut." Maar de systeem-versie van wine moeten we aanpassen. 
+>>>	Zie: http://askubuntu.com/questions/323437/how-to-prevent-wine-from-adding-file-associations/400430#400430
+	Disabling winemenubuilder.exe altogether will prevent wine from hijacking your file associations, but it will also prevent it from creating menu entries for newly installed software, which may be an undesired behavior. The better solution is this:
+	1. Remove existing wine hijacks (from wine FAQ):
+		rm -f ~/.local/share/mime/packages/x-wine*
+		rm -f ~/.local/share/applications/wine-extension*
+		rm -f ~/.local/share/icons/hicolor/*/*/application-x-wine-extension*
+		rm -f ~/.local/share/mime/application/x-wine-extension* 
+	EIGEN TOEVOEGING: haal dde mime-type associaties ook uit het tekstbestand
+		/home/dirk/.local/share/applications/mimeinfo.cache
+	2. Edit /usr/share/wine/wine.inf (as root), find the [Services] section:
+		[Services]
+		HKLM,%CurrentVersion%\RunServices,"winemenubuilder",2,"%11%\winemenubuilder.exe -a -r"
+		 and change it to
+		[Services]
+		HKLM,%CurrentVersion%\RunServices,"winemenubuilder",2,"%11%\winemenubuilder.exe -r"
+		 to start winemenubuilder.exe without the -a switch. This will prevent updating file associations on new user accounts (or with new WINEPREFIXes).
+	3. Edit your $WINEPREFIX/system.reg (default WINEPREFIX=$HOME/.wine), if it exists, remove the -a switch:
+		[Software\\Microsoft\\Windows\\CurrentVersion\\RunServices]
+		"winemenubuilder"="C:\\windows\\system32\\winemenubuilder.exe -r"
+	This will prevent wine from stealing your preferred mimeapps, but the winemenubuilder will still run and create convenient desktop entries for your Windoze software. (met de syntax winemenubuilder -w snelkoppeling.lnk)
+<<<
+
+- Met POL kunnen we toch nog een bestandsextensie in het Linux-filesystem koppelen aan een programma in een wineprefix
+
+== TEMP, TMP e.a. environmentveranderlijken
+
+- Windows' system of user TEMP en TMP directories best niet laten overlappen met Linux /tmp, bevatten o.a. beide een directory hsperfdata_dirk. Evt. bij hevig gebruik en voor een Wineprefix op SSD, een eigen tmpfs voor mounten
+
+in %WINEPREFIX%/system.reg: (wine-syntax)
+	[System\\CurrentControlSet\\Control\\Session Manager\\Environment] 1478279755
+	#time=1d236bf19ff9780
+	"PATH"=str(2):"C:\\windows\\system32;C:\\windows;C:\\windows\\system32\\wbem"
+	"TEMP"=str(2):"C:\\windows\\temp"
+	"TMP"=str(2):"C:\\windows\\temp"
+
+in %WINEPREFIX%/user.reg: (wine-syntax)
+	[Environment] 1478279603
+	#time=1d236bebf663b80
+	"TEMP"="C:\\users\\dirk\\Temp"
+	"TMP"="C:\\users\\dirk\\Temp"
+
+== linux-verborgen bestanden niet tonen in Windows 
+
+- in registry sleutel ShowDotFiles wijzigen
+	>>> ~/PlayOnLinux's virtual drives/%WINEPREFIX%/user.reg
+	[Software\\Wine] ???????
+	"ShowDotFiles"="N"
+	<<<
+
+== linux-app associeren met een bestandsextensie in wine
+
+Omgekeerde van "wine file association hijack", en wel nuttig:
+https://wiki.winehq.org/FAQ#How_do_I_associate_a_native_program_with_a_file_type_in_Wine.3F
+
+== backup en herstel van wineprefix
+
+- met plugin PlayOnLinux Vault
+	- both backup and restore your applications.
+	- playonlinux > plugins > PlayOnLinux vault, kies een toepassing; hele wine prefix waar die toepassing in staat, wordt gebackupt
+
+- met de hand
+	- b.v. xz comprimeert 12% beter dan de bz2 die Vault gebruikt, maar Vault bewaart ook shortcuts en iconen
+	- backup : op command line, niet in thunar met create archive, want die volgt symbolic links (en wine of POL linkt graag / naar dosdevices/Z: ) :
+		$ tar -cJf /media/tarch/.playonlinux/EEN_PREFIX.tar.xz -C "~/PlayOnLinux's virtual drives/" "EEN_PREFIX"
+		-c : create
+		-J : xz-compressie
+		-f ... : archiefnaam
+		-C : change to directory, zodat de subdirectory "EEN_PREFIX" toplevel wordt in de tar
+	- herstel (nog niet geprobeerd) :
+		- na nieuwe installatie van playonlinux een wine prefix herstellen uit een archief :
+			- run playonlinux for the first time to let it generate a default .PlayOnLinux folder
+			- quit playonlinux
+			- delete the generated .PlayOnLinux folder
+			- extract your own .PlayOnLinux folder to that location
+
+== Fonts in Wine prefix
+
+- ge kunt, zoals gebruikelijk in Windows, fonts (of linux symlinks ernaar) plaatsen in C:\Windows\Fonts
+
+- alle fonts van het systeem (/usr/share/fonts en ~/.fonts) die niet in C:\Windows\Fonts staan, maakt wine (of POL?) echter ook beschikbaar, via een entry in de wine-windows-registry
+	- %wineprefix%/system.reg :
+		- sleutel [Software\\Microsoft\\Windows\\CurrentVersion\\Fonts]
+		EN
+		- sleutel [Software\\Microsoft\\Windows NT\\CurrentVersion\\Fonts]
+	- %wineprefix%/user.reg
+		- sleutel [Software\\Wine\\Fonts\\External Fonts]
+
+- het heeft dus geen zin fonts van het linux-systeem te kopiëren naar de C:\Windows\Fonts van de wineprefix
+
+- het heeft evenmin zin de font-entries op te kuisen onder de genoemde sleutels in system.reg en user.reg, want bij elke start van een POL toepassing worden ze er terug bijgezet.
+
+== joystick ==
+
+>>> after spending a day trying to get my joystick to work with wine, I found out that dinput8 needs to be installed, and set to 'builtin, native' <<<
+
+== Adding a new drive or customizing the drive label / serial number
+
+. https://www.codeweavers.com/support/docs/crossover-mac/driveconfig :
+
+CrossOver allows you to add new drives to be used by Windows applications, and to change their label or serial number. If you need to create a new drive or have an application which depends on a serial number or Windows volume label then follow the examples below.
+
+. to make the path /mnt available as the drive J: in a bottle, you would execute the following command:
+	$ ln -s /mnt "%mijnwineprefix%/dosdevices/j:"
+
+. to associate a drive to the /dev/sda1 device you would add a double colon to the command.
+	$ ln -s /dev/sda1 "%mijnwineprefix%/dosdevices/j::"
+
+For 'real' devices, CrossOver should automatically get the serial number and label for a volume. However you can also set these manually. (Sommige licenties voor toepassingen worden door de eigenaar verbonden aan het label of serienummer van de harde-schijf: dat moet ge eerst doorgeven, en dan krijgt ge een licentie om de toepassing vanop die schijf te gebruiken.)
+
+. to set the serial number of a given mount point you need to create a file called .windows-serial on the root of the virtual drive:
+	$ echo '12345678' >/mnt/.windows-serial
+
+. to set the label you would create a file called .windows-label on the root of the virtual drive.
+	$ echo 'MY_LABEL' >/mnt/.windows-label
+
+== fout op "libudev.so.0" no such file (o.a. Win7x86PROGS)
+
+- Deze fout wordt voor zowat alles gegeven dat in POL met een terminal wordt gestart
+	>>>
+	err:module:load_builtin_dll failed to load .so lib for builtin L"winebus.sys": libudev.so.0: cannot open shared object file: No such file or directory
+	err:winedevice:async_create_driver failed to create driver L"WineBus": c0000142
+	<<<
+- Maar heeft blijkbaar niet direct gevolgen voor mijn toepassingen. Libudev geeft toegang tot udev (interface om via /sys devices te vinden op logische klasse, i.p.v. via fysieke verbinding zoals in /dev). Zal wel meer belang hebben voor b.v. spelletjes met speciale input devices zoals gamepads e.d.
+
+- Zie https://askubuntu.com/questions/288821/how-do-i-resolve-a-cannot-open-shared-object-file-libudev-so-0-error :
+	- sinds Ubuntu 14.04 alleen nog libudev1
+	- oude libudev0 kan nageïnstalleerd worden uit oude packages
+
+== POL SHORTCUTS EN UBUNTU STARTMENU ITEMS
+
+=== POL shortcuts zijn eenvoudige bash shellscripts in /home/dirk/.PlayOnLinux/shortcuts/ die worden aangeroepen vanuit een POL-script dat een hele environment opzet. Ze moeten dus geen executable flag hebben. Voorbeeld :
+		>>> /home/dirk/.PlayOnLinux/shortcuts/VirtualDub
+			#!/usr/bin/env playonlinux-bash
+			[ "$PLAYONLINUX" = "" ] && exit 0
+			source "$PLAYONLINUX/lib/sources"
+			export WINEPREFIX="/home/dirk/.PlayOnLinux/wineprefix/Win7x86PROGS"
+			export WINEDEBUG="-all"
+			cd "/home/dirk/.PlayOnLinux/wineprefix/Win7x86PROGS/drive_g/PROGRAMS/VirtualDub/"
+			POL_Wine VirtualDub.exe "$@"
+		<<<
+		- in de opdracht "cd ..." werkt "dosdevices/g:" even goed als "drive_g"; behalve dat dat een indirectie meer is (g: is link naar drive_g), zou dat evt. ooit met iets moeilijkheden geven met de ':'
+		- in de opdracht "cd ..." kan in principe een deel van het path vervangen worden door $WINEPREFIX, en dat werkt, maar in POL zelf werkt dan de opdracht "Open application directory" niet meer ("Unable to detect the URI-scheme of "$WINEPREFIX/....")
+	- icon met zelfde naam (zonder extensie) in /home/dirk/.PlayOnLinux/icones/32 , en voor display 'extra large' een groter (of link naar de kleine van .../32) in .../full_size
+
+. ****************************************************
+. ** OPGELET: SHORTCUTS WORDEN GEWIJZIGD BIJ CONFIG **
+. ****************************************************
+	- nieuwe shortcut-bestanden in /home/dirk/.PlayOnLinux/shortcuts/, en wijzigingen, worden direct opgepikt door de PlayOnLinux hoofdtoepassing, maar toch wordt er op een mij onbekende plaats nog extra info bijgehouden.
+	- bij het openen van de Wine-configuratie voor een toepassing, wordt de shortcut voor die toepassing opnieuw geschreven. O.a. de extra argumenten van de "POL_Wine"-opdracht worden daarbij overschreven vanuit die extra info.
+	- DAAROM ALTIJD, zelfs als gewoon met mousepad een nieuwe shortcut wordt gemaakt:
+		- in POL-hoofdscherm de shortcut selecteren en in linkerbalk op 'Configure' klikken (NIET averechts klikken op shortcut en 'configure wine' kiezen)
+		- Opent venster 'PlayOnLinux configuration'
+		- in tab 'General' vak 'Arguments' de extra argumenten opgeven voor het programma dat in de regel "POL_Wine" van het shortcut-script wordt gestart
+		- OPM gek genoeg is hier het programma zelf niet te zien dat in die regel "POL_Wine" wordt opgestart; het zij zo.
+	
+=== Startmenu-items zijn .desktop-bestanden in /home/.local/share/applications. Zij kunnen gewoon verwijzen naar een POL shortcut om die op te starten met 
+	Exec=/usr/share/playonlinux/playonlinux --run "shortcutnaam" %F
+	- shortcutnaam: naakte naam zoals in /home/dirk/.PlayOnLinux/shortcuts/
+	- %F : plaatshouder voor lijst bestandsnamen (zie https://standards.freedesktop.org/desktop-entry-spec/latest/ar01s06.html)
+
+. Voorbeeld:
+	>>> ~/.local/share/applications/VirtualDub.desktop
+		[Desktop Entry]
+		Version=1.0
+		Type=Application
+		Name=VirtualDub
+		Comment=video-bewerker
+		Icon=/home/dirk/.PlayOnLinux/icones/32/VirtualDub
+		Exec=/usr/share/playonlinux/playonlinux --run "VirtualDub" %F
+		NoDisplay=false
+		Categories=AudioVideoEditing;AudioVideo
+		StartupWMClass=VirtualDub
+		StartupNotify=false
+		Terminal=false
+	<<<
+
+== Specifieke windows-programmas
+=== Windows help-viewers
+
+. De 'placeholders' van Wine zelf deugen niet. Niet dezelfde index- en zoekfunctionaliteit van de echte, hebben ook slechte layout. De klassieke .hlp-bestanden waren laatst standaard in XP, dus daarvoor best XP-exes gebruiken. Voor de latere 'compiled html' .chm-bestanden is xchm een goed linuxalternatief.
+
+. In ~/PlayOnLinux's virtual drives/%WINEPREFIX%/drive_c/windows/ de volgende bestanden vervangen (wine-placeholders hernoemd met suffix ".WINE") door link naar de echte bestanden uit een WinXP SP3 installatie (Wine-winhelp implementeert o.a. geen search):
+	$ cd ~/PlayOnLinux's virtual drives/%WINEPREFIX%/drive_c/windows
+	$ mv winhelp.exe winhelp.exe.WINE
+	$ mv winhlp32.exe winhlp32.exe.WINE
+	$ ln -s /media/sdata/.win-gschijf/PROGRAMS/XPHelp/winhelp.exe 
+	$ ln -s /media/sdata/.win-gschijf/PROGRAMS/XPHelp/winhlp32.exe
+	$ cd system32
+	$ mv winhlp32.exe winhlp32.exe.WINE							
+	$ ln -s /media/sdata/.win-gschijf/PROGRAMS/XPHelp/system32/winhlp32.exe
+	0 hetzelfde voor .chm compiled html: 
+		- windows/hh.exe
+		- windows/system32/hhctrl.ocx
+		- windows/system32/hhsetup.exe (heeft geen placeholder in Wine)
+	 lijkt geen verschil te maken (precies of hij start toch hh.exe.WINE op), in ieder geval nog altijd geen goede chm-weergave op o.a. Franck Alimants JDK1.5 en JDK1.8 javadoc
+
+=== Dragon Naturally Speaking 11 (/media/sdata/GEZIPTE.PRG/_GETEST Win7/Dragon Naturally Speaking 11 Premium NL/DNS11PRE.ISO)
+
+. ZIE OOK http://binaryimpulse.com/2013/01/installing-dragon-naturally-speaking-12-on-ubuntu-12-04-using-playonlinux/
+. 1ste keer gaf setup in '%wineprefix%/playonlinux.log' volgende fout (misschien omdat ik e.e.a. gedeïnstalleerd heb): 
+	err:winediag:SECUR32_initNTLMSP ntlm_auth was not found or is outdated. Make sure that ntlm_auth >= 3.0.25 is in your path. Usually, you can find it in the winbind package of your distribution.
+  dus: check versie in terminal:
+	$ ntlm_auth -V
+  indien niet gevonden, winbind installeren in Ubuntu Software Center of met
+	$ sudo apt-get update
+	$ sudo apt-get install winbind
+. om te installeren: iso mounten, b.v. op /cdrom, en 'setup.exe' opstarten. Gaf dialoog:
+	Unable to configure periodic task(s) as specified by
+	the following parameter. You will be able to configure the tasks manually after
+	the installation using Administrative Settings dialog.
+	Error: -2147221164
+	'aco|lmo|dc'
+  ZIE:
+>>>  http://www.nuance.com/ucmprod/groups/corporate/@web-enus/documents/collateral/dns13_adminguide.pdf (is dus van NatSpeak v13)
+	Revising Day/Time of Scheduled Tasks (Optional)
+	This section describes how to modify the schedule for Dragon tasks to later take place on each dictation client computer by passing particular options in a command line installation. This section is a continuation of 'Installation using the Dragon command line'. When you finish this section, you might want to proceed to 'Configuring Local or On-Demand Install of Vocabularies/Text-to-Speech (Optional)'.
+	Note: You take the following actions on the client computer to install Dragon on client PCs, not on the computer where you installed the initial installation and configured default option settings for end-users.
+	You can include an additional option on the command line to run one or more of the following tasks on a particular schedule: 
+		* Acoustic model optimization (ACO) — This task optimizes the acoustic files used to recognize words that the end-user trains and speaks. You can set a particular date and time for this optimization to occur. When a speaker is new to Dragon, you might want to run the optimization more often, after the speaker has worked with Dragon for a while.
+		* Language model optimization (LMO) — This task optimizes the language model (vocabulary files) used to help recognize words that the end-user speaks. The model incorporates data from the end-user’s speech into the language model he or she is using, ultimately customizing the model for that User Profile.
+		* Data Collection (DC) — This task automatically collects data that helps improve Dragon’s ability to recognize speech. You can choose to allow this data to be sent back to Nuance over the Internet on a particular schedule or choose not to send the data. This process does not collect your personal information. Data collection is available in non-US English versions of Dragon NaturallySpeaking.
+	You turn on/off the above tasks and set the schedule for those you turn on by passing an option called PERIODIC_TASK to the MSI installer. You set PERIODIC_TASK to a string containing short acronyms for the types of tasks, aco | lmo | dc, separated by vertical bars. If you do not pass the acronym for the feature, that feature is set to its default. After the acronyms for the tasks to schedule, the string for PERIODIC_TASK should include the administrator login and password, then the schedules that correspond to the acronyms, in the order that they occur in the string. The schedules use three-letter weekday abbreviations and 24-hour time with two digits for the hour and two for the minute, separated by a colon. The two schedules are separated by vertical bars and presented in the same order as their corresponding acronyms. While the acronyms for the tasks are separated from each other by vertical bars, semicolons separate the group of tasks from the admin user name, password, and group of schedules.
+	For instance, to retain the default schedule for data collection and modify schedules for acoustic model optimization to Mondays at 1 AM and language model optimization to Mondays at 6 AM, you would set PERIODIC_TASK as follows:
+		PERIODIC_TASK="aco|lmo;admin;pswd;Mon, 01:00|Mon, 06:00"
+	An installation command line including this task setting option might look like the following:
+		setup.exe /s /v"SERIALNUMBER=#####-###-####-####-##
+		DEFAULTSINI=\"C:\<full_path>\nsdefaults.ini\"
+		INSTALLDIR=\"C:\<full_path>\Dragon13\"
+		ROAMINGUSERINI=\"C:\<full_path>\roamingdef.ini\"
+		PERIODIC_TASK="aco|lmo;admin;pswd;Mon, 01:00|Mon, 06:00" /L*v C:\Logs\logfile.log /qn"
+	For more information on the PERIODIC_TASK option, refer to .MSI Options for Roaming User Profile, Tuning, and Data Collection Setup'.
+<<<<
+
+In de UI is de optie om een planning in te voeren er wel, maar de knop reageert niet. Nog uitzoeken of de ACO en LMO op afroep uitgevoerd kunnen worden.
+
+.  .  .  .  .  .  .  .  .
+1STE OPSTART OK; blijft volgende keren hangen met 100% cpu
+.  .  .  .  .  .  .  .  .
+Zou kunnen zijn, in Wine, door de Dragon Sidebar (een contextgevoelig venster met relevante spraakopdrachten). Wordt standaard geopend als een profiel wordt geladen. Is dus, blijkbaar, geen probleem als er nog geen profiel is bij opstarten, en de sidebar tonen na het opstarten kan duidelijk wel. OPLOSSING:
+1. To disable sidebar before dragon crashes: edit ".wine/drive_c/users/Public/Application Data/Nuance/NaturallySpeaking12/Users/%username%/current/options.ini", and add line:
+	Sample commands launch on open=0
+	Sample commands ask launch on open=0
+(laatste lijn zelf uitgevonden).
+2. Voor elk nieuwe profiel, de sidebar uitschakelen:
+>>>> http://nuance.custhelp.com/app/answers/detail/a_id/6873/~/how-to-disable-the-dragon-sidebar
+	To disable the Dragon Naturally Speaking "Dragon Sidebar", please follow the steps below:
+	    Launch Dragon Naturally Speaking.
+	    Load a Dragon user profile.
+	    Choose "Tools/Options/Miscellaneous"
+	    Uncheck "When the user profile opens/Show the Dragon Sidebar".
+	Note: is profile specific and will be need to be configured for profile that is loaded.
+<<<<
+
+.  .  .  .  .  .  .  .  .
+==== PROJECT: doorpipen van spraakherkenning naar Linux
+.  .  .  .  .  .  .  .  .
+. moet kunnen via named pipe of via network socket
+
+. sockets in C# of VB: 
+	. Socket Code Examples https://msdn.microsoft.com/en-us/library/w89fhyex.aspx
+  Java text controls worden niet ondersteund door NatSpeak (vanaf 13 zelfs helemaal niet meer), dus hangen we vast aan Windows-programmeeromgeving; maar voor linux kant zou Java met zijn socket classes wel kunnen voldoen.
+
+. emulation of Windows NT Named Pipes
+	 http://lkcl.net/namedpipes/namedpipes-emulation.txt
+  zie ook scriptje alhier: 
+	winetalk
+
+. Netcat is a general purpose program that transfers data across a TCP/IP connection. It comes in both Windows and Linux ('nc') versions (https://en.wikipedia.org/wiki/Netcat)
+
+Ofwel de Dragon Client SDK gebruiken om een windows-proggie te schrijven dat de dictaten doorpijpt naar linux, ofwel de dictaten met de gewone NatSpeak toepassing ontvangt in een eigen windows-proggie met textbox, dat dan het doorpijpen doet. Beide mogelijkheden met een evenknie in linux om input te ontvangen en misschien in de keyboard stream te zetten.
+
+NatSpeak heeft (alvast vanaf versie 12), de mogelijkheid van Full Text Control (FTC) in o.a. een object van RichTextBox class in Windows Presentation Foundation (WPF) van .NET, die gebruikt kunnen worden in b.v. C#, VB, F# en C++ 
+	zie http://stackoverflow.com/questions/28372271/activating-dragon-naturally-speaking-full-text-control-feature-in-a-wpf-applicat :
+>>>
+	 I'm trying to use Dragon Naturally Speaking with my WPF application. They have a feature called "Full-Text Control" that allows you to correct, replace text etc... with voice commands. If I use WinForms [de voorloper van WPF], everything works fine. Dragon comes with a toolbar that hovers at the top of the screen. Inside that bar, there's a Checkmark icon that turns green when the current focused RichTextBox supports "Full-Text Control". This feature isn't working with WPF and I'm using a RichTextBox like I'm supposed to. In one of their PDF files I found a parameter you can pass to the msi. This means that you have to install the application using a command line using a command window run as Admin. 
+		MSIEXEC /i "C:\Nuance Software\DNS12\Dragon NaturallySpeaking 12.msi" TEXT_SERVICE_SUPPORT=1
+<<<
+
+	zie http://www.dummies.com/software/dragon-naturallyspeaking/how-to-use-full-text-control-applications-with-naturallyspeaking/
+>>>
+ Following are some applications that have the Full Text Control capability:
+    Notepad
+    WordPad
+    Microsoft Word
+    Outlook: When you use Word to edit Outlook’s e-mail messages, the Word windows also use Full Text Control.
+    Internet Explorer, Mozilla Firefox, and Google Chrome: Internet Explorer’s Full Text Control capability applies only to web pages that expect your input, such as online forms or web e-mail interfaces.
+<<<
+
+=== R4 gewoon uit te voeren in Wine
+
+b.v. wineprefix op ramdisk
+	$ mkdir /media/ramdisk/dirk
+	$ WINEPREFIX=/media/ramdisk/dirk wine winecfg
+	Maakt indien nodig, een windows-systeemschijf in de WINEPREFIX. In winecfg
+		. dat windowssysteem instellen op b.v. WinXP of Win7
+		. een drive G: laten verwijzen naar naar de schijf met PROGRAMS/VanDale2.1 en CDKOPIE/VanDale2.1 (b.v. /media/seagm1)
+	$ WINEPREFIX=/media/ramdisk/dirk wine 'G:\PROGRAMS\R4\R4.exe'
+
+=== PlayOnLinux - Van Dale grote woordenboeken 2.1 en EGWN14
+
+. ZIE OOK /media/sdata/PROGRAMS/VanDale2.1/_INSTALLATIE/_INSTALLATIE.TXT voor installatie zonder PlayOnLinux, met de systeemversie van wine, en alle bestanden op /media/sdata.
+
+. In POL\Tools\Manage Wine versions:
+	. Wine 1.9.22 (x86) geinstalleerd
+. In POL\Configure\New een virtual drive creeren voor Windows-32 met die Wine 1.9.22 "woordenboeken, tekst en spraak"
+	. OPM: Wine vraagt of hij extra packages mag installeren, doen, anders vraagt hij het iedere keer weer:
+		. Mono package voor .NET 
+		. Gecko package voor embedded HTML woordenboeken
+	. In Configure/woordenboeken_tekst_en_Spraak:
+		. Wine/Configure wine/Graphics: Screen resolution 120dpi
+		. Wine/Configure wine/Drives add G: /media/sdata/
+. manueel de Van Dales installeren uit map "/seag1/CDKOPIE/VanDale21" (kopie van windows-installatie)
+	. woordenboekbestanden laten staan op map "/seag1/CDKOPIE/VanDale21/DATA" (later misschien op SSD zetten, is maar 1,5GB)
+	. instructies uit map _INSTALLATIE voor x86 volgen, met als 'speciallekes':
+	. toevoegen aan register:  Wine/Command prompt naar g:\CDKOPIE\VanDale2.1\_Installatie\Win x86:
+		regedit HKLM_Van_Dale_Lexicografie.reg
+	. Miscelaneous/Open Virtual drives directory:
+		. Van Dale Fonts kopieren naar: "/home/dirk/.PlayOnLinux/wineprefix/woordenboeken__tekst_en_spraak/drive_c/windows/Fonts/". Dit zijn (b.v. na installatie van de rest te checken met Wordpad)
+			resp001.ttf = Respelling
+			SILDIPA_.TTF = SILDoulosIPA
+			SILMIPA_.TTF = SILManuscriptIPA
+			SILSIPA_.TTF = SILSophiaIPA
+			vandale.ttf = Van Dale 1997
+			vdhn.ttf = Van Dale Extended
+			vdl2000.ttf = Van Dale 2000
+			vdldiac.ttf = Van Dale Diacritica
+			vdlschrf.ttf = Van Dale Schrift
+		. Programmabestandenmap 'Woordenboek' van /media/sdata/CDKOPIE/VanDale2.1 kopieren naar '/home/dirk/.PlayOnLinux/wineprefix/woordenboeken__tekst_en_spraak/drive_c/Program Files'
+		. 'Win x86'-versie van cdsearch.cfg en ccserv5.ini in de juiste mappen van 'drive_c/Program Files' zetten
+		0 DIENT TOT NIETS: snelkoppelingen 'Woordenboeken' gekopieerd naar /home/dirk/.PlayOnLinux/wineprefix/woordenboeken__tekst_en_spraak/drive_c/users/Public/Start Menu/Programs/
+	. General/Make a new Shortcut from this virtual drive/Browse: een voor een de Van Dale exe's kiezen uit de lijst en een naam geven, aan het einde kies: 'I don't want to make another shortcut'
+	. voor zover dat al niet gebeurde bij het maken van de shortcuts in POL-config: in POL zelf: naar keuze 'Create a shortcut' (op de desktop) naar de geinstalleerde programma's
+
+=== PlayOnLinux - BS Kempen
+
+Nog niet werkend gekregen. Dit is alvast nodig, maar niet genoeg:
+	OFWEL Try winetricks mdac28. http://wiki.winehq.org/winetricks
+	OFWEL met PlayOnLinux/configuration/install components/mdac28
+Zie ook afhankelijkheden in G:/PROGRAMS/BSKempen_databank/BSKdb depends.txt
+
+>>> $WINEPREFIX/playonlinux.log
+	[02/11/17 20:12:41] - Running wine-1.9.22 /home/dirk/PlayOnLinux's virtual drives/woordenboeken__tekst_en_spraak/dosdevices/g:/PROGRAMS/BSKempen_databank/BSKdb.exe (Working directory : /media/sdata/.win-gschijf/PROGRAMS/BSKempen_databank)
+	err:ole:CoGetClassObject class {00000514-0000-0010-8000-00aa006d2ea4} not registered
+	err:ole:create_server class {00000514-0000-0010-8000-00aa006d2ea4} not registered
+	err:ole:CoGetClassObject no class object {00000514-0000-0010-8000-00aa006d2ea4} could be created for context 0x5
+	wine: Unhandled exception 0x0eedfade in thread 9 at address 0x790d8857:0x7b43fd72 (thread 0009), starting debugger...
+	err:seh:setup_exception_record stack overflow 1088 bytes in thread 0009 eip 7bc488c8 esp 00240ef0 stack 0x240000-0x241000-0x340000
+<<<
+
+>>> https://social.msdn.microsoft.com/Forums/en-US/00c2a790-a07c-462f-b577-e51e403c0fc1/adodb-class-not-registered?forum=adodotnetdataproviders
+	Retrieving the COM class factory for component with CLSID {00000514-0000-0010-8000-00AA006D2EA4} failed due to the following error: 80040154 Class not registered (Exception from HRESULT: 0x80040154 (REGDB_E_CLASSNOTREG)).
+	That particular CLSID is referring to the ADO Connection Class so it does look like it got wacked. What you could try is re-registering the ADO library (msado15.dll), assuming that it still exists. Just make sure to run the Regsvr32 utility under an elevated command prompt (Run as administrator).
+<<<
+
+>>> http://support.microsoft.com/kb/833220
+	For 32-bit ADO (under 64-bit Windows) the path to msado15.dll is the same but under Program Files (x86). Also for 32-bit COM component registration you need to use the 32-bit version of Regsvr32 under Windows/SysWOW64.
+<<<
+
+>>> https://support.microsoft.com/nl-be/help/833220/-error-in-loading-dll-error-message-when-you-run-a-microsoft-access-wizard-in-access
+	This problem may occur if you have missing Microsoft Data Access Components (MDAC) files, corrupted MDAC files, or outdated MDAC files on your computer.
+
+	To resolve this problem, use either of the following methods:
+
+	Method 1: Register the required Dao360.dll file and the Msado15.dll file
+
+	You may have to register the Dao360.dll file and the Msado15.dll file by using the Regsvr32.exe program. To do this, follow these steps:
+		Click Start, and then click Run.
+		In the Run dialog box, type the following commands in the Open box, and then click OK:
+			  Regsvr32.exe "<<Dao360.dll_Path>>"
+			  Regsvr32.exe "<<Msado15.dll_Path>>"
+		The <<Dao360.dll_Path>> placeholder is the absolute path of the Dao360.dll file.
+		The <<Msado15.dll_Path>>placeholder is the absolute path of the Msado15.dll file.
+
+		The following examples show how you may specify an absolute path:
+			  Regsvr32.exe "C:\Program Files\Common Files\Microsoft Shared\DAO\Dao360.dll"
+			  Regsvr32.exe "C:\Program Files\Common Files\system\ado\Msado15.dll"
+		If the Dao360.dll file is successfully registered, you receive a message that is similar to the following message:
+			DllRegisterServer in C:\Program Files\Common Files\Microsoft Shared\DAO\Dao360.dll succeeded.
+		If the Msado15.dll file is successfully registered, you receive a message that is similar to the following message:
+			DllRegisterServer in C:\Program Files\Common Files\system\ado\Msado15.dll succeeded.
+		Click OK.
+
+	Method 2: Install the latest version of MDAC
+
+	For additional information about how to download the latest version of MDAC, visit the following Microsoft Developer Network (MSDN) Web site:
+	http://msdn.microsoft.com/en-us/data/aa937729.aspx
+<<<
+
+>>> playonlinux.log
+	err:ole:CoGetClassObject class {6c736db1-bd94-11d0-8a23-00aa00b58e10} not registered
+	err:ole:CoGetClassObject no class object {6c736db1-bd94-11d0-8a23-00aa00b58e10} could be created for context 0x1
+<<<
+
+=== PlayOnLinux - Encyclopédie Hachette 2002
+
+	- link naar .win-gschijf/PROGRAMS/Hachette2002/FONTS/hachebld.TTF, hacheita.TTF, hachesym.TTF en hachenor.TTF in windows/Fonts/
+	- opstarten in .win-gschijf/PROGRAMS/Hachette2002 met Hachette2002.bat:
+		- bat-file kan niet rechtstreeks gestart met POL-shortcut ("no .exe"), wel vanuit Wine command prompt. Exe van Hachette2002 is maar java 1.1.5, en die starten vereist classpaths etc. met veel '\'-characters (Windows); dat omzetten naar geldige linux-syntax bleek nogal moeilijk.
+		Daarom de batfile starten, met POL-shortcut
+		>>>
+			cd "/home/dirk/.PlayOnLinux/wineprefix/Win7x86PROGS/drive_g/PROGRAMS/Hachette2002/"
+			POL_Wine cmd.exe /C Hachette2002.bat
+		<<<
+		- cmd.exe /C : "Run Command and then terminate [cmd.exe]"
+		- OPGELET: POL_Wine-argument "/C Hachette2002.bat" MOET ingesteld worden in het scherm "PlayonLinux configuration", tab "General", veld "Arguments"  (zie lemma hierboven : ** SHORTCUTS WORDEN GEWIJZIGD BIJ CONFIG **)
+		- rekent op
+			- Java 1.1.8 in .win-gschijf/PROGRAMS/JDK118
+			- ehm2000.exe in .win-gschijf/PROGRAMS/JDK118/BIN/
+			- .win-gschijf/PROGRAMS/JDK118/LIB/font.properties aangepast aan Hachette-fonts
+		- werkt zonder Quicktime, geeft wel
+		>>>
+			java.lang.NoClassDefFoundError: quicktime/QTSession
+				at 
+				at ehm.app.MainApp$BackStart.run(MainApp.java:1165)
+		<<<

@@ -1,0 +1,116 @@
+== Unicode escape ==
+- [Ctrl+Shift+U]XXXX[Enter] of [Ctrl+Shift+U]XXXX[Space], b.v.
+	✝ : [Ctrl+Shift+U]271d[Enter] (latin cross)
+	- Na de Ctrl+Shift+U wordt een u-underscore getoond als teken dat de 4-hex-unicode-codepoint ingevoerd wordt.
+	- voor zover de toepassing niet zelf de Ctrl+Shift+U kaapt, zoals Geany.
+	- kan dat escape niet werkt, als in "Settings/Language support/Language/Keyboard input method" op XIM staat.
+
+== X11 compose keys ==
+- instellen met Settigns/Keyboard/Layout : [Compose key]
+	- Mijn locale (printenv) : LANG=en_US.UTF-8
+	- Compose keys staan dan in "/usr/share/X11/locale/en_US.UTF-8/Compose"
+	- Eigen composities instellen :
+		>>> https://askubuntu.com/questions/47496/how-can-i-add-a-custom-compose-key-sequence
+			b.v. om "[ComposeKey]|>" te mappen naar ▸
+		Create a file ~/.XCompose (that is a file named .XCompose in your "home" folder) which contains the following:
+			include "%L"   # import the default Compose file for your locale
+			<Multi_key> <bar> <greater>     : "▸"
+		See man 5 Compose for more info about the format of this file.
+		<<<
+
+- voorbeelden :  [compose key], dan 1ste en 2de (en 3de)) toets (meestal vrije volgorde):
+=== accenten ===
+	é : RightWin e '
+	ô : RightWin o ^
+	ñ : RightWin n ~
+	...
+	Ë : RightWin E "
+	ç : RightWin c ,
+=== ligatuurletters ===
+	ß : RightWin s s
+	æ : RightWin a e (die volgorde)
+	Æ : RightWin A E (die volgorde)
+	œ : RightWin o e (die volgorde)
+	Œ : RightWin O E (die volgorde)
+	µ : RightWin / u
+	µ : RightWin m u
+=== aanhalingstekens ===
+	« : RightWin < <
+	» : RightWin > >
+	“ : RightWin " <
+	” : RightWin " >
+	‘ : RightWin ' <
+	’ : RightWin ' >
+	´ : RightWin ' '
+	` : `­
+=== leestekens ===
+	— : RightWin - - - (kastlijntje, em dash)
+	– : RightWin - - . (half kastlijntje, en dash)
+	¶ : RightWin P ! (die volgorde) (sectie)
+	§ : RightWin s o (paragraaf)
+	  : RightWin space space (non-breaking space)
+	­  : RightWin - - space (word break of zacht koppelteken)
+=== speciale tekens ===
+	· : RightWin ^ . (center dot)
+	• : RightWin . = (bullet)
+	… : RightWin . . (elipsis)
+	€ : RightWin e = OF RightWin c =
+	¥ : RightWin y = (yen en yuan)
+	£ : RightWin l - (pond)
+	¤ : RightWin x o (munt algemeen)
+	™ : RightWin t m (die volgorde)
+	© : RightWin o c (die volgorde)
+	® : RightWin o r (die volgorde)
+	⓪ : RightWin ( 0 ) (die volgorde)
+	...
+	⑳ : RightWin ( 2 0 ) (die volgorde)
+	№ : RightWin N o (die volgorde, Numero)
+=== wiskunde ===
+	≠ : RightWin = /
+	≤ : RightWin < = (die volgorde)
+	≥ : RightWin > = (die volgorde)
+	∞ : RightWin 8 8
+	⇒ : RightWin = > (die volgorde)
+	ø : RightWin / o
+	Ø : RightWin / O
+	× : RightWin x x (vector product)
+	÷ : RightWin - :
+	· : RightWin ^ . (scalair product, center dot)
+	± : RightWin - +
+	¬ : RightWin - ,
+	‰ : RightWin % o (die volgorde, permille)
+=== breuken (indien voorzien in het lettertype) ===
+	½ : RightWin 1 2 (die volgorde)
+	...
+	⅑ : RightWin 1 9 (die volgorde)
+	⅔ : RightWin 2 3 (die volgorde)
+	¾ : RightWin 3 4 (die volgorde)
+	⅝ : RightWin 5 8 (die volgorde)
+=== Superscript ===
+	° : RightWin o o
+	⁺ : RightWin ^ + (die volgorde)
+	¯ : RightWin ^ - (die volgorde)
+	⁼ : RightWin ^ = (die volgorde)
+	⁰ : RightWin ^ 0 (die volgorde)
+	¹ : RightWin ^ 1 (die volgorde)
+	...
+	⁹ : RightWin ^ 9 (die volgorde)
+	⁽ : RightWin ^ ( (die volgorde)
+	⁾ : RightWin ^ ) (die volgorde)
+=== Subscript ===
+	₊ : RightWin _ + (die volgorde)
+	(geen subscript -)
+	₌ : RightWin _ = (die volgorde)
+	₀ : RightWin _ 0 (die volgorde)
+	₁ : RightWin _ 1 (die volgorde)
+	...
+	₉ : RightWin _ 9 (die volgorde)
+	₍ : RightWin _ ( (die volgorde)
+	₎ : RightWin _ ) (die volgorde)
+=== Smileys ===
+	☺ : RightWin : ) (die volgorde, lachend)
+	☹ : RightWin ; ( (die volgorde, frons)
+=== Muziek ===
+	♭ : RightWin # b (die volgorde)
+	♯ : RightWin # #
+	♮ : RightWin # f (die volgorde)

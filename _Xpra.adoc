@@ -1,0 +1,175 @@
+Xpra = X (Windowing system) persistent remote application
+
+=== Voorbeeld ===
+
+- zonder proxy (zie _Xubuntu.adoc sectie "BIONIC dist-upgrade 181029" subsectie "Xpra" "PROBLEEM 2")
+	- xpra server starten (meestal op VBox host) :
+		$ xpra start --bind-tcp=0.0.0.0:14500 --pulseaudio=no --webcam=no --mdns=no --exit-with-children=yes --terminate-children=yes --start-child="mousepad [pad/leesmij.txt]"
+			--bind-tcp : is eenvoudigste internet-connectiedeel, zal rapper gaan dan ssh e.d.
+				- 0.0.0.0 : aanvaard guest op om het even welke verbinding van host (als ik het goed begrijp)
+					- b.v. op mijn FRT met een VM actief met 2 NAT + hostonly verbinding, geeft "ifconfig" zowel 192.168.56.1 op vboxnet0 als 192.168.1.3 op thuisnetwerk
+				- :14500 : de default port waarop guests zoeken, als daar geen expliciet portnr is opgeven
+			--pulseaudio=no : voor client in VM is VBox daar beter in, xpra heeft voor geluid netwerk en compressie nodig
+			--webcam=no --mdns=no : maakt het wat lichter
+			--exit-with-children=yes --terminate-children=yes : xpra server en processen erop gestart met --start-child wederkerig samen afsluiten
+			[--tray=yes] : er is (nog?) geen xpra-trayding voor xubuntu
+			[--start-after-connect=yes] : lijkt niets te doen, toep. al te zien in "ps -ef | grep toep" van server-host zonder connect
+		- start xpra server, en een daemon die alle boodschappen (b.v. foutmeldingen van gtk-3 themes) naar een log, i.p.v. terminalscherm te vervuilen tussen alle prompts door.
+			 - misschien is "> /dev/null" genoeg
+			 - daemon afsluiten door gewoon te enteren
+	- xpra server vinden (meestal op VBox guest) :
+		$ xpra list
+			- aanvaard geen connection string
+			- als die zegt : >>> No xpra sessions found <<<, dan is expliciet adres nodig :
+				$ xpra info tcp/FRT
+				OF 
+				$ xpra info tcp/192.168.56.1
+					- 192.168.56.1 : host-ip, nodig als guest FRT niet kan pingen
+						- is standaard host-ip van VBox local host netwerk, kunt ge daar wijzigen
+					- om te zien welke ip een (virtual) machine heeft op welk netwerk :
+						$ ifinfo
+	- client xpra sessie verbinden met xpra server (meestal op VBox guest)
+		- als "xpra list" 1 server vindt:
+			$ xpra attach
+		- anders
+			$ xpra attach tcp/FRT
+			OF (zie "xpra info" hierboven)
+			$ xpra attach tcp/192.168.56.1
+		- "xpra attach" toont de toepassing, en opent ook een soort daemon :
+			- Ctrl-C voor detach
+			OF
+			- toepassing afsluiten
+
+=== BIJ CRASH VAN XPRA SERVER : ===
+	--use-display : Use an existing display rather than starting one with xvfb. ... This can also be used to rescue an existing display whose xpra server instance crashed.
+
+=== show a list of xpra servers you have running on the current host ===
+	$ xpra list
+
+=== show a list of xpra servers found via mDNS. ===
+
+	0 xpra list-mdns
+	>>> sorry, 'list-mdns' is not supported on this platform yet
+
+=== show default configuration ===
+
+	$ xpra showconfig
+
+=== displays ===
+
+- Unix draait default op display :0
+
+- Xpra server-sessie start default op display :1
+	>>>
+		Actual display used: :1
+	<<<
+
+=== toepassing delen met andere (virtuele) computer ===
+
+In VBox host-guest xpra combo (Zowel Windows VM als Ubuntu VM met Xpra_2.1.3) heeft xpra geen winswitch nodig (CLI is genoeg), en geen beveiliging
+
+- vb. met tcp (simpel maar onbeveiligd) op default poort 14500: 
+	- start server op linux (b.v. VBox host FRT) :
+		$ xpra start --bind-tcp=0.0.0.0:14500 --pulseaudio=no --webcam=no --mdns=no --tray=yes --start-after-connect=yes --terminate-children=yes [--start-new-commands=yes | --start[-child]=mousepad --exit-with-children=yes]
+			- TEDOEN : al die opties in bash-aliases zetten, of in ~/xpra/xpra.conf of /etc/xpra/xpra.conf
+			- start : Start an xpra server, choosing a display automatically and start mousepad on that virtual display. No window will appear until you attach with xpra attach.
+			- start daemon en gaat naar subshell; <enter> om terug een prompt te krijgen
+				[--daemon=no] : geen daemon, toont dan heel de log op terminal; ctrl-C om server te stoppen
+			- zegt op welke displaynr (default ":1") het gestarte programma mousepad gevonden kan worden
+				>>> Actual display used: :1
+			- TEDOEN geeft nog een paar foutboodschappen (Warning: cannot create socket '/run/xpra/FRT-1' [Errno 13] Permission denied)
+			--bind-tcp=0.0.0.0:14500 : accept connections on all interfaces, op poort 14500
+				- poort 14500 is default voor clients, moet voor server expliciet;
+				- andere poort, b.v. --bind-tcp=0.0.0.0:1111 (lijkt niet gereserveerd te zijn), moet dan ook opgegeven worden voor clients die niet local op de xpra-server draaien
+				- if the host portion (0.0.0.0) is omitted, then 127.0.0.1 will be used. 
+					0 kunt 0.0.0.0 NIET vervangen door mask zoals 192.168.255.255
+				- Using bind-tcp without using the tcp-auth option is major security risk (especially when passing 0.0.0.0); anyone may connect to this port and access your session.
+				- alternatief voor -tcp : -ssl en -vsock
+			--pulseaudio=no : per user maar 1 pulseaudio, en die draait al; bovendien wordt regelt vbox het geluid in een host-guest xpra-combo. Desnoods xpra server met een 'dedicated user' draaien.
+				TEDOEN : proberen of mijn noise-cancelling microphone even goed werkt met pulseaudio over xpra, als met USB passthrough
+			--webcam=no : geen behoefte aan, en anders foutboodschap omdat ik geen webcam heb
+			--mdns=no : disable the publication of new sessions via mDNS; mDNS blijkt niet nodig in mijn setup, en anders fout "Warning: failed to load the mdns avahi publisher: No module named avahi"
+			0 --system-tray=yes : stuurt ook system tray iconen van gestarte toepassingen door naar client, werkt niet overal (ergens wel?)
+			--start-after-connect=yes : Wait for a client to connect before executing --start[-child] commands.
+			--terminate-children=yes : On server stop, terminate all the child commands that have been started by the server. This does not affect server exit. Most  child  commands are tied to the display so they are normally forced to shutdown anyway, but this gives them more time to cleanup properly and can be used to stop background commands that aren't tied to a display.
+			--start-new-commands=yes : ge kunt nog extra programmas uitvoeren op de display van de server; zie sectie "programma toevoegen aan sessie"
+			--start[-child]=CMD... : After starting the server, runs the command CMD using the default shell. The command is run with its $DISPLAY set to point to the newly-started server. This option may be given multiple times to start multiple commands. --start-child is identical to --start, except that the commands are taken into account by --exit-with-children. Zie ook sectie : "programma toevoegen aan sessie"
+			[--exit-with-children=yes] : only if --start-child is given : xpra server terminates when last of children started by --start-child has exited.
+			[--clipboard=no] : als er interferentie is met VBox clipboard-delen
+	- toepassing overnemen in windows (VBox guest, die FRT kan zien op het netwerk)
+		- volledig pad, of in Computer/eigenschappen/geavanceerd/Omgevingsvariabelen/User
+			- "PATH" : "G:\PROGRAMS\Xpra" voor Win7-10
+			- "PATH" : "G:\PROGRAMS\Xpra_XP" voor WinXP
+		OFWEL met GUI
+		C:\> xpra
+			- vul servernaam (FRT) in, evt. poortnr. (default 14500), opties, en [Connect]
+		OFWEL volledig CLI
+		C:\> xpra attach tcp:FRT[:poortnr]
+		- attach : attaches to a running xpra server, and forwards any applications using that server to appear on your current screen.	Specifiek Windows client-only : "Some platforms and package managers may choose to only build the client and not the server. In this case, only the attach subcommand will be available."
+		- plaatsen beide Xpra icoon in Windows system area
+		- keren terug naar prompt; alternatief "xpra_cmd" i.p.v. "xpra" keert niet terug naar prompt, maar toont live log
+	- toepassing overnemen in linux
+		$ xpra attach
+			[--tray=yes] : icoon+menu in notification area
+			[:1] : displaynr. als er meerdere draaien; enkel local (xpra server) genoeg, windows client heeft de hele "tcp:FRT[:poort]" nodig
+	- ge kunt toepassing zo over en weer pingpongen tussen server en 1 of meer clients
+	- server stoppen die niet met "--exit-with-children=yes" is gestart
+		OFWEL in ander terminalvenster :
+			$ xpra stop [:displaynr]
+			- attaches to a running xpra server, and requests that it terminates immediately.  This generally causes any applications using that server to terminate as well (unsafe, o.a. zonder tijd om te saven).
+				>>>
+					server requested disconnect: server shutdown
+					xpra at :1 has exited.
+				<<<
+		OFWEL via GUI
+			- via system tray icon van local client als die attach --tray=yes heeft gedaan : "suspend server"
+		OFWEL
+			? Ctrl-C in terminalvenster waar de server nog niet naar de prompt is teruggekeerd
+
+=== programma toevoegen aan sessie ===
+
+	OFWEL GUI (xpra system tray menu)
+		"Run command"
+	OFWEL CLI linux
+		$ xpra control [:1] start[-child] mousepad
+	OFWEL CLI Windows 
+		??C:\> xpra control tcp:FRT[:poortnr] start[-child] mousepad
+	- als server niet gestart is met optie "--start-new-commands=yes" : "server returned error code 127 this feature is currently disabled"
+
+=== poorten ===
+
+- zie https://en.wikipedia.org/wiki/List_of_TCP_and_UDP_port_numbers :
+	- 1111 lijkt vrij, 14500 lijkt default
+	- poorten 5901 en 10000 worden gebruikt in voorbeelden op het net
+	- alleen root kan poorten < 1024 gebruiken
+	- 1024-49151 kunnen geregistreerd zijn voor andere toepassingen, maar daarom nog niet gebruikt op mijn pc
+	- NIET VRIJ: 
+		- 1024 : reserved 
+		- 1027 : reserved
+		- 1234 (VLC media player for UDP/RTP stream)
+		- 2222 (EtherNet/IP implicit messaging)
+		- 3333 (allerlei niet officiëel)
+		- 4444 (Xfvb frame buffer, is dus misschien zelfs door Xpra zelf gebruikt voor iets)
+		- 5555 (allerlei niet officiëel)
+		- 6666 (IRC)	
+		- 7777 (allerlei niet officiëel)
+		- 9999 (allerlei niet officiëel)
+		- 10000 (Network Data Management Protocol, en allerlei niet officiëel)
+		- 12345 (Network Data Management Protocol, en allerlei niet officiëel)
+	- poorten 49152–65535 : cannot be registered, used for private or customized services or for temporary purposes
+
+=== hele display met alle draaiende toepassingen overnemen ===
+
+- NIET VOOR VM : die zit immers ook op de display, geeft eindeloze loop (getest!)
+	- evt. om op notebook van Mieke te dicteren
+
+- server starten en stoppen, b.v. :
+	$ xpra shadow :0 --bind-tcp=0.0.0.0:14500
+	- overnemen op Windows (b.v. XP) :
+		G:\PROGRAMS\Xpra_XP> xpra attach tcp:FRT
+	$ xpra stop
+
+=== met LaTex en Xpra ===
+	- zie b.v. https://tex.stackexchange.com/questions/392587/how-can-i-have-my-latex-editor-open-my-viewer-on-a-remote-display
+	- in NaturallySpeaking kunnen opdrachten gedefiniëerd worden voor LaTeX-macros
+
