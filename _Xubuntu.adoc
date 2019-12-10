@@ -9,6 +9,7 @@ Filesystem Hierarchy Standard : http://www.pathname.com/fhs/pub/fhs-2.3.html#THE
 Linux Filesystem Hierarchy : http://www.tldp.org/LDP/Linux-Filesystem-Hierarchy/html/index.html
 
 == SCHIJVEN INDELEN EN FORMATTEREN ==
+[literal]
 $ lsblk -o NAME,SIZE,label,partlabel,uuid,partuuid
 NAME          SIZE LABEL        PARTLABEL                    UUID                                 PARTUUID
 sda           2,7T
@@ -38,7 +39,8 @@ nvme0n1     119,2G
 
 - Uit "Intel Linux* NVMe* Driver"
 	- zie https://www.intel.com/content/dam/support/us/en/documents/ssdc/data-center-ssds/Intel_Linux_NVMe_Guide_330602-002.pdf
-	>>>
+:prewrap:
+....
 		Aligning Drive Partitions
 		-------------------------
 		Be sure the starting block of the used partition is divisible by 4096 bytes. You can look at your partition table in the parted tool. The following is an example listed partition table that is aligned:
@@ -71,7 +73,7 @@ nvme0n1     119,2G
 		IMPORTANT: Do not discard blocks in filesystem usage.
 		Be sure to turn off the discard option when making your Linux filesystem. You want to allow the SSD manage blocks and its activity between the NVM (non-volatile memory) and host with more advanced and consistent approaches in the SSD Controller.
 			- ext4 : the default extended option is not to discard blocks at filesystem make time, retain this, and do not add the “discard” extended option as some information will tell you to do.
-	<<<
+....
 
 === ESP (U)Efi System Partition ===
 
