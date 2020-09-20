@@ -1,0 +1,133 @@
+$ bind -p
+>>>
+	[Ctrl]+x[Ctrl]+v	: display-shell-version
+	[Ctrl]+x[Ctrl]+r	: re-read-init-file
+	[Ctrl]+x[Ctrl]+e	: edit-and-execute-command
+	[Esc]&	: tilde-expand (vervang om het even waar ~ door /home/dirk)
+	[Ctrl]+l	: clear screen (niet zoals mijn alias cls: schermvol lege lijnen, scrollt dan prompt tot boven, dus vorige output bewaard)
+	[Ctrl]+_	: undo
+	[Ctrl]+x[Ctrl]+u	: undo
+	[Esc]r	: revert-line (undo alle edits op lijn uit history)
+	[Esc][Ctrl]+r	: revert-line
+	
+	[Esc]d	: kill-word
+	[Ctrl]+w	: unix-word-rubout
+	[Esc][Ctrl]+?	: backward-kill-word
+	[Esc][Ctrl]+h	: backward-kill-word
+	[Ctrl]+k	: kill-line (van cursor tot einde)
+	[Ctrl]+x[Ctrl]+?	: backward-kill-line (van cursor tot begin)
+	[Ctrl]+u	: unix-line-discard
+
+	[Ctrl]+y	: yank
+	[Esc][Ctrl]+y	: yank-nth-arg
+	[Esc].	: yank-last-arg
+	[Esc]_	: yank-last-arg
+	[Esc]y	: yank-pop
+
+	[Esc]l	: downcase-word
+	[Esc]u	: upcase-word
+	[Esc]c	: capitalize-word
+	[Esc]t	: transpose-words (woord en vorige van plaats veranderen, of met cursor in woord: letter en vorige)
+	[Ctrl]+t	: transpose-chars (letter en vorige van plaats veranderen)
+
+	[Esc]=	: possible-completions
+	[Esc]?	: possible-completions
+	[Esc]*	: insert-completions (ineens allemaal op de opdrachtlijn)
+	[Esc][Esc]	: complete
+	[Ctrl]+i	: complete
+	[Esc]!	: complete-command
+	[Ctrl]+x!	: possible-command-completions
+	[Esc]/	: complete-filename
+	[Ctrl]+x/	: possible-filename-completions
+	[Esc]$	: complete-variable
+	[Ctrl]+x$	: possible-variable-completions
+	[Esc]~	: complete-username
+	[Ctrl]+x~	: possible-username-completions
+	[Esc]@	: complete-hostname
+	[Ctrl]+x@	: possible-hostname-completions
+	[Esc]{	: complete-into-braces
+	[Ctrl]+xg	: glob-list-expansions
+
+	[Esc]^	: history-expand-line
+	[Esc][Ctrl]+i	: dynamic-complete-history
+	[Esc]>	: end-of-history
+	[Esc]<	: beginning-of-history
+	[Ctrl]+s	: forward-search-history
+	[Esc]n	: non-incremental-forward-search-history
+	[Ctrl]+r	: reverse-search-history
+	[Esc]p	: non-incremental-reverse-search-history
+	[Esc]OA	: previous-history
+	[Esc][A	: previous-history
+	[Ctrl]+p	: previous-history
+	[Esc]OB	: next-history
+	[Esc][B	: next-history
+	[Ctrl]+n	: next-history
+
+	[Esc][Ctrl]+e	: shell-expand-line
+	[Esc]OF	: end-of-line
+	[Esc][F	: end-of-line
+	[Ctrl]+e	: end-of-line
+	[Esc][4~	: end-of-line
+	[Esc]OH	: beginning-of-line
+	[Esc][H	: beginning-of-line
+	[Ctrl]+a	: beginning-of-line
+	[Esc][1~	: beginning-of-line
+	[Ctrl]+j	: accept-line
+	[Ctrl]+m	: accept-line
+
+	[Ctrl]+x*	: glob-expand-word
+	[Esc][1;5D	: backward-word
+	[Esc][5D	: backward-word
+	[Esc][Esc][D	: backward-word
+	[Esc]b	: backward-word
+	[Esc][1;5C	: forward-word
+	[Esc][5C	: forward-word
+	[Esc][Esc][C	: forward-word
+	[Esc]f	: forward-word
+	[Esc]g	: glob-complete-word
+
+	[Esc]OD	: backward-char
+	[Esc][D	: backward-char
+	[Ctrl]+b	: backward-char
+	[Esc]OC	: forward-char
+	[Esc][C	: forward-char
+	[Ctrl]+f	: forward-char
+	[Ctrl]+d	: delete-char
+	[Esc][3~	: delete-char
+	[Ctrl]+?	: backward-delete-char
+	[Ctrl]+h	: backward-delete-char
+
+	[Esc]\\	: delete-horizontal-space
+
+	[Ctrl]+]	: character-search
+	[Esc][Ctrl]+]	: character-search-backward
+	[Ctrl]+x[Ctrl]+x	: exchange-point-and-mark
+	[Esc] 	: set-mark
+	[Ctrl]+@	: set-mark
+	[Esc][200~	: bracketed-paste-begin
+	[Ctrl]+x)	: end-kbd-macro
+	[Ctrl]+x(	: start-kbd-macro
+	[Ctrl]+xe	: call-last-kbd-macro
+
+	[Esc]#	: insert-comment
+	[Esc]-	: digit-argument
+	[Esc]0	: digit-argument
+	[Esc]1	: digit-argument
+	[Esc]2	: digit-argument
+	[Esc]3	: digit-argument
+	[Esc]4	: digit-argument
+	[Esc]5	: digit-argument
+	[Esc]6	: digit-argument
+	[Esc]7	: digit-argument
+	[Esc]8	: digit-argument
+	[Esc]9	: digit-argument
+	[Esc].	: insert-last-argument
+	[Esc]_	: insert-last-argument
+	[Ctrl]+q	: quoted-insert
+	[Ctrl]+v	: quoted-insert
+	[Esc][2~	: quoted-insert
+	[Ctrl]+g	: abort
+	[Esc][Ctrl]+g	: abort
+	[Ctrl]+x[Ctrl]+g	: abort
+	[Ctrl]+o	: operate-and-get-next
+<<<

@@ -1,3 +1,21 @@
+= ffmpeg truuks en commandos =
+:description: verslag van de inrichting van mijn linux systeem
+
+Zie (https://ffmpeg.org/documentation.html)
+
+== andere docs ===
+=== _XUbuntu.adoc ===
+=== _Xubuntu truuks en commandos.adoc ===
+=== _Xubuntu composekey multikey combinaties.adoc  ===
+=== _ffmpeg truuks en commandos.adoc  ===
+=== _Tex-LaTex.adoc  ===
+=== _Wine-PlayOnLinux.adoc  ===
+=== _POLwineprefix 2.11 Win7x86PROGS.txt  ===
+=== _VirtualBox.adoc  ===
+=== _Xpra.adoc  ===
+=== _Dragon.adoc  ===
+=== _SW10 installatie.txt  ===
+
 == HANDELINGEN ==
 
 === Commando's tijdens uitvoering van ffmpeg ===
@@ -71,6 +89,28 @@ Press [q] to stop, [?] for help
 - b.v. split file in 1 stap in 2 stukken, voor en na 50'
 	$ ffmpeg -i largefile.mp4 -t 00:50:00 -c copy smallfile1.mp4 -ss 00:50:00 -c copy smallfile2.mp4
 
+=== streams en maps ===
+
+- ffmpeg mapt normaal beste stream van elk (video hoogste resolutie, audio meeste channels, 1ste ondertitel)
+	- streams benoemen : [inputnr:][type][:streamnr]
+		’V’ only matches video streams which are not attached pictures, video thumbnails or cover arts.
+		’v’ matches all video streams, 
+		’a’ matches all video streams, 
+		’s’ matches all subtitle streams, 
+	- streams selecteren:
+		"-map stream" ... , b.v. "-map V -map a:1"
+	- streams weglaten:
+		"-map -stream" ... , b.v. "-map -V -map -a:1"
+		OF verkort :
+		-sn : geen ondertitels
+			- OPM: er zit blijkbaar een regressie in ffmpeg waardoor er stiekem toch een ondertitel door de optie -sn sluipt (zit die ondertitel misschien in de chapters-informatie??); oplossen door stream per stream te mappen, voor elke behouden en niet-behouden stream: "-map 0:0 -map 0:1 -map -0:2 -map -0:3"
+		-vn : geen video
+		-an : geen geluid
+	- ook titels van hoofdstukken weglaten:
+		"-map_chapters -1"
+	- andere metadata weglaten:
+		"-map_metadata -1"
+
 === extract subtitle from video file and convert to .srt ===
 
 	$ /opt/ffmpeg/ffmpeg -i "s1eps27_The Exile.m4v" -vn -an -codec:s:0 srt "s1eps27_The Exile.srt"
@@ -92,13 +132,6 @@ Press [q] to stop, [?] for help
 		$ for i in *.wmv ; do ffmpeg -i "$i" -c:v copy -c:a pcm_s16le /media/ramdisk/wmv/"${i/.wmv/.avi}";done
 	- met dummy video (zie sectie "bestaande audio in een still-video container wikkelen")
 		$ for i in *.wmv ; do ffmpeg -f lavfi -i color=c=yellow:s=16x12 -i "$i" -map 0:v -map 1:a -shortest -c:v libx264 -tune stillimage -pix_fmt yuv420p -c:a pcm_s16le /media/ramdisk/wmv/"${i/.wmv/.avi}";done
-
-=== bestaande audio in een still-video container wikkelen ===
-
-- b.v. in mp4
-	$ ffmpeg -f lavfi -i color=c=yellow:s=16x12 -i audio.mp3 -shortest -c:v libx264 -tune stillimage -pix_fmt yuv420p -c:a copy audio.mp4
-	-f lavfi : This input device reads data from the open output pads of a libavfilter filtergraph. Als de optie "graph" met input voor lavfi niet is opgegeven, dan "[graph] defaults to the 'filename' specified for the input device."
-	-shortest : duur wordt bepaald door de korste input; vermits lavfi eeuwig duurt, is dit hier audio-lengte
 	
 === output to a raw YUV420P file: ===
 
@@ -108,6 +141,71 @@ ffmpeg -i mydivxinput.avi hugefileoutput.yuv
 
 ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 	- geprobeerd met (ffprobe) XVid-avi SAR 1:1 DAR 4:3, wordt dan in mp4 SAR 4:3 DAR 16:9, en aan 16:9 afgespeeld in VLC
+
+=== bestaande audio in een still-video container wikkelen ===
+
+- b.v. hele mp3-directory in avi, goed voor VirtualDub :
+	$ for b in *.mp3;do ffmpeg -f lavfi -i color=c=yellow:s=16x12 -i "$b" -shortest -c:v libxvid -tune stillimage -pix_fmt yuv420p -c:a copy /media/ramdisk/"${b/.mp3/.avi}";done
+	-f lavfi : This input device reads data from the open output pads of a libavfilter filtergraph. Als de optie "graph" met input voor lavfi niet is opgegeven, dan "[graph] defaults to the 'filename' specified for the input device."
+	-shortest : duur wordt bepaald door de korste input; vermits lavfi eeuwig duurt, is dit hier audio-lengte
+
+=== genereer tekstbeeld met geluidsspoor ===
+
+- typisch om voor of in een bestaande video te plakken. A/V-formaat en -compressie moeten daarmee overeenkomen. vb.
+	>>> $ ffprobe -i orig.mp4
+	...
+    Stream #0:0(und): Video: h264 (High) (avc1 / 0x31637661), yuv420p, 854x480, 349 kb/s, 30 fps, 30 tbr, 15360 tbn, 60 tbc (default)
+    ...
+    Stream #0:1(und): Audio: aac (HE-AACv2) (mp4a / 0x6134706D), 22050 Hz, stereo, fltp, 33 kb/s (default)
+	...
+	<<<
+	- voor zelf gegenereerde A/V moet het volledige formaat opgegeven worden, b.v. voor het bovenstaande vb. van ffprobe:
+	$ /media/sdata/WERK/ffmpeg/ffmpeg -f lavfi -i anullsrc -f lavfi -i color=gold:854x480 -r 30 -pix_fmt yuv420p -video_track_timescale 15360 -vf drawtext='fontfile=/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf':fontcolor=blue:fontsize=70:text="1LijnTekst":'x=(main_w-text_w)/2:y=(main_h-text_h)/2',fade=in:st=0:d=1,fade=out:st=3:d=1 -c:v libx264 -b:v 250k -c:a libfdk_aac -profile:a aac_he_v2 -ar 22050 -ac 2 -vbr 1 -t 4 4minmis.mp4
+		- video invoer
+			-f lavfi : Libavfilter input virtual device
+			-i color=gold:854x480 : input vaste kleur, en grootte zoals ffprobe
+			-pix_fmt yuv420p 
+			-r 30 : afspeelsnelheid, zoals fps (of tbr?) van ffprobe
+			-video_track_timescale 15360 : zoals tbn (timebase nominator) van ffprobe. mp4 heeft geen vaste framesrate, maar elk frame krijgt een timestamp, met eenheid (1/tbn) seconde
+		- audio invoer
+			-f lavfi : Libavfilter input virtual device
+			-i anullsrc : audio null source (geeft een geluidsspoor, maar stilte)
+		- video filter :
+			- NA de 2 invoeren
+			-vf : video filter
+				- drawtext=lettertype:kleur:grootte:tekst:startplaats
+				- tekst: default komt alle tekst op 1 lijn, zie hieronder voor meer lijnen
+					- GEEN ':' in die tekst zonder nog uit te zoeken speciale escape
+				- fade=[in|out]:st(art):d(uur) in seconden
+		- video uitvoer
+			-c:v libx264 : zoals ffprobe
+				- preset, tune en profile staan niet in ffprobe, mogen dus afwijken
+				- bitrate is sowieso veranderlijk
+		- audio uitvoer
+			-c:a libfdk_aac -profile:a aac_he_v2 : zoals ffprobe
+			-ar 22050 : audio rate, zoals ffprobe
+			-ac 2 : 2 audiokanalen, zoals ffprobe (wordt autom. als stereo verondersteld)
+			[-sample_fmt fltp] : resolutie van de samples, zoals ffprobe, hier floating point
+				- OPM: libfdk_aac -profile:a aac_he_v2 aanvaardt deze parameter niet, maar is daar blijkbaar wel de default
+		-t 4 : laat het geheel 4 seconden duren
+
+- meer dan 1 lijn tekst, simpel: links uitgelijnd
+	- newline NIET als '\n', maar als Ctrl-L (form feed)
+		- OPGELET in bash shell intikken als [Ctrl-V][Ctrl-L] : Ctrl-V neutraliseert even bash's eigen interpretatie van de volgende code; voor bash is Ctrl-L clear screen, een soort form feed van de terminal
+	OF
+		gewoon als niewe lijn (bash leest tot afsluitende '"') :
+		>>>
+			text="4 min.
+			beschadigd
+			en geknipt":
+		<<<
+
+- meer dan 1 lijn tekst, elk b.v. gecenterd:
+	- zet meerdere drawtext filters in -vf, gescheiden door ',', maar samen tss. de labels [in] en b.v. [tekst], en de fade tss. de labels [tekst] en [out] :
+		$ tekststijl='fontfile=/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf':fontcolor=blue:fontsize=70
+		$ xcentery='x=(main_w-text_w)/2:y=(main_h-text_h)/2'
+		$ .../ffmpeg ...  -vf [in]drawtext="$tekststijl":text="Lijn 1":"$xcentery"-40, drawtext="$tekststijl":text="Lijn 2":"$xcentery"+40[tekst],[tekst]fade=in:st=0:d=1,fade=out:st=3:d=1[out] ...
+
 
 === animated gif omzetten naar b.v. h264 in mp4 ===
 
@@ -130,6 +228,8 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 
 === 2-pass XviD encoding (met default mpeg4-encoder, maar FourCC-tag XVID) ===
 
+- OPM: "Both encoders should provide a similar output, but for lower bitrates/quality (e.g. 1000 kBit/s for 720p content), libxvid will deliver better quality than mpeg4."
+
 - pass 1
 	$ /opt/ffmpeg/ffmpeg -i "film.avi" -c:v mpeg4 -b:v 1200k -pass 1 -passlogfile "/media/ramdisk/ffmpeg_pass" -an -f avi -y /dev/null
 
@@ -144,7 +244,7 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 		- NOOT: i.p.v.
 			-c:v mpeg4 -vtag XVID
 			-c:v libxvid
-		maar de mpeg4 encoded zou beter zijn
+		maar heeft dus externe library libxvid nodig
 	-vtag fourcc/tag (output)
 		Force video tag/fourcc. 
 	-pass 1
@@ -173,56 +273,87 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 	- ${1%.*} : parameter 1, but remove shortest matching suffix pattern ".*" (extensie van bestandsnaam)
 	- ${1##*/} : parameter 1, but remove longest matching prefix pattern "*/" (pad voor bestandsnaam)
 
-=== sessie opnemen van scherm (b.v. ook video in browser) 'screen capture' ===
+=== opnemen van scherm (b.v. ook video in browser) 'screen capture' ===
 
 - versie van ffmpeg :
 	- WEL met ffmpeg uit Ubuntu repository
 		- gecompileerd met o.a. --enable-libpulse --enable-x11grab
 	- NIET met /opt/ffmpeg/ffmpeg version 3.3.4-static http://johnvansickle.com
-	- NIET met /opt/ffmpeg/ffmpeg-fdkaac version 3.2.4 ronny1982
+	- NIET met /opt/ffmpeg/ffmpeg-fdk_aac version 3.2.4 ronny1982
 
-- alleen geluid :
+- video input : format x11grab (samen met de andere inputopties vóór "-i videoinput"), b.v.
+	$ ffmpeg -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size ${w}x$h -i :0.0+$x,$y ... output
+		-f x11grab ...  -i :0.0+x,y : grabformaat van X11, invoer van display :0.0 dus video.
+			- EERST formaat -f met opties, dan pas invoer -i
+		-framerate 30 : niet-gehele opgeven als breuk, b.v. 29975/1000, maar wschlk. best overeenkomend met schermverversingssnelheid (b.v. 25 geeft (erg lichte) flikkering op VRT Nu)
+		-video_size wxh : capture-grootte
+			- opties zoals -r 30 (framerate) en -s 1200x672 (uitvoerdimensies) werken ook wat het resultaat betreft, maar ik vermoed dat zo capture gebeurt met de defaults van het formaat -f, en dan pas omgezet naar formaat voor uitvoer; zou verspilling zijn
+		-draw_mouse 0 : muis niet mee opnemen (default 1)
+		-show_region 1 : kadertje rond opgenomen deel
+		[-follow_mouse 1] : (zinloos bij volledig scherm) klein gebied dat de muis volgt
+			- ZONDER x, y offset, anders hebben die voorrang
+			- juist hiervoor zou -show_region handig zijn, maar kader komt helaas in beeld bij muisbeweging, en wordt mee opgenomen
+		-i :0.0+x,y : de videoinput, voluit [hostname]:display_number.screen_number[+x_offset,y_offset]
+			- hostname : default localhost
+			- screen_number : default 0
+			+x_offset,y_offset :
+				- default +0,0
+				- alternatief -grab_x $x -grab_y $y -i $DISPLAY, b.v.
+					:$DISPLAY+0,624
+
+- alleen geluid : format alsa (samen met de andere inputopties vóór "-i geluidsinput"), b.v.
 	$ ffmpeg -thread_queue_size 512 -f alsa -sample_rate 44100 -channels 2 -i pulse -c:a flac /media/ramdisk/output.flac
+		-i pulse : de geluidsinput
 
 - beeld + geluid, b.v. Vrt Nu fullscreen, Kinderen van de collaboratie
 	- eerst schermafdruk nemen om te bepalen waar de video juist op het scherm komt
 	- Geluidsinstellingen (in 'Volume control', menunaam Pulse Audio of pavucontrol) :
 		- Configuration, Built-in audio : Analog Stereo Duplex
 		- 1ste keer ffmpeg een keer laten opnemen met b.v. onderstaand commando om in tab 'Recording', de keuze 'ALSA plug-in (ffmpeg)' in te stellen op 'Monitor of Built-in Audio Analogue Stereo' (anders is er geen keuze : "No application is currently recording audio")
-	- verliesloze opname van kortere stukken (want orde 1GB per minuut voor deze instellingen, anders b.v. -c:v libx264) :
-		$ ffmpeg -thread_queue_size 512 -f alsa -sample_rate 44100 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 1200x672 -i :0.0+0,624 -c:a flac -c:v huffyuv /media/ramdisk/test.mkv
-		-thread_queue_size 512 : tegen "[alsa @ 0x1c90640] Thread message queue blocking; consider raising the thread_queue_size option"; evt. herhalen VOOR -f x11grab
-		-f alsa ... -i pulse : formaat alsa ingevoerd via pulseaudio, dus geluid
-			- EERST formaat -f met opties, dan pas invoer -i
-			- opties zoals -ar 44100 en -ac 2 werken ook wat het resultaat betreft, maar ik vermoed dat zo capture gebeurt met de defaults van het formaat -f, en dan pas omgezet naar formaat voor uitvoer; zou verspilling zijn
-		-f x11grab ...  -i :0.0+0,624 : grabformaat van X11, invoer van display :0.0 dus video.
-			- EERST formaat -f met opties, dan pas invoer -i
-			- opties zoals -r 30 en -s 1200x672 werken ook wat het resultaat betreft, maar ik vermoed dat zo capture gebeurt met de defaults van het formaat -f, en dan pas omgezet naar formaat voor uitvoer; zou verspilling zijn
-			-draw_mouse 0 : muis niet mee opnemen (default 1)
-			-show_region 1 : kadertje rond opgenomen deel
-			[-follow_mouse 1] : (zinloos bij volledig scherm) klein gebied dat de muis volgt
-				- ZONDER x, y offset, anders hebben die voorrang
-				- juist hiervoor is -show_region handig, maar kader helaas in beeld bij muisbeweging, mee opgenomen
-			-framerate 30 : 25 geeft (erg lichte) flikkering op VRT Nu; niet-gehele opgeven als breuk, b.v. 29975/1000
-			-i :0.0+0,624 : voluit [hostname]:display_number.screen_number[+x_offset,y_offset]
-				- hostname : default localhost
-				- screen_number : default 0
-				+x_offset,y_offset :
-					- default +0,0
-					- alternatief -grab_x 0 -grab_y 624 -i $DISPLAY
-				- vb. : :$DISPLAY+0,624
+	- SNELLE compressie door GPU, bijna zonder CPU-belasting : vaapi HW-versnelling voor scaling en compressie
+		- zie sectie "vaapi GPU-hardware versnelling"
+		- een paar opties voor hwaccell en vaapi mogen wschlk. weg of korter, maar dit werkt :
+		$ /media/sdata/WERK/ffmpeg/ffmpeg -thread_queue_size 512 -init_hw_device vaapi=intel:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device intel -filter_hw_device intel -f alsa -sample_rate 44100 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 1200x672 -i :0.0+0,624 -c:a flac -vf "format=nv12|vaapi,hwupload,scale_vaapi=w=768:h=432:mode=hq" -c:v h264_vaapi -profile:v high -b:v 2500k -t 3000 /media/ramdisk/test.mkv
+			-thread_queue_size 512 : tegen "[alsa @ 0x1c90640] Thread message queue blocking; consider raising the thread_queue_size option"; evt. herhalen VOOR -f x11grab
+			-f alsa ... -i pulse : geluid formaat alsa ingevoerd via pulseaudio
+				- EERST formaat -f met opties, dan pas invoer -i
+				- opties zoals -ar 44100 en -ac 2 werken ook wat het resultaat betreft, maar ik vermoed dat zo capture gebeurt met de defaults van het formaat -f, en dan pas omgezet naar formaat voor uitvoer; zou verspilling zijn
+			-f x11grab -i :0.0+0,624 : beeldinvoer van X11-display 0:0, offset x=0, y=624: 624=(1920-672)/2
+			- "scale_vaapi=w=768:h=432:mode=hq" : ineens in hardware herschalen naar echt 16:9-formaat 768x432
+			- video-encoder h264_vaapi heeft blijkbaar default pix_fmt yuv420p, is OK
+			-t 3000 : autom. stoppen na 3000 sec. == 50 min., anders neemt hij op tot toets 'q'
+			- cpu-gebruik :
+				$ cat /proc/loadavg
+				>>> ongeveer 2.5 <<<
+	- VERLIESLOOS 
+		- met "-c:v libx265 -preset ultrafast -x265-params lossless=1" en fdk_aac HE2 : 1200x672 aan 36322 kb/s, 260MB/min
+			$ /opt/ffmpeg-dirk/ffmpeg -thread_queue_size 512 -f alsa -sample_rate 44100 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 1200x672 -i :0.0+0,624 -c:a libfdk_aac -profile:a aac_he_v2 -vbr:a 2 -pix_fmt yuv420p -c:v libx265 -preset ultrafast -x265-params "lossless=1" /media/ramdisk/test.mkv
+		- huffyuv en flac : kortere stukken (want orde 1GB per minuut voor deze instellingen) :
+			$ ffmpeg -thread_queue_size 512 -f alsa -sample_rate 44100 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 1200x672 -i :0.0+0,624 -c:a flac -c:v huffyuv /media/ramdisk/test.mkv
 	- HQ opname langere stukken : x264 single-pass snel maar weinig verlies, en bijna geen kbs voor stilstaand :
 		$ ffmpeg -thread_queue_size 512 -f alsa -sample_rate 44100 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 1200x672 -i :0.0+0,624 -c:a flac -pix_fmt yuv420p -c:v libx264 -preset ultrafast -crf 18 -y /media/ramdisk/test.mkv
-		-pix_fmt yuv420p : anders default yuv444
-		-crf : constant rate factor [0,51], 0 is lossless, sane range is 17–28 (17 or 18 visually lossless, 23 default)
-	- ineens herschalen naar echt 16:9-formaat, b.v. 768x432 :
-		-vf scale=768:432
+			-pix_fmt yuv420p : anders yuv444p (slecht ondersteund in Windows), default-formaat van libx264
+			-crf : constant rate factor [0,51], 0 is lossless, sane range is 17–28 (17 or 18 visually lossless, 23 default)
+			-vf scale=768:432 : ineens herschalen naar echt 16:9-formaat
 
-- voorbeeld met vaapi HQ-versnelling voor scaling en compressie (opm: een paar opties voor hw accell en vaapi mogen wschlk weg of korter, maar dit werkt) :
-	$ /media/sdata/WERK/ffmpeg/ffmpeg -thread_queue_size 512 -init_hw_device vaapi=intel:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device intel -filter_hw_device intel -f alsa -sample_rate 44100 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 1200x672 -i :0.0+0,624 -c:a flac -vf "format=nv12|vaapi,hwupload,scale_vaapi=w=768:h=432:mode=hq" -c:v h264_vaapi -profile:v high -b:v 2000k -t 3000 -y /media/ramdisk/test.mkv
-		-t 3000 : autom. stoppen na 3000 sec. == 50 min., anders neemt hij op tot toets 'q'
-		- cpu-bezetting : $ cat /proc/loadavg : ongeveer 2.5
+=== opnemen van ffplay ===
 
+- o.a. voor video's waarop ffmpeg decoder-fouten geeft : ffplay handelt die robuuster af
+	- zie sectie 'herstel beschadigd bestand' : 
+
+- starten ffmpeg in achtergrond, ffplay in voorgrond met -autoexit, en sturen met kill een SIGINT naar achtergrond zo gauw ffplay afsluit :
+	- gebruiken GPU-encoder voor video, en snelle flac encoder voor audio
+	- zie ook sectie 'opnemen van scherm (b.v. ook video in browser) 'screen capture''
+	- zie ook sectie 'ffplay echt in achtergrond uitvoeren'
+		- om ffplay-voortgangsrapport niet doorheen ffmpeg-voortgangsrapport te mengen
+	$ /media/sdata/WERK/ffmpeg/ffmpeg -hide_banner -nostdin -thread_queue_size 512 -init_hw_device vaapi=intel:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device intel -filter_hw_device intel -f alsa -sample_rate 44100 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 854x480 -i :0.0+173,720 -c:a flac -vf "format=nv12|vaapi,hwupload" -c:v h264_vaapi -profile:v high -b:v 2500k /media/ramdisk/uitvoer.mkv & ffplay -loglevel quiet -hide_banner -autoexit -x 854 -y 480 -noborder -i invoer ;kill $!
+		- ffmpeg -nostdin ... & : draai ffmpeg in de achtergrond
+			-nostdin : belangrijk, anders wacht ffmpeg eeuwig tot hij stdin kan monitoren, hetgeen immers niet kan vanuit achtergrond
+		- ffplay -noborder : zonder frame en titelbalk, zodat netjes x_offset = (schermbreedte - videobreedte)/2, y_offset = ...
+		- kill $! : $! is PID van meest recent in achtergrond gestarte taak
+			- kill zonder meer stuurt SIGINT, wordt voor ffmpeg behandeld als normale vraag om ordelijk af te sluiten en te stoppen
+			- kill op bash jobnr., b.v. kill %1, niet betrouwbaar: als al andere opdrachten in de shell liepen, kan het jobnr, 2, 3 enz. zijn
+		
 === muziek DVD naar flac, mp3, ogg ===
 
 - de gereedschappen mplayer en lsdvd van sectie "DVD naar MP4" werken alleen op de dvd-map VIDEO_TS, niet op AUDIO_TS. Dat maakt werken met ffmpeg moeilijk. 
@@ -270,7 +401,7 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 - typisch bij digitaliseren van analoge video kan de polariteit van een van de geluidsaansluitingen verkeerd zijn, wat resulteert in een faseverschil van PI. Als ge dan de 2 kanalen samenvoegt tot 1 mono geluid, heffen de 2 kanalen elkaar (gedeeltelijk) op, met een erg magere klank als resultaat. In zulk geval kunt ge met ffmpeg ofwel slechts 1 signaal selecteren, ofwel, zoals in de opdracht hieronder, het verschil van beide kanalen coderen:
 	$ /opt/ffmpeg/ffmpeg -i stereoIN.mp4 -c:v copy -af "pan=1c|c0=c0-c1" -c:a aac monoUIT.mp4
 	- -af "pan=1c|c0=c0-c1" : audiofilter pan naar 1 kanaal, dat ene uitvoerkanaal (c0) is samengesteld uit het verschil van de 2 invoerkanalen c0 en c1 (OPM: aanhalingstekens rond de filteropdracht zijn nodig voor bash vanwege '|')
-	- -c:a aac : codec en instellingen te keizen anar behoefte
+	- -c:a aac : codec en instellingen te keizen naar behoefte
 
 === FLAC 24 bit 96khz to 16 bit 48khz ===
 
@@ -318,7 +449,26 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 	- remove metadata, b.v. chapter info verwijderen uit mp4 
 		$ ffmpeg -i input -map_chapters -1 -c copy output.mp4
 
-=== mp3 Lame VBR opties ===
+=== ffmpeg geluidskwaliteit ===
+- ffmpeg supported formats from high to low quality:
+	libopus > libvorbis >= libfdk_aac > aac > libmp3lame >= eac3/ac3 > libtwolame > vorbis > mp2 > wmav2/wmav1
+
+- in mp4 past mp3 en aac, later ook ac3 toegevoegd, niet algemeen ondersteund
+
+- ffmpeg's eigen ingebouwde aac is bij 128kbps "even goed" als fdk_aac
+	- voor lagere bitrate is de aac van fdk (Fraunhofer) veel beter (zoals voor mp3), met werkende VBR (bij default profile:a aac_low)
+	- eigen aac van ffmpeg 3.3.2 (static build) is niet meer experimenteel, VBR mogelijk wel;
+	- eigen aac in 32k is "zo goed als" fdk's mp3 pro in Windows 
+
+- fdk_aac: default is profile:a aac_low
+	- profile:a aac_he_v2 is vooral beter (kwaliteit/grootte) aan lage bitrate (vbr 1-3 of cbr), omdat het de geluidskanalen combineert (cfr. mp3 joint stereo)
+		- ENKEL STEREO 
+		- alternatief: eerst audio met Fraunhofer's mp3 (wine vdub) aan b.v. 24kbps
+			- zie sectie "TTC algemeen spraak"
+	- OPM: Medion TV ondersteunt aac_he_v2 in .mp4 en .m4a, LG DVD-speler enkel aac_low in .mp4 (geen .m4a)
+	- OPM: lagere sampling rate kan zelfs hogere bitrate geven dan origineel
+
+==== mp3 Lame VBR opties ====
 
 	$  ffmpeg -i invoer -c:a libmp3lame -q:a 2 -compression_level 0 -joint_stereo 1 uitvoer.mp3
 	-q:a 2 : wordt vertaald naar lame-optie V (variable-bitrate quality)
@@ -338,11 +488,11 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 		#	-V 9 		 65 	 45- 85 	-q:a 9
 	-compression_level 0 : wordt vertaald naar lame-optie -q (algorithm quality. 0 highest quality but slowest, 9 fastest but worst quality)
 	-joint_stereo 1 : wordt vertaald naar lame-optie -m j, -joint-stereo 0 naar -m s als invoer stereo is
-	- OPM lagere samplingrate (ffmpeg -ar 22050 of -ar 24000) geeft lagere bitrate bij zelfde -q
 	- Lucky Luke films met -q 9 ong. 64kbps, -q 8 ong. 72kbps, -q 2 ong. 170kbps
+	- OPM lagere samplingrate (ffmpeg -ar 22050 of -ar 24000) geeft lagere bitrate bij zelfde -q
 
-=== aac en libfdk_aac opties ===
-
+==== aac en libfdk_aac opties ====
+	- zie (https://trac.ffmpeg.org/wiki/Encode/HighQualityAudio)
 	- aac is nieuwer en beter dan mp3, maar native aac encoder van ffmpeg nog niet op punt voor variabele bitrate, de libfdk_aac van Fraunhofer is vooral op dat vlak beter
 	- Fraunhofer-bib libfdk_aac niet als binary verspreid, dus ffmpeg zelf compileren (WERK/ffmpeg/ffmpeg), of static build in /opt/ffmpeg (https://launchpad.net/~spvkgn/+archive/ubuntu/ffmpeg-nonfree)
 	- libfdk_aac profielen :
@@ -356,7 +506,7 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 				-vbr 5 : mono 112kbps, stereo 2x 96kbps = 192kbps, 5.1 2x 112kbps + 2x2x 96kbps = 608kbps
 			- zie ook http://wiki.hydrogenaud.io/index.php?title=Fraunhofer_FDK_AAC#Bitrate_Modes
 		- 'high efficiency', geoptimaliseerd voor lage bitrates
-			- ALLEEN STEREO, maar door verschilcodering slechts 2-3 kbps meer dan mono zou geven
+			- ALLEEN STEREO, maar zou door verschilcodering slechts 2-3 kbps meer dan mono geven
 			- om mono toch als stereo te coderen : -ac 2
 			- om stereo, b.v. hoofdzaak spraak, mono te maken, maar op stereo-kanaallayout : -af "pan=stereo|c0<c0+c1|c1<c0+c1"
 			$ ffmpeg -i invoer -c:a libfdk_aac -profile:a aac_he_v2 
@@ -396,9 +546,11 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 			-vbr               <int>        E...A.... VBR mode (1-5) (from 0 to 5) (default 0)
 		<<<
 
-=== lage bitrates voor spraak ===
+==== lage bitrates voor spraak ====
 
 - voor lage bitrates, goed genoeg voor spraak, is nog altijd Fraunhofer de top, zowel in mp3 (veel beter dan Lame) als in aac;
+
+- geluid in video :
 	- stereo lage bitrates (b.v. spraak met muziekfragmenten)
 		- ffmpeg -i invoer -c:a libfdk_aac -profile:a aac_he_v2, voor lage bitrates stukken beter dan Fraunhofer Pro mp3, en voor zelfde kwaliteit veel lagere bitrates dan LAME vbr
 			- zie sectie "aac en libfdk_aac opties"
@@ -418,8 +570,11 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 		- libfdk_aac met ffmpeg -profile:a aac_he_v2 ook goed voor mono, maar minder spectaculair beter dan ffmpeg -profile:a aac_low
 		- sinds VDub 1.10 ook met batch-encoding naar .WAV :
 			- eerst 1 bron laden in Vdub
-			- evt. met Audio/conversion audio naar gelang bron downsamplen naar 16000 of 22500 Hz HQ, mono, en comprimeren naar b.v. 24kbps
-				- kan ook direct bij compressie naar mp3, met zelfs extra keuze voor 24000Hz
+			- instellingen voor geluid kiezen :
+				- Audio/Full processing
+				- Audio/conversion : mono, naar gelang bron evt. downsamplen naar 16000 of 22500 Hz HQ
+					- kan ook direct bij compressie naar mp3, met zelfs extra keuze voor 24000Hz
+				- comprimeren naar b.v. 24kbps
 			0 NIET NODIG: File/Queue batch operation/Save as wav
 			- File/Queue batch operation/Batch Wizard
 				- Route outputs to a different folder : J:\ (mijn ramdisk)				
@@ -434,9 +589,71 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 		- combineren met (originele of gehercomprimeerde) video :
 			$ for i in *.mp4;do ffmpeg -i "$i" -i /media/ramdisk/"${i/.mp4/.wav}" -map 0:v -map 1:a -c copy /media/ramdisk/"$i";done
 
+- geluid apart: in mp3 voor grootste ondersteuning :
+	- zie sectie "bestaande audio in een still-video container wikkelen"
+	- zie hierboven VDub (wine)
+
+=== gamma, brightness en contrast filter ===
+
+- een veelzijdige filter is "eq" (? equalizer) voor de contrast, helderheid, verzadiging en gamma :
+	- interactief uitproberen met de AviDemux-filter "MPlayer eq2" (rechtsklikken op de schuifknoppen geeft optie 'reset')
+	- de getalwaarden daarvan overnemen naar ffplay om nog eens te checken
+		$ ffplay -i ... -vf eq=gamma=1.75:gamma_weight=0.78:contrast=1.3:brightness=0.2" ...
+		- ffplay aanvaardt meerdere sets -vf-filters, die tijdens het afspelen een na een gekozen kunnen worden met toets 'w' (met achteraan de rij bijgevoegd de audio -showmode's wave en rdft (frequentie))
+			- ongefilterd : -vf null
+		- zie sectie "bediening ffplay"
+	- dan in ffmpeg gebruiken :
+		$ ffmpeg -i ... -vf eq=gamma=1.75:gamma_weight=0.78 ...
+		- zie [https://ffmpeg.org/ffmpeg-filters.html#eq]
+
+=== nachtbeelden ophelderen ===
+
+- export naar png :
+	$ ffmpeg -i x.avi  img%05d.png
+		- %05d : 5 cijfers decimaal, met voorloopnullen
+	- XnView batch convert, b.v.
+		- Actions/Map/Exposure=+15
+		- Actions/Map/Adjust/Gamma=2.20
+		- OPM: Levels is in batch convert veel beperkter dan in hoofdprogramma
+	$ ffmpeg -i img%05d -i x.avi -map V -map 1:1 -pix_fmt yuv420p -r 25 ...
+		-map V : default video stream, i.e. 1ste uit 1ste input
+		-map 1:1 : audio, in dit geval 2de stream uit 2de input
+		-pix_fmt : converteer naar pixelformaat van h264 compressor
+		-r : framerate
+OF
+- AviDemux : Video Filter / Colors / Avisynth color filter :
+	- Flags : _ Autowhite, _ AutoGain, _ Clip to TV range, Levels=TV->PC
+	- Y : gain=30, brightness=30, gamma=85, contrast=75
+	- U, V : contrast=30
+
+=== bediening ffplay ===
+
+- tijdens ffplay, met afspeelvenster actief:
+	- quit : q
+	- geluid uit : m
+	- geluid hard/zacht : * / of 0 9
+	- fullscreen : dubbelklik of f
+	- pause : spatie of p
+	- s : step per frame
+	- voor|achteruit 10s : cursor left|right
+	- voor|achteruit  1m : cursor up|down
+	- voor|achteruit 10m : page up|down
+	- volgend geluidsspoor : a
+	- volgend videospoor : v
+	- volgende ondertitel : t
+	- volgende videofilter (bij meerdere opties -vf) of audioweergave (golf of freq.) : w
+	- bij rechtsklik is de breedte van het beeld een virtuele scrollbalk voor de afspeelpositie, b.v. op 1/4 van rechts rechtsklikken is doorspoelen tot 1/4 van einde
+
+=== ffplay echt in achtergrond uitvoeren ===
+
+- PROBLEEM ffplay opent een videovenster, en geeft zijn boodschappen (o.a. voortgang) in de terminal, ZELFS als ge ffplay in de achtergrond draait : "ffplay ... &"
+	- ondertussen kunt ge wel opdrachten intikken in de terminal, maar die invoer is onleesbaar omdat hij zelfs tijdens het intikken wordt overschreven door de voortgangsrapportering, die immers "\r..." gebruikt.
+- OPLOSSING ffplay echt stil maken, en laten stoppen bij einde :
+	$ ffplay -hide_banner -loglevel quiet -autoexit -i bestand &
+
 === titel-metadata verwijderen (b.v. rarbg-torrent) ===
 
-$ ffmpeg -i invoer -map_metadata -1 -c copy uitvoer
+$ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
 
 - OPM voor mp3 behandelt ffmpeg enkel ID3V2 tags, evt. ID3V1 blijven staan; ook ID3V1 tags wegdoen :
 	$ mid3v2 -D *.mp3
@@ -472,12 +689,34 @@ $ ffmpeg -i invoer -map_metadata -1 -c copy uitvoer
 
 - zie https://trac.ffmpeg.org/wiki/Concatenate
 
-- mpg, vob (is mpg), mpeg transport streams and possibly other formats can be concatenated. This is analogous to using cat on UNIX-like systems or copy on Windows.
-	$ /opt/ffmpeg/ffmpeg -i "concat:INPUT1.VOB|INPUT2.VOB|INPUT3.VOB" -c encoders ... output.mpg
-	- "concat protocol"
-	OF
-	$ cat INPUT1.VOB INPUT2.VOB INPUT3.VOB | ffmpeg -i - -c encoders ... output.fmt
-	- "-i -" leest invoer van stdin, die gepipet wordt vanuit cat
+- concat protocol :
+	- mpg, vob (is mpg), mpeg transport streams and possibly other formats can be concatenated. This is analogous to using cat on UNIX-like systems or copy on Windows.
+		$ /opt/ffmpeg/ffmpeg -i "concat:INPUT1.VOB|INPUT2.VOB|INPUT3.VOB" -c encoders ... output.mpg
+		- vb. om meerdelige string te maken:
+			$ --concat="$(seq -s .VOB\|  8 12).VOB"
+				>>> 8.VOB|9.VOB|10.VOB|11.VOB|12.VOB <<<
+				-s : separator (default \n)
+				-w : equalize width by padding with leading zeroes
+		OF
+		$ cat INPUT1.VOB INPUT2.VOB INPUT3.VOB | ffmpeg -i - -c encoders ... output.fmt
+		- "-i -" leest invoer van stdin, die gepipet wordt vanuit cat
+	-  mp4 files can be losslessly transcoded to MPEG-2 transport streams to concatenate. All MPEG codecs (MPEG-4 Part 10 / AVC, MPEG-4 Part 2, MPEG-2 Video, MPEG-1 Audio Layer II, MPEG-2 Audio Layer III (MP3), MPEG-4 Part III (AAC)) are supported in the MPEG-TS container format, although the commands below would require some change (e.g., the -bsf bitstream filters will have to be changed).
+		- b.v. voor mp4 met H.264 video en AAC audio:
+			$ ffmpeg -i input1.mp4 -c copy -bsf:v h264_mp4toannexb -f mpegts intermediate1.ts
+			$ ffmpeg -i input2.mp4 -c copy -bsf:v h264_mp4toannexb -f mpegts intermediate2.ts
+			$ ffmpeg -i "concat:intermediate1.ts|intermediate2.ts" -c copy -bsf:a aac_adtstoasc output.mp4
+			OF
+			- Using named pipes to avoid intermediate files
+				- OPM:  named pipe kan maar 1 keer gelezen worden
+					- werkt zeker niet voor 2-pass hercoderen
+					- werkt wschlk. niet voor formaten waarbij b.v. eerst achteraan een frame-index o.i.d. moet gelezen worden
+				- send stderr (to which ffmpeg sends all the written data) to /dev/null, to avoid cluttering up the command-line:
+				- OPGELET: -y to force ffmpeg to write to the existing named pipes temp1 and temp2. Without the switch, the first two ffmpeg programs running in the background will not produce any output because they wait for interactive yes/no answers to overwrite existing files
+			$ mkfifo temp1 temp2
+			$ ffmpeg -y -i input1.mp4 -c copy -bsf:v h264_mp4toannexb -f mpegts temp1 2> /dev/null & \
+			$ ffmpeg -y -i input2.mp4 -c copy -bsf:v h264_mp4toannexb -f mpegts temp2 2> /dev/null & \
+			$ ffmpeg -f mpegts -i "concat:temp1|temp2" -c copy -bsf:a aac_adtstoasc output.mp4
+		- voor h.265-invoer : "-bsf:v hevc_mp4toannexb"
 
 - the concat 'demuxer' is more flexible: it requires the same codecs with a consistent bitrate setting, but different container formats can be used; and it can be used with any container formats. Instructions:
 	- Create a file 'mylist.txt' with all the files you want to have concatenated in the following form (lines starting with a # are ignored):
@@ -488,6 +727,12 @@ $ ffmpeg -i invoer -map_metadata -1 -c copy uitvoer
 		file '/path/to/file3'
 		<<<
 		- these can be either absolute or relative (to mylist.txt) paths.
+	- extra opdrachten (elk op een eigen lijn, gelden voor de voorgaande file opdracht)
+		>>>
+		duration hh:mm:ss.mmm : voor als duur niet uit vorige file blijkt
+		inpoint hh:mm:ss.mmm : startpunt in vorige file opdracht
+		outpoint hh:mm:ss.mmm : eindpunt in vorige file opdracht
+		<<<
 	- Then you can stream copy or re-encode your files:
 		$ /opt/ffmpeg/ffmpeg -f concat -safe 0 -i mylist.txt -c encoders ... output.xxx
 		-safe 0 above is not required if the paths are relative
@@ -496,7 +741,9 @@ $ ffmpeg -i invoer -map_metadata -1 -c copy uitvoer
 		$ for f in ./*.wav; do echo "file '$f'" >> mylist.txt; done
 		- or with printf
 		$ printf "file '%s'\n" ./*.wav > mylist.txt
-	- If your shell supports process substitution (like Bash and Zsh), you can avoid explicitly creating a list file and do the whole thing in a single line. Make sure to generate absolute paths here, since ffmpeg will resolve paths relative to the list file your shell may create in a directory such as "/proc/self/fd/".
+	- If your shell supports process substitution (like Bash and Zsh), you can avoid explicitly creating a list file and do the whole thing in a single line.
+		- OPGELET : generate absolute paths here, since ffmpeg will resolve paths relative to the implicit list file, which your shell may create in a directory such as "/proc/self/fd/".
+			- gebruik evt. $(realpath ...) om bestanden in andere dan $PWD te voorzien van absoluut pad
 		$ /opt/ffmpeg/ffmpeg -f concat -safe 0 -i <(for f in ./*.wav; do echo "file '$PWD/$f'"; done) -c copy output.wav
 		OF
 		$ /opt/ffmpeg/ffmpeg -f concat -safe 0 -i <(printf "file '$PWD/%s'\n" ./*.wav) -c copy output.wav
@@ -561,10 +808,6 @@ $ ffmpeg -i invoer -map_metadata -1 -c copy uitvoer
 	$ ffmpeg -i input.mp4 -i image.png -filter_complex "[0:v][1:v] overlay=25:50:enable='between(t,0,20)'" -pix_fmt yuv420p -c:v ... -c:a copy output.mp4
 		- overlay van image.png (stream 1:v) op positie x=25,y-50 over film input.mp4 (stream 0:v), van seconde 0 tot 20
 		- opgelet dat we terug het juiste beeldformaat maken, yuv420p voor zowat alle encoders
-
-=== herstel beschadigd bestand ===
-- soms werkt dit, ffmpeg slaat beschadigde stukken gewoon over als vervolg gevonden kan worden
-	$ ffmpeg  -err_detect ignore_err -i fout.mkv -c copy /media/ramdisk/goed.mkv
 	
 === info over mediabestanden ===
 
@@ -580,18 +823,17 @@ $ ffmpeg -i invoer -map_metadata -1 -c copy uitvoer
 
 ==== vergelijken duur van reeks afleveringen na hercompressie ====
 
-- voor 1 reeks
+- voor 1 reeks, genummerd als "99 naam.ext"
+	- voor gemakkelijke vergelijking kappen we de extensie van de bestandsnamen af
 	$ cd oud
-	$ for b in *.mp4;do echo $b ; 2>&1 ffprobe -hide_banner "$b" |grep -E "Duration"|sed -E 's/(.*), start:.*/\1/';done >/media/ramdisk/oud
+	$ for b in ??\ *.???;do echo ${b:: -4}; 2>&1 ffprobe -hide_banner "$b" |sed -nE '/Duration/{s/.*(Duration:[^,]*),.*/\1/;p}';done >/media/ramdisk/ou
 	$ cd nieuw
-	$ for b in *.mp4;do echo $b ; 2>&1 ffprobe -hide_banner "$b" |grep -E "Duration"|sed -E 's/(.*), start:.*/\1/';done >/media/ramdisk/nieuw
+	$ for b in ??\ *.???;do echo ${b:: -4}; 2>&1 ffprobe -hide_banner "$b" |sed -nE '/Duration/{s/.*(Duration:[^,]*),.*/\1/;p}';done >/media/ramdisk/nw
 	- nieuw en oud vergelijken met meld, highlighting maakt snel duidelijk of er meer verschil is dan paar 1/10 seconden
 	$ spawn meld /media/ramdisk/oud /media/ramdisk/nieuw
 
-
 - voor meerdere reeksen
-	$ for d in TTC*/;do pushd "$d";for f in *.mp3;do echo $f ; 2>&1 ffprobe -hide_banner "$f" |grep -E "Duration"|sed -E 's/(.*), start:.*/\1/';done >>/media/ramdisk/oud;popd; pushd /media/sdata/WERK/"$d";for f in *.mp3;do echo $f ; 2>&1 ffprobe -hide_banner "$f" |grep -E "Duration"|sed -E 's/(.*), start:.*/\1/';done >>/media/ramdisk/nieuw;popd;done ;spawn meld /media/ramdisk/oud /media/ramdisk/nieuw
-
+	$ for d in TTC*/;do pushd "$d";for f in *.mp3;do echo $f ; 2>&1 ffprobe -hide_banner "$f" |sed -nE '/Duration/{s/.*(Duration:[^,]*),.*/\1/;p}';done >>/media/ramdisk/oud;popd; pushd /media/sdata/WERK/"$d";for f in *.mp3;do echo $f ; 2>&1 ffprobe -hide_banner "$f" |sed -nE '/Duration/{s/.*(Duration:[^,]*),.*/\1/;p}';done >>/media/ramdisk/nieuw;popd;done ;spawn meld /media/ramdisk/oud /media/ramdisk/nieuw
 	
 == vaapi GPU-hardware versnelling ==
 - zie "https://trac.ffmpeg.org/wiki/Hardware/VAAPI"
@@ -617,14 +859,14 @@ $ ffmpeg -i invoer -map_metadata -1 -c copy uitvoer
 	
 === vaapi hardware accelleration ===
 
-- default Ubuntu versie heeft minder vaapi opties, en geen fdkaac
+- default Ubuntu versie heeft minder vaapi opties, en geen fdk_aac
 
 - EIGEN COMPILATIE MET ffmpegbuild.sh HEEFT OOK FDKAAC
 	- voorlopig in .../WERK/ffmpeg/
 	- ZIE "~/Documents/_installatie/knowhow ffmpeg compileren"
 
 - NIET meegecompileerd in johnvansickle's static build /opt/ffmpeg/ffmpeg
-- NIET meegecompileerd in ronny1982's /opt/ffmpeg/ffmpeg-fdkaac
+- NIET meegecompileerd in ronny1982's /opt/ffmpeg/ffmpeg-fdk_aac
 
 === ondersteunde codecs en filters ===
 - vaapi kan decoderen/filteren/encoderen in GPU's
@@ -915,6 +1157,9 @@ $ ffmpeg -i invoer -map_metadata -1 -c copy uitvoer
 === bitmap ondertitels (VobSub .idx/.sub) mee in .mkv opnemen ===
 - worden door veel spelers echter niet afgespeeld
 
+- encoder:
+	- vobsub idx/sub : -c:s dvdsub of copy daarvan
+
 - Assume your input files are infile.mp4, infile.idx and infile.sub and you wish to combine them all into outfile.mkv :
 		$ ffmpeg -i infile.mp4 -i infile.idx -i infile.sub -map 0:V -map 0:a -c copy -map 1 -c:s:1 dvd_subtitle -metadata:s:s:1 language=fre outfile.mkv
 
@@ -922,9 +1167,9 @@ $ ffmpeg -i invoer -map_metadata -1 -c copy uitvoer
 
 - container-afhankelijk, en niet alle spelers ondersteunen ze
 
-- vobsub idx/sub : -c:s dvdsub of copy daarvan
-- MKV containers: -c:s dvdsub, srt, ass of ssa of copy daarvan
-- MP4 containers: -c:s mov_text of copy daarvan
+- encoder:
+	- MKV containers: -c:s dvdsub (.idx/.sub), -c:s srt OF -c:s subrip (.srt), -c:s ass OF -c:s ssa, of -c:s copy daarvan
+	- MP4 containers: -c:s mov_text of copy daarvan
 	- vb. Import a subtitle file (copy video and audio streams re-encoding):
 		$ ffmpeg -i input.mp4 -sub_charenc WINDOWS-1252 -i subtitle.srt -map 0:V -map 0:a -c copy -map 1 -c:s:0 mov_text -metadata:s:s:0 language=ger output.mp4
 		OF
@@ -998,29 +1243,26 @@ $ ffmpeg -i invoer -map_metadata -1 -c copy uitvoer
 	- chaptertitels van een dvd achterhalen: afspelen in VLC, snapshot (sneltoets '/') nemen van dvd-menus, en overtikken (bij operia zijn er dikwijls geen echte titels, maar gebruikt men de 1ste frase van een stuk, te vinden in de ondertitels als die er zijn).
 	- om ze in mp4 te verwerken, zie lemma "hoofdstukken (chapters) in o.a. mp4-bestand"
 
-=== nachtbeelden ophelderen ===
-
-- export naar png :
-	$ ffmpeg -i x.avi  img%05d.png
-		- %05d : 5 cijfers decimaal, met voorloopnullen
-	- XnView batch convert, b.v.
-		- Actions/Map/Exposure=+15
-		- Actions/Map/Adjust/Gamma=2.20
-		- OPM: Levels is in batch convert veel beperkter dan in hoofdprogramma
-	$ ffmpeg -i img%05d -i x.avi -map V -map 1:1 -pix_fmt yuv320p -r 25 ...
-		-map V : default video stream, i.e. 1ste uit 1ste input
-		-map 1:1 : audio, in dit geval 2de stream uit 2de input
-		-pix_fmt : converteer naar pixelformaat van h264 compressor
-		-r : framerate
-OF
-- AviDemux : Video Filter / Colors / Avisynth color filter :
-	- Flags : _ Autowhite, _ AutoGain, _ Clip to TV range, Levels=TV->PC
-	- Y : gain=30, brightness=30, gamma=85, contrast=75
-	- U, V : contrast=30
-
 == FOUTEN EN HUN OPLOSSINGEN ==
 
-- waarschuwingen niet geven (komen soms in een stortvloed_ :
+=== decodeerfouten zoeken ===
+
+- ffplay toont fouten bij afspelen, maar misschien slaat die er over bij versneld afspelen; daarom volledig decoderen door met ffmpeg te hercoderen, met (naar ik vermoed) de snelste encoders :
+	$ for i in *.mp4;do ffmpeg -hide_banner -xerror -i "$i"  -c:v rawvideo -c:a pcm_s16le -f null - >& /media/ramdisk/"$i".log;echo -e "======\n==\t$?\t$i\n======";done
+		-hide_banner : laat info over ffmpeg compilatie-opties weg
+		-xerror : Stop and exit on error
+		-f null - : dummy muxer; ffmpeg-syntax heeft wel outputspec nodig, maar daar wordt niet naar geschreven : file, - (stdout) of /dev/null
+	$  catfiles /media/ramdisk/*.log | sed -E 's/\r/\n/g'
+		- om voortgangsrapportage (frame ... speed) lijn per lijn te zien, i.p.v. elkaar te overschrijven
+
+=== herstel beschadigd bestand ===
+- soms werkt dit, ffmpeg slaat beschadigde stukken gewoon over als vervolg gevonden kan worden
+	$ ffmpeg  -err_detect ignore_err -i fout.mkv -c copy /media/ramdisk/goed.mkv
+
+- voor avi : mencoder kan frame-index herstellen (wordt met mplauer geïnstalleerd)
+	$ mencoder -forceidx -oac copy -ovc copy corruptvideo.avi -o fixedvideo.avi
+		
+=== waarschuwingen niet geven (komen soms in een stortvloed) ===
 	$ ffmpeg ... -loglevel fatal : Only show fatal errors.
 	OF
 	$ ffmpeg ... -loglevel error : Only show fatal errors, including ones which can be recovered from.
@@ -1037,6 +1279,239 @@ OF
 		$ ffmpeg -fflags +genpts -i inputfile -c copy ...
 	- Also  hard-coding the frame rate can solve this issue :
 		$ ffmpeg -r 25 -i inputfile -c copy ...
+
+=== Too many packets buffered ===
+
+- PROBLEEM: bij stilstaand beeld in een video met geluid, kan de geluidsstream ([0:1] in dit vb.) de foutboodschap
+	>>>
+	Too many packets buffered for output stream 0:1.
+	Conversion failed!
+	<<<
+	- in ffmpeg-uitvoer te herkennen aan veld 'dup' op voortgangslijn die begint met frame-nr (gedropt frame wordt vervangen door duplicaat van het voorgaande)
+	- in AviDemux of VirtualDub te herkennen door frame per frame vooruit te gaan
+
+- OPLOSSING 1: als het beeld is zoals het moet zijn (b.v. video begint met lang, onveranderlijk titelbeeld, b.v. begint met 1 keyframe en dan 100-en dropped frames), dan is dit op te lossen door
+	- gewoon de buffer te vergroten: ffmpeg ... -max_muxing_queue_size 1000 ...
+	OF
+	- een aantal seconden te skippen (is toch maar muziek met stilstaand beeld): ffmpeg -ss 10 ...
+
+- OPLOSSING 2: op b.v. DVD met "TTC Dark Matter, Dark Energy" beginnen de lessen met 20 seconden alleen geluid (intro + begin van de les), dan pas het 1ste frame, met de titel van de les, en vanaf 2de frame gewoon beeld + geluid. De videostroom apart naar een bestand gekopiëerd, speelt niet af in VLC (blijkbaar kan de timing voor het begin alleen door het geluidsspoor geleverd worden). Met ffmpeg kan dat 1ste frame opgeslagen worden, en met de juiste combinatie van overlay-filter en mapping over het beeldloze begin geplakt worden:
+	$ afl=invoerZonderPad.ext
+	$ naam="${afl/.ext}"
+	- kopiëer 1ste frame naar een png-bestand, en leg z'n tijdstamp vast :
+		$ tijdstamp=$(ffmpeg -loglevel debug -i "$afl" -vf select=1 -vframes 1 -f image2 -y /tmp/"$afl".png 2>&1 | grep -E "Parsed_select.* n:0." | sed -E 's!^.* t:([\.0-9]+) .*$!\1!')
+			-loglevel debug : zorgt dat o.a. detailuitvoer van de select-filter getoond wordt
+			-vf select=1 : videofilter die alleen de frames selecteert waarvoor de uitdrukking na de '=' gelijk is aan 1; hier dus een dummy uitdrukking: "selecteer elk frame", maar de filter geeft wel in de debug-log voor elk geselecteerd frame een "[Parsed_select]"-lijn, met o.a.
+				- n: The (sequential) number of the filtered frame, starting from 0.000... (floating point!)
+				- pts: The PTS (Presentation TimeStamp) of the filtered video frame, expressed in TB units. It’s NAN if undefined.
+				- t: The PTS of the filtered video frame, expressed in seconds. It’s NAN if undefined.
+			-vframes 1 : stop uitvoer na 1 frame
+			- grep : selecteert uit de debug-log de "Parsed_select"-uitvoer van de select-filter, voor frame n=0.[000...]
+			- sed : houdt van die lijn alleen de tijdstamp (uit het deel "t:999.99999") over
+	- overlay het uitgefilterde frame over het (frameloze) begin van de video op deze manier:
+		$ ffmpeg -i "$afl" -i /tmp/"$afl".png -i "$afl" -filter_complex "[0:v][1:v]overlay=enable='between(t,0,$tijdstamp)'[video]" -map [video] -map 2:a ... "$doel/$naam.mp4"
+		>>>
+		Stream mapping:
+		  Stream #0:0 (mpeg4) -> overlay:main
+		  Stream #1:0 (png) -> overlay:overlay
+		  overlay -> Stream #0:0 (libx264)
+		  Stream #2:1 -> #0:1 (mp3 (mp3float) -> aac (libfdk_aac))
+		<<<
+			- 3 invoeren: de video zelf, het frame in png voor de overlay daarop, nog eens de video om het geluidsspoor apart toe te voegen aan de combinatie van de vorige 2: als ge het geluidsspoor uit de 1ste -i neemt, geeft ffmpeg alsnog een "Too many packets buffered"
+			- overlay-filter voor de zekerheid expliciete invoerstreams geven, en een benoemde uitvoerstream om die naam te kunnen opgeven in een map, naast een map van de audio uit de 2de invoer van de originele video, anders geeft ffmpeg alsnog een "Too many packets buffered"
+
+== AVIDEMUX ==
+
+- AviDemux batchverwerking :
+	- jobs in Queue zetten met avidemux zelf (File/Queue, of Ctrl-U)
+		- de instellingen van avidemux worden bewaard als AviDemux project script (python), in ~/.avidemux6/jobs/jobnaam.py scripts (kunnen desgewenst ook in AviDemux zelf nog terug geladen worden om te wijzigen of direct uit te voeren)
+			- evt. kunnen voor een reeks jobs achteraf de parameters veranderd worden, b.v. met Geany, b.v. allemaal resamplen naar 22050 :
+				adm.audioSetResample(0, 22050)
+		- UNIEKE JOBNAMEN GEVEN
+		- de jobqueue komt in Sqlite-databasebestand ~/.avidemux6/jobs.sql, met doelnaam en jobstatus
+		- jobqueue beheren en uitvoeren alleen met AviDemux Jobs
+	- Avidemux Jobs nu pas laden (heeft geen auto- of gewone verversfunctie)
+		- "Ready" betekent klaar om uit te voeren, status "Failed" kan met rechtsklik-menu terug op "Ready" gezet worden
+		- met rechtsklik-menu kan ook taak per taak uitgevoerd worden
+		- BEST "Use Qt version", avidemux cli heeft veel Fails waar avidemux Qt geen probleem ziet; minpunt is dat de Qt-versie GUI oproept, en popups op het scherm brengt bij uitvoering
+		- log van uitvoering komt in /tmp/prout.log, met terminal escapes (dus bekijken met cat of less -R)
+		- opdracht zonder qt is (kan nuttig zijn om *.py in een script uit te voeren)
+			$ /usr/bin/avidemux3_[cli|qt5] --nogui --slave 37619 --run /home/dirk/.avidemux6/jobs//JOBNAAM.py --save DOELNAAM --quit
+			--slave 37619 : altijd zelfde nr, dus mog. socketnr., om voortgang en boodschappen van avidemux naar avidemux_jobs te sluizen
+			--nogui : helaas geen effect voor avidemuxXX_qt5
+
+- avidemux2.7_[qt|cli|jobs_qt] --help :
+	Command line possible arguments :
+    --append, append video  (one arg )
+    --audio-codec, set audio codec (MP2/MP3/AC3/NONE (WAV PCM)/TWOLAME/COPY)  (one arg )
+    --avisynth-port, set avsproxy port accordingly  (one arg )
+    --help, print this  ( no arg )
+    --info, show information about loaded video and audio streams  ( no arg )
+    --list-audio-languages, list all available audio langues  ( no arg )
+    --load, load video or workbench  (one arg )
+    --nogui, Run in silent mode  ( no arg ) [OPM: niet gehonoreerd door _qt5, ALTIJD GUI en pop-ups ON TOP]
+    --output-format, set output format (AVI|OGM|ES|PS|AVI_DUAL|AVI_UNP|...)  (one arg )
+    --quit, exit avidemux  ( no arg )
+    --slave, run as slave, master is on port arg  (one arg )
+    --reuse-2pass-log, reuse 2pass logfile if it exists  ( no arg )
+    --run, load and run a script  (one arg )
+    --save, save video  (one arg )
+    --save-jpg, save a jpeg  (one arg )
+    --save-raw-audio, save audio as-is   (one arg )
+    --save-uncompressed-audio, save uncompressed audio  (one arg )
+    --set-audio-language, Set language of an active audio track {track_index} {language_short_name}  (two args )
+    --var, set var (--var myvar=3)  (one arg )
+    --video-codec, set video codec (x264/...)  (one arg )
+
+== VLC ==
+
+=== Hauppauge WinTV gebruiken ==
+
+- input format v4l2
+	- b.v. ondersteunde formaten :
+		$ ffmpeg -f v4l2 -list_formats all -i /dev/video0
+		>>>
+			Raw       :        gray :      8-bit Greyscale :
+			Raw       : Unsupported : 8-bit Dithered RGB (BTTV) :
+			Raw       :    rgb555le : 16-bit A/XRGB 1-5-5-5 :
+			Raw       :    rgb555be : 16-bit A/XRGB 1-5-5-5 BE :
+			Raw       :    rgb565le :     16-bit RGB 5-6-5 :
+			Raw       :    rgb565be :  16-bit RGB 5-6-5 BE :
+			Raw       :       bgr24 :     24-bit BGR 8-8-8 :
+			Raw       :        bgr0 : 32-bit BGRA/X 8-8-8-8 :
+			Raw       :        0rgb : 32-bit A/XRGB 8-8-8-8 :
+			Raw       :     yuyv422 :           YUYV 4:2:2 :
+			Raw       :     uyvy422 :           UYVY 4:2:2 :
+			Raw       :     yuv422p :     Planar YUV 4:2:2 :
+			Raw       :     yuv420p :     Planar YUV 4:2:0 :
+			Raw       :     yuv420p :     Planar YVU 4:2:0 :
+			Raw       :     yuv411p :     Planar YUV 4:1:1 :
+			Raw       :     yuv410p :     Planar YUV 4:1:0 :
+			Raw       :     yuv410p :     Planar YVU 4:1:0 :
+		<<<
+	- b.v. opnemen :
+		$ ffmpeg -f v4l2 -framerate 25 -video_size 640x480 -i /dev/video0 ... output.mkv
+		- v4l2-ctl van package v4l-utils [in aparte terminal] to adjust input, tuning, camera functions (brightness, zoom, focus, ...)
+			-n, --list-inputs : display video inputs
+			-I, --get-input : query the video input
+				>>> Video input : 0 (Television: no signal, no hsync lock) <<<
+			-i, --set-input=<num>
+				$ v4l2-ctl -i 1
+				>>> Video input set to 1 (Composite1: Camera, ok) <<<
+			-V, --get-fmt-video : query the video capture format [VIDIOC_G_FMT]
+			>>>
+				Format Video Capture:
+					Width/Height      : 640/480
+					Pixel Format      : 'YU12'
+					Field             : Interlaced
+					Bytes per Line    : 640
+					Size Image        : 460800
+					Colorspace        : SMPTE 170M
+					Transfer Function : Default (maps to Rec. 709)
+					YCbCr/HSV Encoding: Default (maps to ITU-R 601)
+					Quantization      : Default (maps to Limited Range)
+			<<<
+			- Display all controls and their menus:
+				$ v4l2-ctl -l
+				>>>
+				User Controls
+					 brightness (int)    : min=0 max=65280 step=256 default=32768 value=32768 flags=slider
+					   contrast (int)    : min=0 max=65408 step=128 default=27648 value=27648 flags=slider
+					 saturation (int)    : min=0 max=65408 step=128 default=32768 value=32768 flags=slider
+							hue (int)    : min=0 max=65280 step=256 default=32768 value=32768 flags=slider
+						 volume (int)    : min=0 max=65535 step=655 default=58880 value=58880 flags=slider
+						balance (int)    : min=0 max=65535 step=655 default=32768 value=32768 flags=slider
+						   bass (int)    : min=0 max=65535 step=655 default=32768 value=32768 flags=slider
+						 treble (int)    : min=0 max=65535 step=655 default=32768 value=32768 flags=slider
+						   mute (bool)   : default=0 value=0
+					   loudness (bool)   : default=0 value=0
+					 chroma_agc (bool)   : default=0 value=0 [automatic gain control]
+				   color_killer (bool)   : default=0 value=1
+					comb_filter (bool)   : default=0 value=0
+					  auto_mute (bool)   : default=1 value=1
+		 luma_decimation_filter (bool)   : default=0 value=0
+					  agc_crush (bool)   : default=1 value=1
+					   vcr_hack (bool)   : default=0 value=0 [probeert betere sync met VCR te krijgen]
+			   whitecrush_lower (int)    : min=0 max=255 step=1 default=127 value=127
+			   whitecrush_upper (int)    : min=0 max=255 step=1 default=207 value=207
+					   uv_ratio (int)    : min=0 max=100 step=1 default=50 value=50
+				full_luma_range (bool)   : default=0 value=0
+						 coring (int)    : min=0 max=3 step=1 default=0 value=0
+				<<<
+			- get value:
+				$ v4l2-ctl -C <ctrl>[,<ctrl>]...
+			- set value:
+				$ v4l2-ctl -c <ctrl>=<value>[,<ctrl>=<value>]...
+
+- VLC met camera-invoer:
+	- VLC/File/Open Capture Device
+		[Advanced options...] :
+		- Video capture device: /dev/video0
+		- Input : 1
+	OF
+	- VLC/File/Open Capture Device
+		x Show more options
+		- Edit options: :v4l2-dev=/dev/video0 :v4l2-input=1 :live-caching=0
+			- dev=/dev/video0 : mijn Hauppauge WinTV kaart
+			- input=0 : wschlk. antenne-ingang
+			- input=1 : de cinch video ingang
+			- input=2 : wschlk. S-video ingang
+			- live-caching: default 300ms, is ook zoveel vertraging
+		- opties:
+			- formaat [ :naam=waarde]...
+			- volledige set :
+				- 0 : n.v.t. voor mijn Bt878 Hauppauge WinTV)
+				- X : belangrijk tot essentieel
+				- x : automatisch tot default
+				x :v4l2-standard=PAL
+				  :input-slave=alsa://hw:0,0
+				x :v4l2-dev=/dev/video0
+				x :v4l2-vbidev=/dev/vbi0
+				0 :v4l2-chroma=I422
+				 	- I420, I411, I410, YUY2, GREY, ...
+				X :v4l2-input=1 : cinch video input
+				  :v4l2-audio-input=-1
+				0 :v4l2-width=0
+				0 :v4l2-height=0
+				x :v4l2-aspect-ratio=4\:3
+				x :v4l2-fps=25
+				  :v4l2-radio-dev=/dev/radio0
+				  :v4l2-tuner-frequency=-1
+				  :v4l2-tuner-audio-mode=3
+				  :no-v4l2-controls-reset
+				0 :v4l2-brightness=-1
+				0 :v4l2-brightness-auto=-1
+				0 :v4l2-contrast=-1
+				0 :v4l2-saturation=-1
+				0 :v4l2-hue=-1
+				0 :v4l2-hue-auto=-1
+				0 :v4l2-white-balance-temperature=-1
+				0 :v4l2-auto-white-balance=-1
+				0 :v4l2-red-balance=-1
+				0 :v4l2-blue-balance=-1
+				0 :v4l2-gamma=-1
+				0 :v4l2-autogain=-1
+				0 :v4l2-gain=-1
+				0 :v4l2-sharpness=-1
+				0 :v4l2-chroma-gain=-1
+				0 :v4l2-chroma-gain-auto=-1
+				0 :v4l2-power-line-frequency=-1
+				0 :v4l2-backlight-compensation=-1
+				0 :v4l2-band-stop-filter=-1
+				0 :no-v4l2-hflip
+				0 :no-v4l2-vflip
+				0 :v4l2-rotate=-1
+				0 :v4l2-color-killer=-1
+				0 :v4l2-color-effect=-1
+				  :v4l2-audio-volume=-1
+				  :v4l2-audio-balance=-1
+				  :no-v4l2-audio-mute
+				  :v4l2-audio-bass=-1
+				  :v4l2-audio-treble=-1
+				  :no-v4l2-audio-loudness
+				  :v4l2-set-ctrls=
+				X :live-caching=0
+					- aantal ms vertraging
 	
 == VOORBEELDEN EERDER GEBRUIKTE INSTELLINGEN IN naarh264.sh ==
 
@@ -1133,7 +1608,7 @@ acodec="-ac 2 -ar 22050 -c:a libfdk_aac -vbr 2"
 	-chapter 1-34 : optioneel
 
 - 1ste geluidsstreams (pcm) apart in m4a, met static build met libfdk_aac en hoogste kwaliteitvariable bitrate :
-	$ for i in *.vob ; do nice /opt/ffmpeg/ffmpeg-fdkaac -i $i -map a:0 -c:a libfdk_aac -vbr 5 ${i%.vob}.m4a ; done
+	$ for i in *.vob ; do nice /opt/ffmpeg/ffmpeg-fdk_aac -i $i -map a:0 -c:a libfdk_aac -vbr 5 ${i%.vob}.m4a ; done
 	-vbr 5 geeft in de praktijk voor stereo 256kbps, consistent voor alle delen van Wagner's Ring (Levine-Luisi)
 
 - 2de geluidsstream (5.1 side DTS)
@@ -1147,7 +1622,7 @@ acodec="-ac 2 -ar 22050 -c:a libfdk_aac -vbr 2"
 -voorlopig kan ik toch alleen stereo afspelen, dus gekozen voor beste kwaliteit compressie met fdk-aac van de pcm stereo stream (zie hoger), en origineel geluid als backup bewaard om later misschien iets anders in de mp4's te zetten; stereo pcm als .flac, 5.1 DTS met copy (is een lossy formaat, niet hercomprimeren zonder duidelijke voordelen; dit als flac is vele GB groot) :
 	$ for i in *.vob ; do nice /opt/ffmpeg/ffmpeg -i $i -map a:0 -c:a flac -compression_level 8 ORIG/${i%.vob}.flac -map a:1 -c:a copy ORIG/${i%.vob}.dts ; done
 
-- na alle testen om het geschikte geluidsformaat te vinden, met ffmpg_fdkaac, had ik het geluid al in aparte bestanden, die gewoon mergen met hercompressie van de video :
+- na alle testen om het geschikte geluidsformaat te vinden, met ffmpg_fdk_aac, had ik het geluid al in aparte bestanden, die gewoon mergen met hercompressie van de video :
 	geluid="copy"
 	#clipuit="-ss 350 -t 300"
 		- werken met meerdere inputs, willekeurige positionering in ondertitels gaat niet, dus clip na alle inputs zetten

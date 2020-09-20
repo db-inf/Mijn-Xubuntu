@@ -5,13 +5,30 @@
 
 - OPGELET : bash doet geen globbing tussen '' of "", geen $variable-expansie tussen ''
 
+== TODO bash regex ==
+- als rechterlid van [[ string =~ regex ]], dat NIET tss. "" staat (is anders literal, geen regex)
+- regex NIET tussen "", dus escape spaties als '\ '
+- array BASH_REMATCH[] bevat na uitvoeren gematchte subgroepen
+
+== andere docs ===
+===  _Xubuntu truuks en commandos.adoc  ===
+===  _Xubuntu composekey multikey combinaties.adoc  ===
+===  _ffmpeg truuks en commandos.adoc  ===
+===  _Tex-LaTex.adoc  ===
+===  _Wine-PlayOnLinux.adoc  ===
+===  _POLwineprefix 2.11 Win7x86PROGS.txt  ===
+===  _VirtualBox.adoc  ===
+===  _Xpra.adoc  ===
+===  _Dragon.adoc  ===
+===  _SW10 installatie.txt  ===
+
 == NOODGEVALLEN ==
 
 === bootlog van andere linux op andere partitie zien ===
 
 # journalctl -D /mnt/var/log/journal/
 	- log wordt helaas pas geschreven als bootproces ver genoeg komt
-	- zie sectie "linux logs"
+	- zie sectie "linux logs" en sectie "journalctl"
 
 === Magic Alt Sysrq ===
 
@@ -62,6 +79,8 @@
 	$ sudo -i
 		- gewoon "sudo echo ... > ..." werkt niet, want redirect gebeurt terug buiten sudo
 	# echo "bitmask" >/proc/sys/kernel/sysrq
+	OF
+	$ echo "bitmask" | sudo tee /proc/sys/kernel/sysrq
 
 - blijvend meer toelaten of verbieden :
 	- Alt+sysrq wordt in Ubuntu gecontroleerd door /etc/sysctl.conf (NIET WIJZIGEN, wordt bij upgrade toch vervangen) en /etc/sysctl.d/*.conf :
@@ -79,7 +98,7 @@
 
 === Hele scherm zoomen, panning volgt muis ===
 
-- In Window Manager Tweeks/Accessibility een toets kiezen voor 'key used to grab and move windows', b.v. Alt (niet shift, want dan werkt b.v. selecteren met shift ingedrukt niet meer), en dan zoomt het hele scherm met Alt+scrollwiel
+- In xfce4 Window Manager Tweaks/Accessibility een toets kiezen voor 'key used to grab and move windows', b.v. Alt (niet shift, want dan werkt b.v. selecteren met shift ingedrukt niet meer), en dan zoomt het hele scherm met Alt+scrollwiel
 
 === panel sneltoetsen ===
 
@@ -108,15 +127,17 @@
 
 === launcher sneltoetsen (settings/keyboard) ===
 
+- mijn "Super"-toets : linkse "Windows"-toets
 	. Super+k		Toon launcher sneltoetsen (settings/keyboard)
 	. alt+ctrl+l	vergrendel scherm (paswoord ingeven)
-	. alt+ctrl+t	command terminal emulator
-	. alt+ctrl+F1-6	terminal 1-6
+	. alt+ctrl+t	terminal emulator
+	. alt+ctrl+F1-6	console 1-6
 	. alt+ctrl+F7	X grafische terminal
 	. Print			schermafdruk met dialoog voor bestemming
-	. Ctrl+Print	schermafdruk naar XnViewMP
+	. Ctrl+Print	afdruk actief venster naar XnViewMP
 	. Super+d		desktop (toggle on/off)
-	. Super+t		command terminal emulator
+	. Super+t		terminal emulator
+	. Super+shft+t	transparante terminal emulator
 	. Super+a		application menu popup (application finder)
 	. Super+q		'quick' run (application finder compact)
 		opdracht	opdracht uitvoeren
@@ -130,11 +151,11 @@
 		http://		open url in browser
 		https://	open url in browser
 		file://		open url in browser
-	. Super+LftAlt	whisker application menu popup
+	. Super+LAlt	whisker application menu popup
 	. Super+e		editor (geany)
-	. Super+shift+e	andere editor (mousepad)
+	. Super+shft+e	andere editor (mousepad)
 	. Super+f		filemanager (spacefm)
-	. Super+shift+f andere filemanager (thunar)
+	. Super+shft+f	andere filemanager (thunar)
 	. Super+b		browser (firefox)
 	. Super+m		mail (thunderbird)
 	. Super+p		pc monitor aanzetten (script beeldpc)
@@ -145,7 +166,7 @@
 	. Super+g		Goldendict woordenboek
 	. Super+z		nzbget met webinterface
 	. Super+v		volume controle
-	. Super+shift+v	volume controle tab 'playback'
+	. Super+shft+v	volume controle tab 'playback'
 
 === bash shell sneltoetsen ===
 
@@ -153,20 +174,18 @@
 
 	. ctrl+d	op prompt: exit
 	. ctrl+d	bij lezen invoer van stdin, aan begin van nieuwe lijn : end-of-file
-	. ctrl+c	job/script afbreken met SIGINT
+	. ctrl+c	huidige bash job/script een SIGINT sturen, meeste opdrachten breken dan af
 	. ctrl+z	job/script stoppen met SIGSTOP: koppelt de job los van de terminal, zodat ze geen in- of uitvoer meer krijgt, en daarom ineens helemaal wordt gepauzeerd, zonder zijn resources vrij te geven. Eerste exit geeft boodschap dat er nog jobs zijn, 2de exit sluit ze af.
-
-- zie ook sectie "Beheer jobs"
+		- zie ook sectie "bash jobs"
 
 === xfce terminal sneltoetsen ===
 	. Ctrl+u	clears from cursor to beginning of line
 	. Ctrl+k	clears from cursor to end of line
-	. Esc+bspce	clears one word to the left of the cursor
+	. Esc+bkspc	clears one word to the left of the cursor
 	. Esc+d		clears one word to the right of the cursor
-	. Ctrl+left/right jumps to the beginning of the previous/next word
-
-To clear the entire screen add the following alias to your ~/.bashrc file:
-	alias cls="echo -ne '\033c'"
+	. Ctrl+lft/rgt jumps to the beginning of the previous/next word
+	- Ctrl+l	scroll prompt tot bovenaan terminal, terugscrollen blijft mogelijk
+		- OPM : mijn alias cls="echo -ne '\033c'" doet een echte clear van screen én scrollbuffer
 
 === numeriek toetsenbord gebruiken als muis ===
 
@@ -199,6 +218,47 @@ To clear the entire screen add the following alias to your ~/.bashrc file:
 
 === mimetype van bestanden ===
 
+- samengevat:
+	- mimetype definieren met xml-bestand in ~/.local/share/mime/packages/:
+		>>> mijn-type.xml
+			<?xml version="1.0" encoding="UTF-8"?>
+			<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+			  <mime-type type="application/x-mijnmimetype">
+				<comment>new mime type</comment>
+				<glob pattern="*.xyz"/>
+			  </mime-type>
+			</mime-info>
+		<<<
+		- als globbing niet volstaat om type vast te stellen, maar het (begin van) het bestand gelezen moet worden om een kenmerkende sleutel te vinden: een magic key definieren, zie [https://docs.oracle.com/cd/E19253-01/819-0918/6n3aglfe9/index.html#mimetypes-16], b.v.
+		>>>
+			<magic priority="50">
+				<match offset="0" type="string" value="\x89PNG" />
+			</magic>
+		<<<
+	- Update the MIME database for your changes to take effect:
+		$ update-mime-database ~/.local/share/mime
+	- default toepassing vastleggen met desktop-bestand in ~/.local/share/mime/applications/:
+		- b.v. met diverse vaste parameters, en 1 bestandsnaam (plaatshouder %f, voor alle bestandsnamen %F) als laatste
+		>>> mijntoepassing.desktop
+			[Desktop Entry]
+			Type=Application
+			MimeType=application/x-mijnmimetype
+			Name=mijntoepassing
+			Exec=mijntoepassing parameters %f
+		<<<
+	- Update the application database:
+		$ update-desktop-database ~/.local/share/applications
+	- bestand kan nu geopend worden met
+		$ xdg-open mijnbestand
+		OF
+		$ gio open mijnbestand
+		OF
+		$ gvfs-open mijnbestand
+		- als het een tekstbestand is dat met less bekeken wordt, en $LESSEDIT is ingesteld als xdg-open, kan het bestand met zijn standaardtoepassing geopend worden vanuit less met 'v'
+		
+- zie [https://docs.oracle.com/cd/E19253-01/819-0918/mimetypes-0/index.html]
+- zie [https://help.gnome.org/admin/system-admin-guide/stable/mime-types-custom-user.html.en]
+
 - /usr/share/mime : xml-bestanden in subdirs definiëren mimetypes, globbing patterns voor bestandsnamen, en omschrijvingen
 	- wijzigingingen ENKEL IN /usr/share/mime/packages
 		- in blok <mime-info>...</mime-info>
@@ -219,7 +279,7 @@ To clear the entire screen add the following alias to your ~/.bashrc file:
 
 - zie ook sectie "mimetype default applications"
 
-=== mimetype default applications ===
+==== mimetype default applications ====
 
 - zie ook sectie "xfce applications menu"
 
@@ -290,10 +350,15 @@ To clear the entire screen add the following alias to your ~/.bashrc file:
 
 === Searchplugins Firefox wijzigen ===
 
-- zijn xml-bestanden in ~/.mozilla/firefox/4kbxx5f4.default/searchplugins, maar worden gecached in ~/.mozilla/firefox/4kbxx5f4.default/search.json.mozlz4
+0 zijn xml-bestanden in ~/.mozilla/firefox/4kbxx5f4.default/searchplugins
+	- tegenwoordig niet meer zo simpel als kopieren naar die directory, staan direct en enkel in search.json.mozlz4
+- worden gecached in ~/.mozilla/firefox/4kbxx5f4.default/search.json.mozlz4
 
 OFWEL
 - search plugin maken met de hand, met andere xml's als voorbeeld
+	- zie "/media/sdata/dirk/backups/Firefox = mijn searchengine plugins.zip":
+		- de index.html openen via ZipWebServer
+		- zoals daarin beschreven de plugin kiezen
 OFWEL
 - search plugin laten maken door b.v. Ready2Search http://ready.to/search/en/
 	- resultaat niet installeren, maar eerst bewaren om op maat te maken (o.a. icon checken door het even in een html te plakken met <img src="data:...">)
@@ -355,8 +420,7 @@ OFWEL
 
 - zie ook _Xubuntu.adoc sectie "ATM4 font collectie"
 
-- persoonlijk : kopiëer naar ~/.local/share/fonts (deprecated: ~/.fonts)
-	- heb geen ~/.local/share/fonts, dus voorlopig naar ~/.fonts
+- persoonlijk : kopiëer naar (directories onder) ~/.local/share/fonts (deprecated: ~/.fonts)
 
 - voor iedereen : kopieer naar /usr/local/share/fonts
 
@@ -409,6 +473,11 @@ OFWEL
 
 - knoppen wisselel, b.v. :
 	 $ xinput set-button-map 12 3 2 1 4 5 6 7 8 9 
+
+=== viewframe van staatsarchief maximaliseren ===
+- viewer van search.arch.be is browser popup; om die te maximaliseren in zijn browservenster, in de url van de viewer voor het gedigitaliseerde document :
+	- layout/lightbox/ tussenvoegen voor eadid/
+	- achteraan de url de parameters ?layout=lightbox&tmpl=component toevoegen
 
 == MOUNT  ==
 ZIE OO: Filesystem Hierarchy Standard www.pathname.com/fhs/pub/fhs-2.3.html
@@ -488,6 +557,19 @@ Dat bestand kunnen we mounten of kopiëren ==>
 	>>>
 		directory is [not] a mountpoint
 	<<<
+
+=== bind mount ===
+
+- met bind kunt ge een 2de directory-naam verbinden aan een 1ste directory-naam. De inhoud is zichtbaar op allebei, maar I/O gebeuren naar het bestandssysteem waarop de 1ste directory staat. B.v. tijdelijk opdrachten die naar/van een tmpfs zoals /media/ramdisk schrijven/lezen, eigenlijk laten schrijven/lezen naar een fysieke harde schijf :
+	# mount -o bind /media/sdata/WERK/ramdiskOpHDD /media/ramdisk
+		- maakt "/media/sdata/WERK/ramdiskOpHDD/" ook lees- en schrijfbaar via naam "/media/ramdisk/"
+		- OPM: hetgeen al op /media/ramdisk stond, blijft daar (onbereikbaar) staan tot de bind verbroken wordt met umount;
+	...
+	# umount /media/ramdisk
+	OF
+	# umount /media/sdata/WERK/ramdiskOpHDD
+
+- "-o rbind" i.p.v. "-o bind" om ook evt. bestaande of nieuwe mounts op subdirectories van de 1ste directory-naam ("/media/sdata/WERK/ramdiskOpHDD/" in het vb.) toegankelijk te maken via de 2de ("/media/ramdisk/")
 
 === tablet mounten als usb-schijf ===
 
@@ -590,7 +672,7 @@ Dat bestand kunnen we mounten of kopiëren ==>
 			- parted kan partitietabel direct in het bestand maken :
 				# parted --script --align optimal bestand -- mklabel gpt mkpart mijnpartlabel ext4 0% 100% unit B print
 				--script : na -- komt een hele reeks opdrachten, anders interactief (of via stdin)
-				-- hierna komen de script-ipdrachten, allemaal achter elkaar :
+				-- hierna komen de script-opdrachten, allemaal achter elkaar :
 					- mklabel gpt :	maak gpt partitietabel
 						alternatief : msdos e.a.
 					- mkpart mijnpartlabel ext4 0% 100% :
@@ -815,8 +897,8 @@ Dat bestand kunnen we mounten of kopiëren ==>
 	- met b.v. gparted USB-stick formatteren in FAT32, flags eps en boot
 	# mount cd.iso /cdrom
 	# mount /dev/s%USBSTICK% /mnt
-	# cd /cdrom
-	# rsync -aAXxiv . /mnt/
+	# rsync -rltD -AXxiv /cdrom/ /mnt/
+	-rltD : -a --no-o --no-g --no-p, want FAT/NTFS kent geen linux -o (owner), -g (group) of -p (permissions), zouden fouten geven
 
 == CD-DVD ==
 
@@ -844,9 +926,10 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 
 === algemene image of dvd-video image maken van directory ===
 
-	$ genisoimage -V LABEL -J -r -iso-level 3 -o output_image.iso bronpad [bronmap2]...
+	$ genisoimage -V LABEL -lJr -iso-level 3 -o output_image.iso bronpad [bronmap2]...
 		-V : max. 32 chars
-		-J : Generate Joliet directory records in addition to regular ISO9660 filenames.
+		-l : Allow  full 31-character filenames (mag van iso9660, alleen MS-DOS houdt het bij 8.3)
+		-J : Generate Joliet directory records (o.a. 64-char unicode namen) in addition to regular ISO9660 filenames.
 		-r : Rockridge extensions, sterk aanbevolen voor Joliet
 			- is ook nodig om meer dan 6 directories diep te gaan
 		- bronpad# : inhoud van elk komt in de root van de iso
@@ -856,15 +939,14 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 			- With level 3, no restrictions (other than ISO-9660:1988) do apply.
 			- With  all ISO9660 levels from 1 to 3, all filenames are restricted to uppercase letters, numbers and underscores. Filenames are limited to 31 characters, directory nesting is limited to 8 levels, and pathnames are limited to 255 characters.
 			- Level 4 : not official, genisoimage maps it to ISO-9660:1999, which is ISO9660 version 2. An enhanced volume descriptor with version number and file structure version number set to 2 is emitted. Directory nesting is not limited to 8 levels, there is no need for a file to contain a dot and the dot has no special meaning, filenames do not have version numbers, and filenames can be up to 207 characters long, or 197 characters if Rock Ridge is used.
-	- GANGBARE OPTIES :
-		-f : Follow symbolic links when generating the filesystem. When this option is not in use, symbolic links will be entered using Rock Ridge if enabled, otherwise they will be ignored.
-		-m shell-wildcard-pattern : exclude files volgens pattern
-		- tussen "", voorkomt shell globbing
-		- met wildcard : toegepast op volledig bronpad
-		- zonder wild card : toegepast op naam van file of directory
-		- mag herhaald, b.v. -m "*.bak" m "/mnt/overbodig*"
-		-no-bak : Exclude  backup files files on the ISO9660 filesystem; that is, filenames that contain the characters `~' or `#' or end in .bak. These are typically backup files for Unix text editors.
-		-dvd-video : Generate a DVD-Video compliant UDF filesystem. This is done by sorting the order of the content of the appropriate files and by adding padding between the files if needed. Note that the sorting only works if the DVD-Video filenames include uppercase characters only. Note that in order to get a DVD-Video compliant filesystem image, you need to prepare a DVD-Video compliant directory tree. This requires a directory VIDEO_TS (all caps) in the root directory of the resulting DVD, and usually another directory AUDIO_TS. VIDEO_TS needs to include all needed files (filenames must be all caps) for a compliant DVD-Video filesystem.
+		[-f] : Follow symbolic links when generating the filesystem. When this option is not in use, symbolic links will be entered using Rock Ridge if enabled, otherwise they will be ignored.
+		[-m] shell-wildcard-pattern : exclude files volgens pattern
+			- tussen "", voorkomt shell globbing
+			- met wildcard : toegepast op volledig bronpad
+			- zonder wild card : toegepast op naam van file of directory
+			- mag herhaald, b.v. -m "*.bak" m "/mnt/overbodig*"
+		[-no-bak] : Exclude  backup files files on the ISO9660 filesystem; that is, filenames that contain the characters `~' or `#' or end in .bak. These are typically backup files for Unix text editors.
+		[-dvd-video] : Generate a DVD-Video compliant UDF filesystem. This is done by sorting the order of the content of the appropriate files and by adding padding between the files if needed. Note that the sorting only works if the DVD-Video filenames include uppercase characters only. Note that in order to get a DVD-Video compliant filesystem image, you need to prepare a DVD-Video compliant directory tree. This requires a directory VIDEO_TS (all caps) in the root directory of the resulting DVD, and usually another directory AUDIO_TS. VIDEO_TS needs to include all needed files (filenames must be all caps) for a compliant DVD-Video filesystem.
 
 === (X)Ubuntu Live CD uitpakken naar schijf of usb-stick ===
 
@@ -899,7 +981,8 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 	$ ls
 	- detail: -l
 	- ook verborgen: -a
-	- submappen: wildcard **
+	- wildcard * matcht geen '/', */* wel (maar ook maar juist dat: 1 niveau van subdir)
+	- alle submappen : wildcard ** als globstar opstaat (shopt -s globstar)
 
 === mappen en bestanden in volgorde van tijd ===
 	$ find -printf "%TY-%Tm-%Td %TT %p\n" | sort -n
@@ -951,7 +1034,7 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 	$ groups [username]
 	- print the groups a user is in
 
-=== gedefinieerde aliassen ===
+=== gedefiniëerde aliassen ===
 	$ alias
 
 === open bestanden ===
@@ -961,12 +1044,17 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 
 - enkel op programmanaam
 	- OPGELET: voor scripts die uitgevoerd worden als 'bash script ...' is de programmanaam 'bash'
-	$ pgrep -a "pattern"
-	- pattern : regexp
-	[-a, --list-full] : List the full command line and process ID (anders alleen process ID)
-	[-l, --list-name] : List the process name as well as the process ID.
+	$ pgrep "pattern"
+	- pattern : regexp, default is om case sensitive te matchen op process naam
+	[-i, --ignore-case] : Match processes case-insensitively.
+	[-f, --full] : match pattern against full command line
 	[-x, --exact] : Only match processes whose names (or command line if -f is specified) exactly match the pattern. (zoals "^pattern$")
 	[-U, --uid uid,...] : Only match processes whose real user ID matches (numerical or symbolical value)
+	[ -d, --delimiter delimiter] : set string to delimit each process ID in the output (by default a newline)
+		- b.v. -d, om csv-lijst te krijgen, b.v. voor
+			$ top -p$(pgrep -d, pattern)
+	[-l, --list-name] : List the process name as well as the process ID.
+	[-a, --list-full] : List the full command line and process ID (anders alleen process ID)
 	[-c, --count] : Suppress normal output; instead print a count of matching processes. When count does not match anything, e.g. returns zero, the command will return non-zero value.
 
 - op hele opdracht (nuttig voor o.a. "bash script ...")
@@ -1056,6 +1144,10 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 
 - negatieve zoek : zie sectie "opdracht uitvoeren op alle bestanden van een directory tree" subsectie "vb. 11 bestanden zoeken met uitsluiting van bepaalde suffixen"
 
+==== zoek alle TTC cursussen zonder guidebook ====
+
+$ find . /media/sdata/WERK/ -type d -name "TTC *" -and -not -name "*guidebook*" -and -not -name "*workbook*" -printf "%f\n"|sort
+
 === tel aantal bestanden dat aan criteria voldoet, b.v. aantal .cue-bestanden ===
 	 $ find -iname '*.cue' | wc -l
 	 - wc -l : 'word count' aantal lijnen
@@ -1072,7 +1164,33 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 	-r : recursive
 	-o path : binnen duplicate-groep sorteren op volledig pad
 
-== ENVIRONMENT VARIABELEN ==
+=== hernoemde bestanden gelijk hernoemen op backupschijf ===
+
+- met mijn eigen fdupes-versie, die opties omit first, sort, move en regex heeft
+	$ ~/Documents/c/fdupes-master/fdupes -u -NrMo arg [-g "//pattern"] /media/sdata/ebooks "$bupschijf"/ebooks
+	-u --simulate : run through the program without changing a thing.
+	-N --noprompt : when used together with --delete or --rename, preserve the first file in each set of duplicates and delete or rename the others without prompting the user
+	-r --recurse
+	-M --move : prompt user for files to preserve, and move+rename all others like the first of these (tail of path following directory argument), on the same filesystem
+		- OPM: sorteer hiervoor op volgorde argument, met 'bron'-schijf' eerst (en zo mogelijk vrij van dubbels: anders voor elke dubbel "requested new name in use!", en niet te voorspellen welk van de dubbels als basis wordt gebruikt voor de gelijke bestanden in de andere argumenten)
+	-o --order=WORD : order files according to WORD: time - sort by modification time (default), ctime - sort by status change time, path - sort by full path, arg - sort by directory argument number, name - sort by filename. Append '-' to the sort key (like name-) to reverse order
+	[-g --regex=pattern] : test only files matching a Posix.2 extended regular expressions pattern. The pattern is matched against the full file path when reaching that file, not against the directories while recursing through them. As a custom extension, start a pattern with '//' to match the remainder of that pattern against the filename only (last part of path)
+	[-G --reGex=pattern] : case-insensitive regex, further as above
+
+== SHELL EN ENVIRONMENT VARIABELEN ==
+
+- shell variabelen gelden enkel in de shell of in een script dat door de shell wordt uitgevoerd. Een executable ziet alleen environment variabelen. De opdracht printenv toont de waarde van een environment variabele, de interne bash-opdracht "echo $naam" toont de waarde van een shell variabele.
+	- De bash-opdracht "export naam[=waarde] ..." markeert een of meer shell variabelen voor export naar het environment van elke executable die vanuit de huidige shell gestart wordt, en kent die variabelen evt. ineens een waarde toe.
+		- OPGELET: het blijven shell variabelen, maar met een vlagje "exporteer deze naar environment als ge een opdracht uitvoert", met de waarde van de shell variable op dat moment. B.v.
+			$ a=b
+			$ printenv a
+			>>><<<
+			$ export a
+			$ printenv a
+			>>>b<<<
+	- Een bash opdrachtlijn die een executable start, kan vooraan een of meer environment variabelen opsommen en een waarde geven, en die aan de opdracht doorgeven:
+		$ [naam=waarde ] ... opdracht ...
+		- OPGELET: die komen enkel in het environment van opdracht; in b.v. een opdrachtlijn als "n=w opdracht $n" is "n" nog een (al dan niet bestaande) shell variabele, NIET de environment variabele die de waarde w gaat krijgen binnnen "opdracht" zelf.
 
 === laatste exit code ===
 
@@ -1213,10 +1331,16 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 
 === huidige kernel ===
 
+- de versie
 	$ uname -r
 	>>> 4.4.0-98-generic <<<
 	-r, --kernel-release
 	-n, --nodename : print the network node hostname
+
+- configuratie-opties van huidige kernel :
+	$ cat "/boot/config-$(uname -r)" | less
+	OF
+	$ grep -i GezochteOptie "/boot/config-$(uname -r)"
 
 === geinstalleerde versie Ubuntu ===
 
@@ -1243,7 +1367,7 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 			>>> xenial <<<
 	- Free Desktop standaard
 		$  cat /etc/os-release
-		- in NAME=VALUE formaat, zodat ge van daaruit gemakkelijk environment variabelen kunt instellen
+		- in NAME=VALUE formaat, zodat ge van daaruit gemakkelijk variabelen kunt instellen
 		>>>
 			NAME="Ubuntu"
 			VERSION="18.04.1 LTS (Bionic Beaver)"
@@ -1273,8 +1397,19 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 
 === welk package installeerde dit bestand ===
 
+- voor executables kunnen we which het volledige pad laten bepalen van de versie die uitgevoerd zal worden (zoekt $PATH af)
 	$ dpkg -S $(which qvlc)
 	>>> vlc-plugin-qt:amd64: /usr/bin/qvlc <<<
+
+- maar pad is niet nodig :
+	$ dpkg -S libbz2.so
+		>>>
+		libbz2-1.0:amd64: /lib/x86_64-linux-gnu/libbz2.so.1.0.4
+		net.downloadhelper.coapp: /opt/net.downloadhelper.coapp/converter/build/linux/64/libbz2.so.1.0
+		libbz2-1.0:amd64: /lib/x86_64-linux-gnu/libbz2.so.1.0
+		libbz2-1.0:amd64: /lib/x86_64-linux-gnu/libbz2.so.1
+		<<<
+		- in dit vb. zijn /lib/x86_64-linux-gnu/libbz2.so.1.0 en /lib/x86_64-linux-gnu/libbz2.so.1 symlinks naar /lib/x86_64-linux-gnu/libbz2.so.1.0.4
 
 === welke libraries zijn nodig voor executable ===
 
@@ -1400,7 +1535,7 @@ $ dpkg-query -s e2fsprogs
 		>>> 8 <<<
 
 === type partitie (mbr of gpt) en detail van alle partities op alle schijven ===
-	$ sudo parted -l
+	# parted -l
 
 === report file system disk space usage ===
 	- Show information about all file systems :
@@ -1413,6 +1548,29 @@ $ dpkg-query -s e2fsprogs
 				/dev/sda1      2753050464 2392517016 220663500  92% /media/sdata
 			<<<
 
+=== schijfgebruik per bestandtype in directory tree ===
+- b.v. schijfgebruik van alle jpg onder een hoofddirectory :
+	- exporteer paden voor bashshell die we vanuit find starten
+		$ export dir=/mijn/pad/
+		$ export ramdisk=/media/ramdisk/
+	- voorbereiden: maak op ramdisk symlinks naar al die bestanden, met behoud van directory-indeling (om gelijk genoemde bestanden uit elkaar te houden) :
+		$ find "$dir" -type f -iname "*.jpg" -execdir bash -c 'ramdir=${PWD/#$dir/$ramdisk};mkdir -p "$ramdir";ln -srt "$ramdir" "$@";' _ \{\} \+
+			-execdir \+ : groepeer resultaat per directory en voer uit in die directory
+			- bash -c '...' _ \{\} :
+				- opdracht tss. '', tegen expansie van $PWD, $dir en $ramdisk op de find-opdrachtlijn zelf: moet pas in de subshell
+				- '_' : argument 0
+				- \{\} : lijst van gevonden bestanden als arg. 1 e.v.
+			- vervanging ${var/$dir1/$dir2} werkt wonderwel, ook als zowel var, dir1 als dir2 zelf /-tekens bevatten
+			- ln -srt "$ramdir": symlinks, relatief (anders allemaal links naar "./xxx"), en in target "$ramdir"
+	- disk usage met dereferencing van de symlinks
+		$ cd /media/ramdisk
+		$ du -Lhs
+		OF per directory
+		$ du -Lhs *
+			-L : dereference symlinks
+			-h : human readable
+			-s : summary per argument
+
 === aantal inodes in een directory tree ===
 
 - als root om ALLES te vinden
@@ -1423,6 +1581,90 @@ $ dpkg-query -s e2fsprogs
 	-l : count lines
 
 === partities en bestandssystemen identificeren ===
+
+==== zelf partition uuid en label instellen ====
+- zie ook sectie "zelf random-uuid genereren"
+
+- label kan met parted
+	# parted [/dev/sdX] : schijf, niet partitie, b.v. /dev/sda of /dev/nvme0n1
+		> [print devices] : lijst van devices
+		> [select /dev/sdX] : schijf, niet partitie
+		> print free : print alle info partities (met nrs) en vrije ruimte van huidige schijf
+		> name partitienr label
+		> quit
+	OF met gparted (GUI)
+	OF met fdisk /dev/sdX
+		> x : ga naar expert mode
+		> m : help
+		> p : print
+		> n : change partition name
+			> # : partitienr, zoals in print
+			> xxxx-xxx...-xxx : gewenste uuid
+		> r : return naar standard mode
+		> w : write to disk (gek genoeg kan dat niet in expert mode)
+		> q : quit
+
+- uuid kan met gdisk en fdisk in expert mode :
+	# gdisk /dev/sdX
+		> x : ga naar expert mode
+		> ? : help
+		> p : print
+		> c : change partition uuid 
+			> # : partitienr, zoals in print
+			> xxxx-xxx...-xxx : gewenste uuid
+		> w : write to disk
+		> q : quit
+	OF
+	# fdisk /dev/sdX
+		> x : ga naar expert mode
+		> m : help
+		> p : print
+		> u : change partition uid 
+			> # : partitienr, zoals in print
+			> xxxx-xxx...-xxx : gewenste uuid
+		> r : return naar standard mode
+		> w : write to disk (gek genoeg kan dat niet in expert mode)
+		> q : quit
+
+==== zelf filesystem uuid en label instellen ====
+- zie ook sectie "zelf random-uuid genereren"
+
+
+- ext2/3/4)
+	# tune2fs -U mijn_uuid /dev/ext#partitie
+	EN
+	# tune2fs -L mijnlabel /dev/ext#partitie
+	OFWEL
+	# /sbin/e2label /dev/ext#partitie mijn_label
+
+- ntfs met tool
+	- uuid heet "volume serial number"
+	- install the ntfsprogs package
+		# ntfslabel --new-serial=x1x2x3x4x5x6x7x8 /dev/ntfspartitie mijn_label
+		--new-serial	: 8 bytes, 16 hex digits
+	OF met de hand (zie verder)
+
+- fat/fat16/fat32
+	- mkfs.fat -n NAAM -i UUID /dev/sdXY : UUID 8 hex cijfers
+	OF
+	- met tool
+		- uuid heet "volume serial number"
+		- install the mtools utility package.
+			# mlabel [-n|-N mijn_serial] -i /dev/partitie ::mijn_label
+			-n		: Assigns a new (random) serial number to the disk
+			-N serial	: Sets the supplied serial number, an 8 digit (4 bytes) hexadecimal number, without spaces
+	OF met de hand (zie verder)
+ 
+- ntfs,fat,fat16,fat32
+	- met de hand
+		- uuid heet "volume serial number"
+		# dd if=/dev/partitie of=EersteNtfsBlok.hex bs=512 count=1
+		- ntfs: uuid op offset 0x48-0x4f (8 bytes) in EersteBlok.hex, wijzigen met hex-editor
+		- fat/fat16/fat32: uuid op offset 0x43-0x46 (4 bytes) in EersteBlok.hex, wijzigen met hex-editor
+		# dd if=EersteBlok.hex of=/dev/partitie bs=512 count=1
+
+==== zelf random-uuid genereren ====
+	$ uuidgen
 
 ==== de symbolic links in /dev/disk/* ====
 
@@ -1631,6 +1873,16 @@ $ sudo file -s /dev/sdb1
 	<<<
 	- OPM : 'unwritten' is typisch voor een GrootBestand aangemaakt met fallocate, zolang er inderdaad niet geschreven is naar die blocks. Swap file gemaakt met fallocate zal altijd unwritten blijven, omdat het swap-mechanisme niet langs het bestandssysteem gaat voor het schrijven: het vraagt aan het bestandssysteem enkel de lijst van blocks, en doet daarna direct I/O naar die blocks.
 
+=== defragmenteren ===
+- voor 1 bestand, alle bestanden in directory, of partitie
+	- zien of er winst te halen is
+		$ e4defrag -cv naam
+		-c :  get current fragmentation count and an ideal fragmentation count
+		[-v] : verbose
+	- uitvoeren :
+		$ e4defrag -v naam
+		[-v] : verbose
+
 === is dit een virtual machine ===
 
 - /proc/cpuinfo heeft dan een flag "hypervisor" voor elke cpu
@@ -1651,30 +1903,117 @@ $ sudo file -s /dev/sdb1
 		user : Total number of CPU-seconds that the process used directly (in user mode)
 		sys  : Total number of CPU-seconds used by the system on behalf of the process (in kernel mode)
 
+=== uitvoeringsinformatie ===
+- OPM: top (3,7MB) blijkt meer geheugen te vragen dan conky (2,7MB)
+
+==== conky uitvoeringsinformatie ====
+- GUI : conky, GUI voor allerlei systeeminformatie
+	- ververst aan gewenst tempo
+	- configureren met ~/.conkyrc
+		- herlaadt bij wijzigen daarvan
+
+==== top uitvoeringsinformatie ====
+- CLI : top, wist terminal en toont in terminal tot 4 tabellen ('tasks windows'), ververst elke x sec.
+	$ top -opties
+	- OPM : '-' voor opties noch ' ' tss. optieletter en waarde zijn verplicht
+	[-o [+|-]veld] : sorteer op dat veld, + hoog naar laag, - omgekeerd
+		- print alleen lijst van beschikbare velden :
+			$ top -O 
+	[-d ss.t] : ververs om de ss sec. en t/10 sec. (default 3.0 of ~/.toprc)
+	[-p pid[,pid]...] OF [-p pid]... : alleen die process ids
+		- alleen bepaalde processen op naam :
+			$ top -p$(pgrep -d, john)
+	[-c] : toggle display van commandline/procesnaam
+	[-b] : batch mode : geen interactieve opdrachten, geen kleurtjes, scherm niet wissen, bij elke verversing gewoon nieuwe lijnen
+	[n nn] : aantal keren verversen vooraleer te stoppen (OPM : verversen t.g.v. interactieve opdrachten telt mee)
+	- top config onder naam (b.v. een alias of symlink) waarmee het is opgestart + "rc" :
+		"$HOME/.your-name-4-top" + "rc"
+		- Use the 'W' interactive command to create or update it
+	- elk window heeft eigen kolommen en sortering, zie ook hieronder punt "interactie"
+	- interactie algemeen
+		q : quit
+		? : toon help voor interactieve commando's
+			? : volgende sectie help
+		W : save naar ~/.toprc (of andere naam, zie boven)
+		+ : reset filters in elk tasks window
+		A : toggle single/multiple tasks windows
+		- enkel met multiple tasks windows
+			a/w : volgend/vorig tasks window
+			_ : toggle aan/uit-stand van elk tasks window (i.e. toon andere set)
+			- : toggle huidige tasks window uit
+		g : prompt om nummer 1-4 van actieve tasks window ("column group")
+			- zowel in single als multiple 'A'-mode
+		= OF + :
+	- interactie summary bovenaan :
+		- OPM: er is er maar 1, maar de instellingen zijn per huidige tasks window
+		l : toggle of lijn met o.a. load average getoond wordt in summary bovenaan
+		m : toggle of en hoe geheugengebruik (RAM en swap) getoond wordt in summary bovenaan
+		t : toggle of en hoe cpu-bezetting getoond wordt in summary bovenaan
+		1 : toggle alle cpus samen/per (hyperthreading) kern
+		E : toggle schaal geheugen (B, KB, MB, GB, ...)
+	- interactie huidige tasks window
+		i : toggle toon idle processen 
+		f : interactief scherm om getoonde kolommen en sortering te kiezen
+		c : toggle commandline/processname
+		e : toggle schaal geheugen (B, KB, MB, GB, ...)
+			- OPM : schaal heeft invloed op filters (zie verder), want die vergelijken strings-gewijs
+		n OF # : prompt om hoeveel processen te tonen (top van sortering), 0 voor window-vol
+		d OF s : prompt om update interval
+		r : prompt om pid en nieuw nice-level (prioriteit = 20+nice)
+		k : prompt om pid en signaalnaam of -nr (default 15=sigterm)
+		- sortering :
+			V : toggle sorteren op kolom/groeperen per PPID (parent)
+			< OF > : sorteer op (zichtbare) kolom links of rechts van huidige sorteerkolom
+			R : toggle reverse/normaal sorteren
+			- legacy shortcuts
+				M : %MEM
+				N : PID 
+				P : %CPU
+				T : TIME+
+			x : toggle highlight voor sorteerkolom
+			y : toggle highlight voor actieve tasks
+			b : toggle bold/reverse highlight
+		= : reset filters
+		Ctrl-o : toon filters
+		o OF O : prompt om filter (O: hoofdlettergevoelig) :
+			[!]VELD=waarde : gedeeltelijke match is genoeg
+			[!]VELD<waarde
+			[!]VELD>waarde
+			- vergelijking is als string, dus pas op met schaal (b.v. geheugen) en links/rechts-uitlijnen
+
 === linux logs ===
 
 - zie "https://help.ubuntu.com/community/LinuxLogFiles"
 - zie "man journald.conf"
 
-- verschillende logs staan in /var/log, meeste als tekstbestand met generaties, oudere gezipt (zelf in te stellen)
-	- journal in /var/log/journal, in binair formaat, te raadplegen met journalctl, zie sectie "journalctl"
-	
 - kernel ring buffer?
 	$ dmesg
-	
-- hele syslog :
-	$ less /var/log/syslog
-	- shift-g : scroll naar einde
-	- /zoekterm[Enter] : zoeken, met n(ext) en p(revious); regex-speciale chars escapen met '\'
-	
-- iets bepaalds zoeken, b.v. TBYTES :
-	$ grep TBYTES /var/log/syslog
 
-- log opvolgen
-	$ tail -f -n 50 /var/log/syslog
-	- afsluiten met Ctrl-Z
-	-f : follow; tail blijft actief en scrollt naar achter naarmate log wordt bijgevuld
-	-n 50 : aantal lijnen
+- journals staan in binair formaat, zie sectie "journalctl"
+
+- andere logs in /var/log, meeste als tekstbestand met generaties, oudere gezipt (zelf in te stellen)
+	- gezipte generaties : met zcat, zless, zmore, zgrep, zdiff
+
+- syslog :
+	>>>
+		- syslog is a standard logging facility. It collects messages from various programs, including the kernel. It is usually configured to store these messages by default. How it stores these messages is generally distribution-dependant.
+		- /var/log/messages is generally used to store non-critical messages while /var/log/syslog stores everything, including critical and non-critical messages; Ubuntu no longer uses the /var/log/messages, but you can re-enable it
+	<<<
+	- hele syslog :
+		$ less /var/log/syslog
+		- shift-g : scroll naar einde
+		- /zoekterm[Enter] : zoeken, met n(ext) en p(revious); regex-speciale chars escapen met '\'
+	- zoeken, b.v. TBYTES :
+		$ grep TBYTES /var/log/syslog
+		- in generaties (al dan niet .gz) :
+			$ zgrep TBYTES /var/log/syslog*
+	- opvolgen
+		$ tail -f -n 50 /var/log/syslog
+		- afsluiten met Ctrl-C
+		-f : follow; tail blijft actief en scrollt naar achter naarmate log wordt bijgevuld
+		-n 50 : aantal lijnen
+	- zoeken met opvolgen :
+		$ watch [-n seconden] -c grep -colour=always [-i] [-E "zoekterm"] ... /var/log/syslog
 
 ==== journalctl ====
 
@@ -1682,10 +2021,10 @@ $ sudo file -s /dev/sdb1
 	- OPM: default gedrag in Ubuntu (Storage=auto in journald.conf) : als directory /var/log/journal/ niet bestaat, wordt journal bijgehouden in /run/log/journal (dir. wordt aangemaakt); in Ubuntu is /run een tmpfs, dus journals verdwijnt bij afsluiten
 
 - journals nakijken :
-	- Ubuntu (bionic) journalctl gecompileerd zonder -g --grep optie; om te zoeken pipe naar grep
-	# journalctl --no-pager -D /mnt/var/log/journal/ >/media/ramdisk/journals
+	- in Ubuntu (bionic) is journalctl gecompileerd zonder -g --grep optie; om te zoeken pipe naar grep
+	# journalctl --no-pager [-D /mnt/var/log/journal/] >/media/ramdisk/journals
 	--no-pager : niet pipen naar less, zodat ge zelf een pipe kunt doen naar b.v. grep, of  redirect naar tekstbestand
-	-D : directory naar ander journal, b.v. van gemounte andere systeemschijf
+	[-D ...] : directory naar ander journal, b.v. van gemounte andere systeemschijf
 
 - lijst van alle gejournaleerde opstartsessies
 	# journalctl --list-boots 
@@ -1706,38 +2045,76 @@ $ sudo file -s /dev/sdb1
 			<<<
 			- zie "man journald.conf"
 
+=== snelheid USB schijf ===
+
+- soms wordt een USB-schijf of -stick niet herkend op zijn volle snelheid, o.a. meegemaakt met de Kingston 64GB USB3.0. In andere poort steken kan helpen, maar om zeker te zijn:
+	- zien in welke bus hij zit
+		$ lsusb
+		>>>	Bus 004 Device 007: ID 0951:1666 Kingston Technology DataTraveler G4 <<<
+		- hiermee worden de USB-aparaten getoond met naam
+	- zien welke snelheid device op die bus nu heeft
+		$ lsusb -t
+		-t : tree
+		>>> zoek naar Dev 7 op Bus 4
+		/:  Bus 04.Port 1: Dev 1, Class=root_hub, Driver=xhci_hcd/2p, 10000M
+			|__ Port 1: Dev 2, If 0, Class=Hub, Driver=hub/4p, 5000M
+				|__ Port 2: Dev 7, If 0, Class=Mass Storage, Driver=usb-storage, 5000M
+		<<<
+		- achteraan staat de snelheid in MBit/sec :
+			1.5M	: USB0
+			12M		: USB1
+			480M	: USB2
+			5000M	: USB3.0 == USB3.1 gen. 1
+			10000M	: USB3.1 gen. 2
+
+=== beschikbare documentatie ===
+
+- man pages : de man-opdracht zoekt die zelf, zie sectie "eigen programmas en man pages toevoegen", o.a. in
+	- /usr/share/man
+- info pages : idem, o.a. in
+	- /usr/share/info
+- niet-man documentatie per toepassing :
+	- /usr/share/doc
+- beschrijving per toepassing welke niet-man documentatie en waar ze geinstalleerd is
+	- /usr/share/doc-base
+	- /var/lib/doc-base
+
 == HANDELINGEN ==
 
 === sed - zoek en vervang in een bestand ===
 
-- OPM : -E om extended regular expression te gebruiken, anders basic regex (zoals grep)
+- OPM : -E om extended regular expression te gebruiken, anders basic regex (~ zoals grep)
 
 - man sed is beknopt :
 	$ info sed
 
-==== search/replace regexp op 1 lijn
+==== sed search/replace regexp op 1 lijn ====
 	$ sed -Esi s/zoek/vervang/g file.txt [file2.txt]...
 		-E : extended regular expression
 		-s : elk bestand apart
 		-i[backupextensie], --in-place[=backupextensie] : niet naar stdout, maar naar originele bestandsnaam, met evt. backup
 		[-e] script, --expression=script : script commands to be executed; als er meer dan 1 script is, moet de -e er staan
 		- script : gequote als er spaties in staan
+			- s/searchpattern/replacepattern/ : substitute
+				- scheidingsteken (hier '/') naar keuze, maar alledrie gelijk
+				- NIET VERGETEN : sed-optie -E voor extended regular expression
+				- zie verder sectie "sed opdrachten"
 
-==== dos CRLF naar unix LF ===
+==== sed dos CRLF naar unix LF ===
 	$ for i in *.srt;do sed -i 's/\r$//' "$i";done
 	-i : in place
 	- gewoon alle \r weglaten
 	- OPM: in for-loop bestand per bestand, want met b.v. "sed ... *.srt" concateneert alle inputbestanden
 
-==== unix LF naar dos CRLF ===
+==== sed unix LF naar dos CRLF ===
 - b.v. onze Medion TV leest .srt subscripts alleen met dos CRLF lijneinde :
-	$ for i in *.srt;do sed -i -e 's/$/\r/' -e 's/\r\r/\r/' "$i";done
+	$ for i in *.srt;do sed -i 's/$/\r/;s/\r\r/\r/' "$i";done
 	-i : in place
-	-e : nodig als er meer opdrachten zijn
 	- eerst blindweg een \r voor elk lijneinde ('$') zetten, dan alle \r\r vervangen door \r (fallback voor als het bestand al (deels) dos CRLF heeft) :
 	- OPM: in for-loop bestand per bestand, want met b.v. "sed ... *.srt" concateneert alle inputbestanden
 	
-==== sed space ====
+==== sed hold en pattern space ====
+
 - hold space : a long-term storage, such that you can catch something, store it and reuse it later when sed is processing another line. You do not directly process the hold space, instead, you need to copy it or append to the pattern space if you want to do something with it.
 
 - pattern space : When sed reads a file line by line, the line that has been currently read is inserted into the pattern buffer (pattern space). Pattern buffer is like the temporary buffer, the scratchpad where the current information is stored. For example, the print command p prints the pattern space only. Likewise, s operates on the pattern space.
@@ -1752,17 +2129,71 @@ $ sudo file -s /dev/sdb1
 		g : "" alle lijnen, maar komen hier alleen voor de laatste lijn, waarvoor geen "d" wordt gedaan - "g" kopieer hold space naar pattern space (en voer daarop dan volgende sed scripts uit)
 
 ==== sed opdrachten ====
-- command summary for sed : http://docstore.mik.ua/orelly/unix/sedawk/appa_03.htm
+- zie [command summary for sed](http://docstore.mik.ua/orelly/unix/sedawk/appa_03.htm)
+
+- enkele sed opdrachtlijn-opties :
+	-E : gebruik extended regex syntax (de Echte Regex)
+	-n : lijnen niet automatisch printen, enkel expliciet met b.v. de opdrachten p of n
+	opdrachtlijst : eerste of enige opdrachtlijst van sed-script
+	-e opdrachtlijst : voeg opdrachtlijst toe aan sed-script
+
+- opdrachtlijst:
+	- opdracht
+	- "opdracht;opdracht" : deze vorm ALTIJD tss. aanhalingstekens, t.b.v. shell
+	
+- opdracht:
+	- opdracht
+	- {opdracht[;opdracht]...} : deze vorm ALTIJD tss. aanhalingstekens, t.b.v. shell
+
+- adressen :
+	- [adres]opdracht : opdracht enkel voor die lijnen
+	- [adres]!opdracht : opdracht voor alle behalve die lijnen
+	- /zoek/ : regex adres
+		- scheidingsteken (hier '/') naar keuze, maar 1ste moet dan voorafgegaan door '\', b.v. \xadresx
+		- /…/I : case insensitive ('i' al gebruikt voor insert)
+		- /…/M : multi-line mode, met extra regels voor zoek-pattern:
+			- ^/$ : begin/einde lijn
+			- `/' : begin/einde buffer
+			- . : matcht GEEN newline
+		- // : laatst gematchte regexp
+	- lijnnr : lijnnr (begint van 1)
+		$ : laatste lijn (geen ^ voor 1ste lijn, oplossen door negatie !)
+	- adres1,adres2 : van tot, elk adres kan lijnnr of zoekpattern zijn
+		- adres2 wordt pas gezocht vanaf lijn na gematchte adres1, behalve als adres1 == 0
+		- gematchte address ranges kunnen overlappen, b.v.
+			>>> $ seq 21 50 | sed -n  '/3/,/6/p' (\n vervangen door ' ')
+				23 24 25 26 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46
+			<<<
+	- lijnnr~N : ("tilde") vanaf lijnnr (niet /zoek/), elke N-de lijn
+	- adres,~N : vanaf adres (lijnnr of /zoek/), elk lijnnr. dat veelvoud is van N
 
 - command "cheat-sheet"
-	: : label
+	- werken met hold space :
+		h : hold = pattern
+		H : hold += \n + pattern
+		x : swap pattern and hold
+		g : pattern = hold
+		G : pattern += \n + hold
+	- niet-sequentiële uitvoering
+		: : label
+		t : branch on substitute (naar elders benoemd label), b.v. ":l;...;tl"
+		b : branch unconditional (naar elders benoemd label), b.v. ":l;...;bl"
+		n : flush pattern, pattern = nextline continue
+		N : pattern += \n + nextline
+			vb. : sed -e 'N;s/\n/=/' vervangt "lijn1\nlijn2" door "lijn1=lijn2"
+		q : flush en quit
+		d : pattern delete top/cycle
+		D : pattern ltrunc(line + \n) top/cycle
+		l : pattern list
+		p : print pattern
+		P : print pattern first line
+		w : print pattern to file
+		i : insert text to stdout
+		a : append text to stdout after flush
+		r : append file to stdout after flush
 	= : line number
-	a : append text to stdout after flush
-	b : branch unconditional
 	c : range change
-	d : pattern delete top/cycle
-	D : pattern ltrunc(line + \n) top/cycle
-	e : execute
+	e COMMAND : execute COMMAND
 		- execute the contents of pattern space as command, and replaces the pattern space with its output; a trailing newline is suppressed
 		- uitvoeringsfouten krijgen de prefix "sh: ", vanwege de shell die door execute wordt aangeroepen om de contents of pattern space uit te voeren
 		- OPM : typisch wordt de opdracht in pattern space samengesteld door voorafgaande substitute 's', met & (volledige pattern match) en \N (gematchte capturing group)
@@ -1770,30 +2201,18 @@ $ sudo file -s /dev/sdb1
 			's/(prefix)(opdrachtparams)(suffix)/echo "\1" "$(opdracht \2)" "\3"/;e'
 				- OPGELET : 's///', NIET "s///", zodat de $() command substitution pas wordt uitgevoerd door de shell die de execute doet, met substitutie van \N en &, en niet reeds vooraf door de shell die sed uitvoert
 				- "" rond "$()" enkel nodig om evt. spaties in uitvoer te beschermen
-	e COMMAND : execute COMMAND
-	g : pattern = hold
-	G : pattern += \n + hold
-	h : hold = pattern
-	H : hold += \n + pattern
-	i : insert text to stdout now
-	l : pattern list
-	n : pattern flush = nextline continue
-	N : pattern += \n + nextline
-	p : pattern print
-	P : pattern first line print
-	q : flush quit
-	r : append file to stdout after flush
-	s/zoek/vervang/gi : substitute
-		- NIET VERGETEN : sed-optie -E voor extended regular expression
+	s/searchpattern/replacepattern/ : substitute of search and replace
 		- attempts to match the pattern space against the supplied regular expression REGEXP; if the match is successful, then that portion of the pattern space which was matched is replaced with REPLACEMENT.
 		- eerste teken na s (hier de /) scheidt de onderdelen zoek en vervang, b.v. 's|pad/naar/bestand|ander/pad/naar/bestand|g'
+		- s//replacepattern/ : leeg search pattern wordt vervangen door laatst gematchte regexp, b.v. regex adres, zelfs inclusief \(\)-groepen
 		- opties na laatste / :
-			- g : optie global (allemaal, anders alleen 1ste voorkomen)
-			- 9 : niet de 1ste, maar de 9-de match vervangen
-			- i, I : case insensitive matching
-			- m, M : multiline matching
-			- p : print pattern space
-			- e : execute; if a substitution was made, pattern space is executed as a shell command, and replaced with the output (trailing newline is suppressed)
+			- s/…/…/g : optie global (allemaal op betreffende lijn, anders alleen 1ste voorkomen)
+			- s/…/…/9 : niet de 1ste, maar de 9-de match vervangen
+			- s/…/…/i EN s/…/…/I : case insensitive matching
+			- s/…/…/m EN s/…/…/M : multiline mode, met extra regels voor zoek-pattern (zie adressen hierboven)
+			- s/…/…/p : replace en print pattern space (meestal na optie -n : silent)
+			- s/…/…/W filename : replace en print naar filename (b.v. ook /dev/stdout en /dev/stderr)
+			- s/…/…/e : replace, execute in shell, en replace zoals shell command substitution (trailing newline is suppressed)
 				- weinig of geen onderscheid met command e, behalve dat deze versie enkel bij een s kan, en enkel wordt uitgevoerd als de s een vervanging doet
 		- speciale waarden in vervang-pattern :
 			- \1 ... \9 : gematchte groepen (wat tss. () staat, in volgorde, ook genest)
@@ -1803,16 +2222,13 @@ $ sudo file -s /dev/sdb1
 			- \U : Turn the replacement to uppercase until a '\L' or '\E' is found,
 			- \u : Turn the next character to uppercase,
 			- \E : Stop case conversion started by '\L' or '\U'.
-	t : branch on substitute
-	w : append pattern to file now
-	x : swap pattern and hold
 	y/sourcechars/destchars/ : transform chars
 
 === beschermd tekstbestand bewerken ===
 
 - veilig en snel, maar in tekst-interface (nano)
 	$ sudoedit tekstbestand
-	- bewerkt een tijdelijke kopie, en hernoemt die pas na afsluiten terung naar originele naam
+		- bewerkt (met nano) een tijdelijke kopie (bewaar ook naar die naam), en hernoemt die pas na afsluiten terug naar originele naam
 	
 - met sudo, sudo -i, pkexec, mijn bash-alias spawn etc. kunt ge alles bewerken
 
@@ -2211,7 +2627,9 @@ Meerdere sequenties samen in 1 bestand bewaren:
 	<<<
 
 === zip zonder compressie ===
+	$ zip -0q doel.zip [bestand]...
 	-0 : no compression (store all files)
+	-q : quiet
 	- zie ook sectie "opdracht uitvoeren op alle bestanden van een directory tree" subsectie "vb. 9 stripverhalen opnieuw inpakken naar cbz"
 
 === Folders delen op het netwerk ===
@@ -2324,6 +2742,11 @@ Meerdere sequenties samen in 1 bestand bewaren:
 		- zie ook functie 'spawn' in .bash_aliases.rc
 	- GUI opdrachten niet gewoon met sudo uitvoeren: sudo zonder -i behoudt environment van user, de gui kan dan zijn configuratiebestanden van de user overschrijven als root, waardoor de user zelf er nadien niet meer aan kan veranderen; dat kan zelfs over login-bestanden gaan, waardoor de user niet meer kan inloggen.
 
+- zie .bash_aliases : alias sudos='XDG_CONFIG_HOME=~/.configroot xfce4-terminal --disable-server --geometry 132x30+0+0 -e "sudo -i"&'
+	- gebruikt aparte map om voorkeuren van xfce4-terminal op te slaan, zodat die zichtbaar te onderscheiden is van gewone terminal
+	- sudo -i maakt de shell root en login, met o.a. verwerking van /root/.profile waar PATH gezet wordt
+		- NIET NODIG: xfce4-terminal --default-working-directory=/root
+
 === Thunar Custom Actions ===
 
 - worden opgeslagen in ~/.config/Thunar/uca.xml
@@ -2340,69 +2763,157 @@ Meerdere sequenties samen in 1 bestand bewaren:
 	   - pattern "*.sh", select "Other files"
 	Then in thunar, right-click the script and select the "Run in Terminal" option.
 
-=== opdracht shellscript uitvoeren in nieuwe terminal, en open houden ===
+=== opdracht of shellscript uitvoeren in nieuwe terminal, en open houden ===
 
 - opdracht uitvoeren in nieuwe (Xubuntu) terminal
-	$ xfce4-terminal -x opdracht arg1 arg2
-	- optie -x : rest van de lijn is de uit te voeren opdracht
-	- optie -e : volgende string of "string1 string2 ..." is de uit te voeren opdracht
-	- optie --tab of --window : 2de tab of window, met eigen opdracht
-	- optie -H : venster open houden na afloop opdracht, maar geen prompt: enkel om uitvoer te kunnen lezen
-	- optie -T titelstring
-	- optie --geometry 80x25+0+0
-	- sluit na afloop van de opdracht waarvoor hij wordt opgestart (vgl. de terminals die door Whisker worden geopend om een man-page te bekijken).
+	- sluiten na afloop van de opdracht (vgl. de terminals die door Whisker worden geopend om een man-page te bekijken) :
+		$ xfce4-terminal -x opdracht args
+		-x : rest van de lijn is de uit te voeren opdracht
+		-e : volgende string of "string1 string2 ..." is de uit te voeren opdracht
+		--tab of --window : 2de tab of window, met eigen opdracht
+		--active-tab : zojuist gedefiniëerde tab actief maken
+		--default-working-directory=directory : alle windows en tabs
+		--working-directory=directory : tab
+		-H : venster open houden na afloop opdracht, maar geen prompt: enkel om uitvoer te kunnen lezen
+		-T titelstring
+		--geometry wxh±x±y : vensterafmetingen in chars, +x/y : van linkerbovenhoek scherm, -x/y rechteronderhoek
+		--drop-down : enige of zojuist gedefiniëerde window in 'drop down' mode (max. 1 window), sluit standaard bij verlies focus (optie rechtsonder in terminal zelf aan te passen)
+		--show/hide-menubar/toolbar/borders/scrollbar
+			- zonder scrollbar scrollen met muiswiel
+			- averechts klikken geeft optie om toch nog menu te tonen
+			- Alt-space voor systeemmenu, o.a. move, resize, always on top ...
+		--font=lettertype
+		--zoom=+-n : standaard lettergrootte x1.2^+n of /1.2^-n
+		
+	- na afloop openhouden voor vervolgopdracht :
+		$ xfce4-terminal -T titel -e "bash -c \"opdracht ; exec bash\""
+	b.v.	$ xfce4-terminal -T titel -e "bash -c \"./Documents/shellscripts/mijnscript.sh ; exec bash\""
+		- 'bash -c' opent shell om script of andere opdracht uit te voeren
+		- 'exec bash' vervangt het vorige proces, in dezelfde terminal, met uitvoer daarvan nog zichtbaar, en biedt prompt voor vervolgopdrachten; exec is a bash built in command:
+			>>>
+				Execute a command
+				Syntax
+					  exec [-cl] [-a name] [command [arguments]]
+				Options
+					  -l   Place a dash at the beginning of the zeroth arg passed to command. (This is what the login program does.)
+					  -c   Causes command to be executed with an empty environment.
+					  -a   The shell passes name as the zeroth argument to command.
+				If command is supplied, it replaces the shell without creating a new process. If no command is specified, redirections can be used to affect the current shell environment. If there are no redirection errors, the return status is zero; otherwise the return status is non-zero.
+			<<<
+	
+- vanuit script nieuwe interactieve shell openen (in zelfde terminal) om opdrachten te aanvaarden, bij exit daaruit gaat script verder:
+	- zet op die plaats in het script de opdracht
+		bash -i
+		OF (mits de aanpassing die ik daarvoor in .bash_aliases heb gedaan)
+		TERMINALTITEL="Mijn nieuwe titel voor het terminalvenster" bash -i
 
-- opdracht uitvoeren in nieuwe terminal (Xubuntu), na afloop openhouden voor vervolgopdracht:
-	$ xfce4-terminal -T titel -e "bash -c \"opdracht ; exec bash\""
-b.v.	$ xfce4-terminal -T titel -e "bash -c \"./Documents/shellscripts/mijnscript.sh ; exec bash\""
-	- 'bash -c' opent shell om script of andere opdracht uit te voeren
-	- 'exec bash' vervangt het vorige proces, in dezelfde terminal, met uitvoer daarvan nog zichtbaar, en biedt prompt voor vervolgopdrachten; exec is a bash built in command:
-		>>>
-			Execute a command
-			Syntax
-				  exec [-cl] [-a name] [command [arguments]]
-			Options
-				  -l   Place a dash at the beginning of the zeroth arg passed to command. (This is what the login program does.)
-				  -c   Causes command to be executed with an empty environment.
-				  -a   The shell passes name as the zeroth argument to command.
-			If command is supplied, it replaces the shell without creating a new process. If no command is specified, redirections can be used to affect the current shell environment. If there are no redirection errors, the return status is zero; otherwise the return status is non-zero.
-		<<<
+=== terminaltype met alternatieve instellingen ===
 
-- vanuit script nieuwe interactieve shell/terminal openen om opdrachten te aanvaarden, bij exit daaruit gaat script verder: 	zet op die plaats in het script de opdracht
-	bash -i
-of (mits de aanpassing die ik daarvoor in .bash_aliases heb gedaan)
-	TERMINALTITEL="Mijn titel voor het terminalvenster" bash -i
+- b.v. transparante terminals configureren :
+	- HOTKEY "Shift+Super+T" ingesteld
+	$ XDG_CONFIG_HOME=~/.configalt xfce4-terminal --disable-server
+	--disable-server : anders gaat hij op zoek naar parent terminal, en neemt daarvan alles over
+	- XDG_CONFIG_HOME= : alternatief voor ~/.config, xfce maakt daarin autom. de nodige subdirs, o.a. ./gtk-3.0 ./ibus ./xfce4/terminal
+		- xfce4-terminal afsluiten, naar nieuwe ./xfce4/terminal de bestanden accels.scm en terminalrc uit standaard .config kopiëren, xfce4-terminal terug opstarten en preferences wijzigen naar believen
 
-=== Beheer jobs ===
+=== bash jobs ===
 
-- GUI-programma als neven-proces openen vanuit terminal, en direct terug een prompt krijgen :
-	$ opdracht &
+- programma als neven-proces openen vanuit terminal, en direct terug een prompt krijgen :
+	- vooral nuttig voor GUI en langdurige progs
+	$ opdracht & [disown]
 		>>> man bash
 		 If a command is terminated by the control operator &, the shell executes the command in the background in a subshell. The shell does not wait for the command to finish, and the return status is 0.
 		<<<
+		- los van de terminal, dus zonder stdin en stdout, behoudens redirect
 		- foutboodschappen, zoals de veel voorkomende van gtk, komen wel in de terminal, tenzij met pipe naar null:
 			$ opdracht >& /dev/null &
 			- zie ~/bash_aliases functie spawn()
+		[disown] : bash command om 'current' job ook los te maken van huidige shell, zie "$ help disown"
 
-- Beheer jobs :
+- opdracht in uitvoering van deze shell stoppen :
+	- b.v. na
+		>>>
+			mousepad &
+			opdracht parameters
+		<<<
+	- Ctrl-Z : stopt proces onmiddelijk, gooit klaarstaande invoer (~ toetsenbord-buffer) en hangende uitvoer weg
+	OF
+	- Ctrl-Y : stopt wanneer proces invoer van de terminal probeert te lezen
+		>>> [n]+  Stopped                 opdracht parameters <<<
+		- [n] : jobnr.
+		- nu kunt ge andere opdrachten uitvoeren, b.v. man raadplegen
+		- OPGELET: als de opdracht in een opdrachten-lijst stond, dan wordt nu de volgende opdracht gestart, b.v. :
+			$ sleep 100 ; doe iets
+			- Ctrl-Z
+				>>> [n]+  Stopped                 sleep 100 <<<
+				maar "doe iets" wordt onmiddelijk uitgevoerd
+	- job herstarten
+		$ [fg] %n
+		[fg] : herstart in voorgrond, is default
+		- koppelt job n aan de terminal (o.a. stdin) en laat ze verder lopen 
+	- job herstarten, maar in achtergrond (lukt niet voor interactieve opdrachten)
+		$ %n &
+		OF
+		$ bg %n
+		[bg] OF & : 'background', laat job n verder lopen maar in de achtergrond, los van de terminal
+	- achtergrondjob naar/in voorgrond halen/herstarten
+		$ fg %n
+	- lijst lopende en gestopte jobs met deze shell als parent (bash internal)
+		$ jobs
+		>>>
+			[m]-  Running                 mousepad &
+			[n]+  Stopped                 opdracht parameters
+		<<<
+		- genummerde lijst (jobnr., NIET pid)
+	- job vragen om af te breken
+		$ kill %n
+		- BELANGRIJK : %-prefix, anders is n een pid (process id)
+		- zelfde als kill -TERM %n, breek job n helemaal af. De afgebroken job blijft wel als 'terminated' in jobs staan, mogelijk om met 'fg n' de job terug naar de voorgrond te brengen om zijn exit code te krijgen.
+		- het is om jobnummer n (met prefix %) als argument te kunnen geven, i.p.v. pid, dat de opdracht kill is ingebouwd in bash
 	- zie ook sectie "bash shell sneltoetsen"
-	$ jobs
-	- overzicht van gestopte en lopende jobs ?van terminalsessie (is denk ik niet echt een commando, bestaat alleen als er jobs zijn)
-	$ fg n
-	- 'foreground', koppelt job n aan de terminal en laat verder lopen
-	$ bg n
-	- 'background', laat job n verder lopen maar in de achtergrond, los van de terminal
-	$ kill %n
-	- zelfde als kill -TERM %n, breek job n helemaal af. De afgebroken job blijft wel als 'terminated' in jobs staan, mogelijk om met 'fg n' de job terug naar de voorgrond te brengen om zijn exit code te krijgen.
-	- het is om jobnummer n (met prefix %) als argument te kunnen geven, i.p.v. pid, dat de opdracht kill is ingebouwd in bash
+
+=== beheer processen ===
+
+- processen worden niet door bash, maar door ?systemd beheerd, op basis van pid (process id)
 	$ ps
-	- overzicht van alle processen ?van terminalsessie, met pid
-	$ kill -STOP pid
-	- zoals ctlr+z: stopt job met pid, zonder zijn resources vrij te geven
+	- overzicht van alle processen, met pid
+	$ kill -STOP [pid | %n]
+		- zoals ctlr+z in bash shell: stopt process met pid, zonder zijn resources vrij te geven
+		- OPM : kill is een bash internal, maar aanvaardt als argument om signaal naar te sturen zowel %jobnr v.d. bash shell, als pid (volledig numeriek), zie sectie "bash jobs"		
 	$ kill -CONT [pid | %n]
-	- zoals 'bg n': laat job pid terug lopen, maar in de achtergrond(?), los van de terminal
+		- zoals 'bg n': laat job pid terug lopen, maar in de achtergrond(?), los van de terminal
 	$ kill -l
-	- lijst van alle SIGxxxx die we naar jobs en processen kunnen sturen als 'kill -xxxx pid' of 'kill -xxxx %jobnr'
+		- lijst van alle SIGxxxx die we naar jobs en processen kunnen sturen als 'kill -xxxx pid' of 'kill -xxxx %jobnr'
+
+- allerlei info van processen, en besturing ervan, via virtueel bestandssysteem in /proc :
+	- /proc/1234 : alle info van process 1234; hierin staan allemaal pseudo-bestanden van 0 lang, uit te lezen met redirect of cat.
+		- OPGELET : niet alles is leesbaar, bevat o.a. link naar de binary in uitvoering :
+			$ realpath /proc/1234/exe
+				>>> /usr/bin/huppeldepup <<<
+			$ realpath /proc/1234/cwd
+				>>> /home/1000/Documents <<<
+			$ cat /proc/1234/cmdline
+				>>> huppeldepup -arg1 -arg2 <<<
+			$ realpath /proc/1234/fd/*
+				>>> geopende filedesriptors, vooraan het trio stdX
+				/dev/pts/1
+				/dev/pts/1
+				/dev/pts/1
+				/home/dirk/snap/john-the-ripper/297/.john/john.rec
+				/home/dirk/snap/john-the-ripper/297/.john/john.log
+				/home/dirk/snap/john-the-ripper/297/.john/john.pot
+				/dev/tty
+				/snap/john-the-ripper/297/run/ascii.chr
+				<<<
+			$ catfiles /proc/1234/fdinfo/*
+				>>>
+				...
+				fdinfo/4
+					 1	pos:	440212
+					 2	flags:	0102001
+					 3	mnt_id:	483
+				...
+				<<<
 
 === pipe naar bestand maar ook naar scherm ===
 
@@ -2448,6 +2959,25 @@ ZIE http://mywiki.wooledge.org/UsingFind
 		$ shopt -s globstar
 		- hiermee wordt ** uitgebreid tot alle niveaus van subdirectories
 		$ for i in ./**/*.ext;
+	- in volgorde van grootte, datum, ...
+		- bash e.a. shell breiden wildcards uit naar pad in alfabetische volgorde. Met 'ls -1 ...' kunnen bestandsnamen in andere volgorde opgevraagd worden, b.v. op Size reversed :
+			$ ls -1Sr
+			>>>
+			'klein bestand'
+			'groot bestand'
+			<<<
+		- uitvoer van 'ls -1 ...' is niet rechtstreeks bruikbaar b.v. als 'for a in $(ls -1 ...)', omdat de quotes verwijderd worden en de bestandsnamen gesplitst in woorden
+		- als opdracht NIET leest van STDIN:
+			$ while read i;do opdracht;done <$(ls -1 ...)
+		- als opdracht WEL leest van STDIN (b.v. ffmpeg zonder -nostdin):
+			- opdracht zou zelf van de pipe lezen, voor while aan de volgende iteratie toekomt
+				b.v. $ ls -1S | while read i;do echo i=$i;read -t 0.1 j;echo j=$j;done
+					- read -t: time out
+			- weerszijden van een pipe worden in een subshell uitgevoerd, kunnen daarom geen variabelen zetten voor buiten de while-loop
+			- oplossing: while-read niet van pipe, maar van here-string <<<$(ls -1 ...) of process substitution < <(ls -1 ...) laten lezen EN resultaat eerst naar array lezen, en doorgeven naar 2de loop:
+				$ unset lijst
+				$ while read i;do lijst=("${lijst[@]}" "$i");done <<<$(ls -1 ...)
+				$ for i in "${lijst[@]}";do opdracht;done
 	- find [bronpad] selecties acties
 		- [bronpad] selecties : zie sectie "lijst-opdrachten" lemma "zoek bestanden en directories"
 		- acties : default actie is naam naar stdout
@@ -2581,11 +3111,14 @@ ZIE http://mywiki.wooledge.org/UsingFind
 
 ==== vb. 7 symbolic links naar bestanden in hernoemde map ====
 
-- links in current directory naar liedjes na hernoemen van /media/seag1m/ naar /media/sdata/ :
-	$ find . -lname '/media/seag1m/*' -exec bash -c 'lied=$(readlink "{}") ; ln -sfi "${lied/seag1m/sdata}" "{}"' \;
+- links in current directory naar liedjes na hernoemen van /media/sdata/ naar /media/tarch/ :
+	$ find . -lname '/media/sdata/*' -exec bash -c 'lied=$(readlink "{}") ; ln -sfiT "${lied/sdata/tarch}" "{}"' \;
 	-lname : selecteer op target van de link, met klassieke bash pathname expansie
 	-ilname : idem, case insensitive
-	-sfi : maak symbolic link, forceer vervangen van bestaande (verbroken) link, maar interactief (y of n)
+	-s : symbolic link
+	-f : forceer vervangen van bestaande (verbroken) link
+	-i : forceer interactief (y of n)
+	-T : BELANGRIJK anders kan 2de argument als doeldirectory geinterpreteerd worden, i.p.v. als linknaam
 	bash -c '...' : nodig om de 2 commando's lied=... en ln ... aan elkaar te breien: lied= is iets van shell
 	- ${parm/zoek/vervang} : parameteruitbreiding met vervanging van zoekterm
 
@@ -2597,7 +3130,7 @@ ZIE http://mywiki.wooledge.org/UsingFind
 
 ==== vb. 9 stripverhalen opnieuw inpakken naar cbz ====
 	- strips staan per album als .jpg in subdirectory van current directory :
-	$ for i in * ; do cd "$i"; echo $PWD ; zip -0 ../"$i".cbz *.jpg ; cd ..; done
+	$ for i in * ; do pushd "$i"; zip -0 ../"$i".cbz *.jpg; popd; done
 
 ==== vb. 10 in alle bestandsnamen dubbele aanhalingstekens vervangen door enkele ====
 	$ find -xdev -iname "*\"*" -execdir bash -c 'mv "${1//\"/"\""}" "${1//\"/\'\''}"' _ \{\}  \;
@@ -2629,12 +3162,63 @@ ZIE http://mywiki.wooledge.org/UsingFind
 		OF
 		$ pdfimages -all -p input.pdf outputprefix
 	- resulterende jpegs opsplitsen in linker en rechter blz
-		$ mkdir gesplitst.
-		$ for i in *.jpg; do eval $(jpeginfo "$i"|sed -E 's/.*jpg ([0-9]+) x ([0-9]+) .*/w=\1 h=\2/');echo $i w:$w $((w/2)) h:$h;jpegtran -opt -prog -crop "$((w/2))x$h+0+0" -copy none -outfile "gesplitst/${i/.jpg/}L.jpg" "$i";jpegtran -opt -prog -crop $((w-w/2))x$h+$((w/2))+0 -copy none -outfile "gesplitst/${i/.jpg/}R.jpg" "$i";done
-			- OPM : $(jpeginfo | sed) moeten in dezelfde subshell, dus dezelfde bracket expansion, want pipe werkt enkel binnen zelfde shell
-			- OPM : jpegtran argumenten mogen afgekort worden, BEHALVE -outfile
+			$ mkdir gesplitst
+		- methode 1 : met sed
+			$ for i in *.jpg; do eval $(jpeginfo "$i"|sed -E 's/.*jpg ([0-9]+) x ([0-9]+) .*/w=\1 h=\2/');echo $i w:$w $((w/2)) h:$h;jpegtran -opt -prog -crop "$((w/2))x$h+0+0" -copy none -outfile "gesplitst/${i/.jpg/}L.jpg" "$i";jpegtran -opt -prog -crop $((w-w/2))x$h+$((w/2))+0 -copy none -outfile "gesplitst/${i/.jpg/}R.jpg" "$i";done
+				- OPM : $(jpeginfo | sed) moeten in dezelfde subshell, dus dezelfde bracket expansion, want pipe werkt enkel binnen zelfde shell
+				- OPM : jpegtran argumenten mogen afgekort worden, BEHALVE -outfile
+		- methode 2 : met read
+			$ for i in *.jpg;do echo $(jpeginfo $i);done|while read naam breed x hoog rest;do echo naam=$naam w=$breed h=$hoog r=$rest;done
+			...
 		$ java be.arci.pdf.ImageWrapper gesplitst/*.jpg [uitvoer.pdf]
 			- wildcard expansie is altijd alfanum gesorteerd, toegevoegde suffixen L en R geven toevallig de juiste volgorde
+
+==== vb. 13 vergelijken duur van reeks afleveringen na hercompressie ====
+- zie "_ffmpeg truuks en commandos.adoc" sectie "vergelijken duur van reeks afleveringen na hercompressie"
+
+==== vb. 14 named pipe ====
+
+- omdat een commandolijn een beperkte lengte heeft (o.a. find en xargs splitsen lijsten met bestandsnamen automatisch op in korte stukken), kunnen programma's die een hele reeks bestanden of andere argumenten verwerken, die uit een lijstbestand lezen. Bash laat toe om zo'n lijstbestand niet eerst naar schijf te schrijven, maar on-the-fly via bash process substitution in te vullen (via een named pipe). B.v. als de directory waar find in zoekt (default ./) niet in de bestandsnaam mag staan :
+	$ commando -l <(find ... -printf "%P\n")
+	-l : typische parameter voor "read filenames from list"
+	- %P : File's name with the name of the starting-point under which it was found removed.
+
+- OPM : smv (SmartVersion) kan bestandslijst niet lezen uit zo'n pipe, die moet een echt bestand krijgen
+
+==== vb. 15 crop jpgs ====
+
+- met "jpeginfo -l" krijgt ge info in listing-formaat van een jpeg-bestand, b.v. :
+	$ jpeginfo -l 19.jpg
+	>>>
+	1403 x 1020 24bit JFIF  P   74894 19.jpg
+	<<<
+
+- uit die info width en height afzonderen, kunnen daarmee dan bash berekeningen doen
+	$ for i in *.jpg;do dim=$(jpeginfo -l "$i") ;dim="${dim%%??bit *}";w="${dim%% x *}";w=${w// };h="${dim#* x }";h=${h// };jpegtran -crop ${w}x$((h-100)) -outfile "/media/ramdisk/$i" $i;done
+		- ${x%%??bit *} : verwijdert alvast zowel " 8bit ..." als "24bit ...", zodat 9999 x 9999 overblijft (met evt. voorloopspaties)
+		- ${x// } verwijdert alle ' '
+
+==== vb. 16 alle woorden met hoofdletter in reeks bestanden ====
+
+- sommige ondertitels zijn volledig in hoofdletters, andere niet
+	- uit de ondertitels met kleine letters een lijst maken met de 'eigennamen' (woorden met hoofdletter)
+		$ for f in S0{3,4}*.srt;do grep -E "[a-z]" "$f" >/dev/null && grep -ie "[a-z]" "$f"|sed -Ee 's|^[a-zA-Z]+[^a-zA-Z](.*)|\1|;s|\. [a-zA-Z]+[^a-zA-Z]||g;s|([^[:alpha:]]+)|\n|g;s| ||g'|grep -Ee "^[A-Z][a-z]";done|sort -u
+
+
+		$ for f in S0{3,4}*.srt;do grep -E "[a-z]" "$f" >/dev/null && grep -ie "[a-z]" "$f" | sed -Ee 's|^[a-zA-Z]+[^a-zA-Z](.*)|\1|; s|\. [a-zA-Z]+[^a-zA-Z]||g; s|[[:punct:]][a-zA-Z]+([^a-zA-Z])|\1|g; s|([^[:alpha:]]+)|\n|g; s| ||g' | grep -Ee "[A-Za-z]"; done | sort -uf | grep -E "^[A-Z][a-z]"
+			- grep 1: zoek bestanden met lijnen met kleine letters; bij succes :
+				- grep 2: enkel de lijnen met letters (b.v. voor .srt: niet de nummers en tijden)
+				- sed s 1: verwijder 1ste woord van elke lijn : kan hoofdletter hebben als begin van zin
+				- sed s 2: verwijder woord na punt : zou hoofdletter moeten hebben als begin van zin
+				- sed s 3: verwijder woord na punctuatie : zou hoofdletter kunnen hebben (b.v. tss. haakjes)
+				- sed s 4: vervang alle niet-letters door \n
+				- sed s 5: verwijder spaties
+				- grep 3: behoud alleen lijnen met letters
+			- sort -uf : verwijder dubbels, case-insensitive; als woord met hoofd- EN kleine letter voorkomt, de kleine houden
+				-u : uniek
+				-f, --ignore-case : fold lower case to upper case characters
+			- grep 5: behoud alleen woorden met hoofdletter gevolgd door kleine letter
+
 
 === dubbele voorkomens verwijderen uit invoer ===
 
@@ -2659,7 +3243,7 @@ ZIE http://mywiki.wooledge.org/UsingFind
 		- vb.: voer opdracht uit op elke directory met flac-bestanden :
 			$ find "_Muziek/" -type f -iname "*.flac" -printf "%h\n" | { declare -A a; while IFS= read -r map; do if [ ! ${a["$map"]} ]; then a["$map"]=x; opdracht $map; fi; done; }
 			-printf "%h\n" : print alleen directory (zonder eind-/), met new-line achter
-			- | { ... } : weerszijden van een pipe worden in een subshell uitgevoerd, waarna environment variabelen en cd-opdrachten verloren gaan; door opdrachtlijst binnen { } te zetten, is dat geheel 1 kant van de pipe, zodat daarbinnen variabelen en cd zichtbaar blijven
+			- | { ... } : weerszijden van een pipe worden in een subshell uitgevoerd, waarna variabelen en cd-opdrachten verloren gaan; door opdrachtlijst binnen { } te zetten, is dat geheel 1 kant van de pipe, zodat daarbinnen variabelen en cd zichtbaar blijven
 			- declare -A a : a is associative array (met keywords), anders met integers als sleutel
 			- IFS= om begin- en eindspaties te behouden in read
 			-r : Backslash does not act as an escape character. The backslash is considered to be part of the line. In particular, a backslash-newline pair may not be used as a line continuation.
@@ -2807,6 +3391,9 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 - in 2 bestanden aanpassen :
 	- /etc/hostname
 	- /etc/hosts lijn met 127.0.1.1
+		>>> [https://askubuntu.com/a/754216/1020749] en Section 10.4 of the (Debian Reference Manual)[http://qref.sourceforge.net/quick/ch-gateway.en.html].
+		If your system has a permanent IP address then use that; otherwise use the address 127.0.1.1
+		<<<
 
 - zonder herstarten toepassen (lukt niet altijd) :
 	# service hostname start
@@ -2842,8 +3429,10 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 - zie "https://www.linuxjournal.com/content/tech-tip-really-simple-http-server-python"
 	$ cd webroot
 	$ python -m SimpleHTTPServer [poort]
-	Ctrl-Z : beëindigen
-	- default poort 8000, IP 0.0.0.0
+	OF
+	$ python3 -m http.server [poort]
+	Ctrl-C : beëindigen
+	- default poort 8000, IP 0.0.0.0 (maar luistert dan ook op 127.0.0.1)
 	- andere IP, b.v. localhost :
 	>>> mijnserver.py
 		#! /usr/bin/python
@@ -2956,6 +3545,16 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 			- als bestand 2 verschijnt, wordt verondersteld dat bestand 1 klaar is, en dat wordt naar HDD verplaatst
 			- als alles klaar is (volgens mijn script "klaar") wordt tenslotte het laatste bestand (99 in dit voorbeeld) naar de HDD gekopiëerd (niet verplaatst, om niet te struikelen over evt. foute interpretatie van "klaar")
 		- OPM : in $(()) moet er geen $ voor shell-veranderlijken, maar het mag wel; is wel nodig voor {} parameter expansion syntax
+			- zonder $ wordt de veranderlijke, als dat al een formule is, uitgerekend alsof ze tss. haakjes staat, b.v.:
+				$ avg_frame_rate=60000/1001
+				$ echo $((avg_frame_rate))
+				>>> 59 <<<
+				$ echo $((avg_frame_rate*100))
+				>>> 5900 <<<
+				$ echo $((100*avg_frame_rate))
+				>>> 5900 <<<
+				$ echo $((100*$avg_frame_rate))
+				>>> 5994 <<<
 		- NIET "for i in {02..99}" : i zelf is string, maar in $(()) wordt die string geinterpreteerd als getal, octaal als er een voorloop-0 is, en 08 en 09 zijn octaal niet geldig
 			- voorloop-0 van i evt. verwijderen met $((${i#0}-1) : remove prefix 0
 			- evt. expliciteren dat i radix 10 heeft :  $((10#$i-1)) : syntax is radix#string; moeten dan wel $i gebruiken, want i zou geïnterpreteerd worden als digit, en dit zou in dit vb. " value [d.w.z. i] too great for base [d.w.z. 10]" geven
@@ -2968,14 +3567,62 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 		$ for i in {2..99};do while ! [[ -f 0$i*.avi || -f $i*.avi ]] ; do sleep 10;done;[[ $((--i)) -lt 10 ]] && i=0$i;mv  $i*.avi /media/sdata/WERK;done;klaar;sleep 30;cp $((++i))*.avi /media/sdata/WERK/;sleep 30;slaap
 			- werken met 1 variabele, die we decrementen als we vorige bestandsnaam maken om te verplaatsen, maar dan moeten we wel terug incrementen om laatste bestandsnaam te maken
 
+=== status van iets opvolgen ===
+
+- watch voert in een tijdloop herhaaldelijk dezelfde opdracht uit, b.v.
+	$ watch cat mijn.log
+		- geeft om de 2 seconden de opdrachtstring 'cat mijn.log' door aan /bin/sh (de nodige aanhalingstekens gebruiken om pipes, redirects, $x, ... pas door sh te laten evalueren)
+		- toont bovenin een 'titel'-lijn met interval, opdracht, tijdstip laatste herhaling
+		-n, --interval seconds.decimals : update interval, default 2 seconds
+		-x, --exec : pass the command to exec instead of to /bin/sh
+		-d, --differences[=permanent] : Highlight the differences between successive updates. "permanent" [of elke andere =x] allows to see what has changed at least once since first iteration.
+		-p, --precise : Make watch attempt to run command every interval seconds. Try it with ntptime and notice how the  fractional  seconds stays (nearly) the same, as opposed to normal mode where they continuously increase.
+		-t, --no-title : Turn off the header showing the interval, command, and current time at the top of the display, as well as the following blank line.
+		-b, --beep : Beep if command has a non-zero exit.
+		-e, --errexit : Freeze updates on command error, and exit after a key press.
+		-g, --chgexit : Exit when the output of command changes.
+		-c, --color : Interpret ANSI color and style sequences
+			- komt neer op kleuruitvoer behouden
+			- OPM: grep e.a. geven default alleen kleuruitvoer naar terminal, niet naar pipe :
+				$ grep --colour=always
+			- OPM: geeft conflict met -d=permanent
+
+=== torrent's magnet link maken van info hash ===
+
+- een magnet link van een torrent heeft de structuur magnet:sleutel=waarde[&sleutel=waarde]..., met de volgende sleutels en waarden :
+	- xt=urn:btih: gevolgd door de infohash (b.v. getoond op YourBitTorrent, die zelf geen magnet links geeft)
+	- dn= gevolgd door downloadnaam (URL-encoded, d.w.z. o.a. spaties vervangen door %20)
+	- tr=udp://tracker.archlinux.org:6969 : 1 of meer trackers, kunnen in Transmission ook nadien toegevoegd worden. De magnet links van [http://rarbgaccess.org/] hebben gewoonlijk maar een tracker of 3, meer zijn te vinden op o.a. [https://newtrackon.com/list]
+
 == RSYNC ==
 
-- MIJN VOORKEUR voor synchronisatie van directories:
+=== MIJN VOORKEUR voor synchronisatie van directories ===
+
+- ntfs heeft geen permissies, owners en group owner zoals ext4, daarom deze opties meegeven :
+	NTFSopts=" --no-p --no-g --no-o "
+
+- rsync heeft zoveel opties, en is zo gevoelig aan '\' :
+	ALTIJD : -n, --dry-run : perform a trial run with no changes made
+
 	- voor linux schijven :
-		$ rsync -aASXx [-iv] [--delete] bronpad/ doelpad/
+		$ rsync -aASXx [-civ] [--delete | --delete-before] bronpad/ doelpad/
+		-a , --archive	: archive mode; equals -rlptgoD (no -H,-A,-X) (preserve symbolic links, devices, attributes, permissions, ownerships, etc.)
+		-A, --acls : preserve ACLs (implies -p)
+		-S, --sparse : handle sparse files efficiently
+		-X, --xattrs : preserve extended attributes
+		-x, --one-file-system : (o.a. linux eigen mounts her en der niet archiveren)
+		[-c, --checksum] : skip based on checksum, not mod-time & size
+		[-i, --itemize-changes] : output a change-summary for all updates
+		[-v, --verbose] : increase verbosity
+		[--delete] : delete extraneous files from dest dirs
+		[--delete-before] : receiver deletes before xfer, not during (variant op --delete, geen optie van)
 	- voor NTFS schijven :
-		$ rsync -aSx --no-p --no-g --no-o [-iv] [-delete] bronpad/ doelpad/
-		- sudo misschien niet nodig bij rsync, maar b.v. wel bij meld omdat die voor [--delete] naar .Trash wil doken
+		$ rsync -rltDSx [-civ] [-delete | --delete-before] bronpad/ doelpad/
+		-rltD : -a --no-o --no-g --no-p, want FAT/NTFS kent geen linux -o (owner), -g (group) of -p (permissions), zouden fouten geven
+		- sudo misschien niet nodig bij rsync, maar b.v. wel bij meld omdat die bij 'delete' naar .Trash wil moven
+	- voor FAT schijven :
+		$ rsync -rltD -x
+		-rltD : -a --no-o --no-g --no-p, want FAT/NTFS kent geen linux -o (owner), -g (group) of -p (permissions), zouden fouten geven
 		
 === test of te verwachten resultaat nakijken ===
 	$ rsync -niv ...
@@ -2994,13 +3641,13 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 		-D		: same as --devices --specials
 			--devices	: preserve device files (super-user only)
 			--specials	: preserve special files
-	- NTFS-schijven : -a afzwakken met --no-p --no-g --no-o (no permissions, no group, no owner), omdat die op NTFS toch niet kunnen gelijkgetrokken worden met ext4
+	- FAT/NTFS-schijven : -rltD : -a --no-o --no-g --no-p, want FAT/NTFS kent geen linux -o (owner), -g (group) of -p (permissions), zouden fouten geven
 	- in afwachting van voldoende kennis, doe ik daar zelf ook de volgende bij
 		-A, --acls : preserve ACLs (implies -p)
 		-X, --xattrs : preserve extended attributes
 		- heeft een paar maar-en, en ik gebruik hard links zelf (nog) niet:
 			0 -H, --hard-links : preserve hard links (look for hard-linked files in the source and link together the corresponding files on the destination.  Without this option, hard-linked files in the source are treated as though they were separate files.)
-		-x, --one-file-system : (want linux/Ubuntu zelf mount her en der tmpfs en speciale bestandssystemen, die wil ik niet archiveren)
+		-x, --one-file-system : (o.a. linux eigen mounts her en der niet archiveren)
 		-S, --sparse : handle sparse files efficiently
 	- soms ook deze :
 		--safe-links : (enkel effect samen met -l) ignore absolute symbolic links and symlinks that point outside the copied tree (oppassen samen met --relative)
@@ -3043,7 +3690,7 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 	[-n, --dry-run] : perform a trial run with no changes made
 	[--delete] : you may want to add this option if you are running this multiple times to the same backup folder. In this case make sure that the source path does not end with /*, or this option will only have effect on the files inside the subdirectories of the source directory, but it will have no effect on the files residing directly inside the source directory.
 	-aAX : transfer in archive (-a) mode (zie hoger), to preserve symbolic links, devices, permissions, ownerships, modification times, and also ACLs (-A), and extended attributes (-X)
-	-x, --one-file-system : (want linux/Ubuntu zelf mount her en der tmpfs en speciale bestandssystemen, die wil ik niet archiveren)
+	-x, --one-file-system : (o.a. linux eigen mounts her en der niet archiveren)
 	-S, --sparse : handle sparse files efficiently
 	-i, --itemize-changes : output a change-summary for all updates
 	-v, --verbose : increase verbosity
@@ -3069,11 +3716,13 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 === vergelijken van verschillende backups ===
 
 - b.v. verschillende kandidaten voor herstel vergelijken met origineel en met elkaar :
-	# rsync -naiAX kandidaat1/ kandidaat2/
-	-n		: no changes
+	# rsync -ncaAXxi kandidaat1/ kandidaat2/
+	-n, --dry-run	: no changes
+	-c, --checksum	: skip based on checksum, not mod-time & size
 	-a , --archive	: archive mode; equals -rlptgoD  (zie hoger)
 	-A, --acls	: preserve ACLs (implies -p)
 	-X, --xattrs	: preserve extended attributes
+	-x, --one-file-system : (o.a. linux eigen mounts her en der niet archiveren)
 	-i		: itemize changes
 
 === volledig herstel van backup over nieuwe versie, met delete van bestanden in nieuwe versie die niet in backup stonden ===
@@ -3326,7 +3975,7 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 	- bij enter met iets ingetikt, wordt de keuze verwerkt in de do-loop; moeten zelf "break"-opdracht uitvoeren om de loop te beeindigen, maar select-lijst wordt niet opnieuw geprint
 		- bij enter van geldig keuzenr heeft $var de overeenkomede waarde uit de select-lijst, en $REPLY het ingetikte nummer
 		- bij enter van ongeldige waarde heeft var de waarde null, "$var" = "", en $REPLY het ingetikte
-	- EINDE is een zelfgekozen naam voor een laatste menukeuze die het afbreken wat gebruikvriendelijker maakt (anders Ctrl-C, in sommige gevallen Ctrl-Z)
+	- EINDE is een zelfgekozen naam voor een laatste menukeuze die het afbreken wat gebruikvriendelijker maakt (anders Ctrl-C)
 	- select is een 'shell builtin command', en komt op een andere plaats dan andere commando's in de parsing van een opdrachtlijn. Daardoor kunnen de menukeuzes [value1]... enkel blanco's bevatten in de volgende gevallen :
 		- tussen ""
 		- door globbing
@@ -3424,7 +4073,13 @@ BLOCKCOM
 		fi <<-'_'
 			dit is helptekst
 		_
-	- ik weet niet waarom het here-document bij de cat terechtkomt, i.p.v. bij de exit
+		OF compact maar onleesbaar
+		{ [[ "-h" = "$1" || "--help" = "$1" ]] && { cat;exit; } || :; } <<-'_'
+			dit is helptekst
+		_
+		
+	- cat is eerste commando dat stdin leest, en leest hem helemaal leeg, zodat exit niets meer krijgt
+	- ':' is gewoon het kortste en snelste (bash built-in) commando dat niets doet; het maakt dus ook stdin niet leeg, maar daar is geen 1 simpel commando voor.
 
 === script maar 1 keer uitvoeren ===
 
@@ -3461,6 +4116,16 @@ BLOCKCOM
 		<<<
 		- /var/lock is in Ubuntu een link naar een tmpfs op /run/lock
 
+=== return of exit ===
+
+- de interactieve shell, scripts die als uitvoerbaar bestand worden uitgevoerd, of scripts die worden uitgevoerd met "bash script", kennen de opdracht "return" alleen in functie; buiten functies geeft return een foutboodschap, en moet "exit" gebruikt worden om een script of de interactieve shell (en zijn terminal) te beëindigen :
+	$ return
+	>>> bash: return: can only `return' from a function or sourced script <<<
+
+- exit op de opdrachtlijn van een interactieve shell, of in een script dat met de bash-opdracht "source" of "." wordt uitgevoerd, beëindigt die shell (en zijn terminal). Daar is de opdracht "return" beter voor.
+
+- goed voor allebei (recente bash) : "fc=-1; return "$fc" 2>/dev/null || exit "$fc" : in een uitvoerbaar script faalt de return, en wordt de exit uitgevoerd.	
+
 === functies, argumenten, return value en spaties daarin ===
 
 - argumenten voor een functie zijn strings, zoals argumenten voor een shell script vanop de opdrachtlijn
@@ -3468,13 +4133,33 @@ BLOCKCOM
 	- $0 is naam van script of shell
 	- om spaties te bewaren, argumenten zowel bij aanroep van als bij gebruik in functie tss. ""
 	
-- de return value van een functie is de return code van de laatste opdracht, een getal van 0 tot 255 (cfr. de exit code van een binary)
-	- als tijdens het uitvoeren van de functie een return-opdracht wordt tegengekomen, is dat de laatste opdracht; het (numerieke) argument van de return-opdracht (default 0) is ook haar return code, en dus die van de functie
+- de return value van een functie (of sourced script) is de return code van de laatste opdracht, een getal van 0 tot 255 (cfr. de exit code van een binary)
+	- als tijdens het uitvoeren van de functie (of sourced script) een return-opdracht wordt tegengekomen, is dat de laatste opdracht; het (numerieke) argument van de return-opdracht (default 0) is ook haar return code, en dus die van de functie (of sourced script)
 	- bereikbaar als de expansie van "$?"
 	- bij tests daarop is 0 true, al de rest false.
 
 - een functie kan andere informatie doorgeven aan de aanroeper via
 	- variabelen : als die niet als 'local' worden gedeclareerd in de functie, zijn ze toegankelijk voor de aanroeper
+		- local maakt evt. externe variabelen met dezelfde naam onzichtbaar, ook voor unset. Overigens verwijdert unset alleen de waarde van de locale naam, maar hij blijft local, en bekend bij declare:
+			$ a=extern;f() { echo BEGIN $a;declare -p a b c;local a b;echo LOCAL $a;declare -p a b c;unset a;echo UNSET $a;declare -p a b c; };f;echo RETURN $a;declare -p a b c;
+			>>>
+				BEGIN extern
+				declare -- a="extern"
+				bash: declare: b: not found
+				bash: declare: c: not found
+				LOCAL
+				declare -- a
+				declare -- b
+				bash: declare: c: not found
+				UNSET
+				declare -- a
+				declare -- b
+				bash: declare: c: not found
+				RETURN extern
+				declare -- a="extern"
+				bash: declare: b: not found
+				bash: declare: c: not found
+			<<<		
 	- stdout, b.v. met de opdracht "echo" en bash command substition, b.v.
 		$ resultaat=$(functie argument...)
 			- de command subsitution behoudt evt. spaties zonder dat er "" rondstaan, zodat elk argument tussen "" kan
@@ -3489,7 +4174,7 @@ BLOCKCOM
 
 - $@ is de array van argumenten van aangeroepen script of functie
 
-- een array is niet toegelaten als functie-argument; expansie tss. "" kan wel door aangeroepene in array gezet worden :
+- een array is niet toegelaten als functie-argument; expansie ("$@") door aangeroepene geeft wel array :
 	>>> ./test.sh
 		#!/bin/bash
 		function copyFiles() {
@@ -3633,11 +4318,133 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 			- 2>&3- : kopieert de fd van 3 (originele stdout) naar 2 (stderr), en sluit 3
 		- sudo -S : prompt op stderr zoals gebruikelijk, maar input van stdin i.p.v. via terminal
 
+=== $IFS nakijken ===
+
+- IFS bevat meestal controle-characters, niet te zien met echo $IFS, daarom
+	- octaal printen
+		$ printf "%s" "$IFS" | od -c -t x1
+		>>>
+		0000000      \t  \n
+				 20  09  0a
+		0000003
+		<<<
+	OF
+	- als here-string catten, met expansie van tabs (als ^I) e.a. non-printing characters, en aanduiding van lijneinde door '$'
+		$ cat -et <<<"$IFS"
+		>>>
+		 ^I$
+		$
+		<<<
+
+=== IFS tijdelijke waarde ===
+
+- IFS kan, zoals andere variabelen, iets als een tijdelijk waarde toegewezen krijgen, als prefix van een opdracht:
+	$ naam=waarde opdracht"
+	- die 'tijdelijke waarde' wordt aan de opdracht doorgegeven via het environment dat het krijgt; in C-termen is dit als char envp[], cfr. main(char argv[])
+	- OPGELET woordsplitsing en expansies van variabelen gebeuren in de shell voor de opdracht wordt uitgevoerd, dus heeft die tijdelijke waarde van IFS daarop geen effect. Enkel in een speciale constructie, b.v. door een variabele tussen '' als argument van eval op te geven, zodat de expansie pas door de 'eval' gebeurt, is dat zichtbaar :
+		$ reeks=(1 2 3)
+		$ echo "${reeks[*]}"
+			>>>1 2 3<<<
+		$ IFS=, echo "${reeks[*]}"
+			>>>
+			1 2 3
+			<<<
+		$ IFS=, eval 'echo "${reeks[*]}"'
+			>>>
+			1,2,3
+			<<<
+		$ IFS=, eval 'echo "$IFS"'
+			>>>
+			,
+			<<<
+	- OPM : tijdelijke waarde van IFS is WEL nuttig voor b.v. woordsplitsing in een read
+	- OPM : brace expansion, o.a. {1..5}, gebruikt altijd een gewone spatie als separator, NIET $IFS
+	
+=== array sorteren ===
+
+- zie (https://stackoverflow.com/questions/7442417/how-to-sort-an-array-in-bash)
+	>>> man bash
+	Words of the form $'string' are treated specially. The word expands to string, with backslash-escaped characters replaced as specified by the ANSI C standard.
+	<<<
+	- waarden MET evt. spaties :
+		- NIET IFS tijdelijke waarde geven door assignment vooraan opdracht: zie sectie "IFS tijdelijke waarde"
+		$ [ -v IFS ] && ifsOld="$IFS" || unset ifsOld
+		$ IFS=$'\n'
+		$ array=($(sort <<<"${array[*]}"))
+		$ [ -v ifsOld ] && IFS="$ifsOld" || unset IFS
+			- gebruikt here-string "<<<"
+			- OPGELET : [*], NIET [@] : wordt anders gequote :
+			>>> man bash
+				"${name[*]}" expands to a single word with the value of each array member separated by the first character of the IFS special variable, and "${name[@]}" expands each element of name to a separate word.
+       		<<<
+			- sort -u : unique
+			- OPGELET IFS= array= : 2 assignments op 1 lijn, worden opeenvolgend en definitief toegewezen
+				- is anders dan bash-statement "naam=tijdelijke_waarde opdracht"
+				- daarom IFS bewaren en herstellen via ifsOld
+	- ENKEL waarden ZONDER spaties :
+		$ array=($(IFS=$'\n';sort <<<"${array[*]}"))
+			- werkt juist vanwege [*] niet met spaties in waarden
+			- maakt er gebruik van dat sort toch in subshell gebeurt:
+				- toewijzing aan IFS blijft daar
+				- NIET IFS tijdelijke waarde geven door assignment vooraan opdracht: zie sectie "IFS tijdelijke waarde"
+				- array assignments mogen over meer dan 1 lijn gebeuren, t.e.m. afsluitende ')'	
+
 == PROGRAMMEREN ==
 
 === C compileren en linken ===
 	$ gcc -o test test.c
 	-o test : naam uitvoerbestand (is direct ook uitvoerbaar)
+
+=== C compileren en linken met -dev packages ===
+
+- vb. : GEZIPTE.PRG/UBUNTU/bsdiff/bsdiff-4.3.tar.gz
+	- makefile aanpassen
+		- dit vb. heeft syntax-variant die mijn make niet lust:
+			- verander .ifndef en .endif in ifndef en endif, zonder voorloop-'.'
+	- benodigde libraries : -lNAAM, in dit vb. -lbz2 dus NAAM=bz2, betekent dat
+		- library libNAAM.so nodig is bij uitvoeren
+		- symbolenindex libNAAM.a nodig is om het gecompileerde programma te linken aan de library
+		- het bijhorende .h headerbestand voor het compileren van de broncode
+			- de naam van het headerbestand staat in een #include-clausules van de .c-broncodebestanden; zoals in de oude tijd zoekt '#include <xx.h>' een header in het include-pad van de compiler, en '#include "yy.h"' een eigen header in de directory van de broncode zelf
+			- de meeste #include <> -headers zijn van de standaard bibliotheken van de compiler zelf, en zijn samen daarmee geïnstalleerd
+			- een beetje gezond verstand en kennis van c laat toe om in dit vb. "#include <bzlib.h>" te herkennen als nodige extra header, en anders zal de compiler wel reclameren dat hij die niet vind
+			- de naam bzlib.h in dit vb. is dus niet te construeren uit NAAM=bz2
+		- de symbolenindex .a en header bzlib.h kunnen geinstalleerd worden met het package xx-dev.versie.deb dat hoort bij het package xx-.versie.deb waaruit de library .so geinstalleerd is
+			- .a en .so moeten van compleet dezelfde versie zijn, want .a bevat offsets in .so
+				- .h is ten 1ste minder veranderlijk tot zelfs redelijk stabiel, en, als gewoon tekstbestand, wat vrijer van formaat
+				- .a en .h zitten samen in xx-dev.versie.deb
+			- als de library niet geïnstalleerd is: installeren samen met zelfde versie van package.versie.deb en package-dev.versie.deb, of dezelfde versie van -dev pseudo-installeren zoals hieronder beschreven
+			- als de library al geïnstalleerd is: zoek package op dat de library installeerde :
+				- zie sectie "welk package installeerde dit bestand"
+					$ dpkg -S libbz2.so
+						>>> libbz2-1.0:amd64: /lib/x86_64-linux-gnu/libbz2.so.1.0.4 <<<
+						- :amd64 is de architectuur, is geen deel van de package-naam
+			- welke versie van package is/wordt default geinstalleerd :
+				$ apt policy libbz2-*
+			- om uw systeem niet te vervuilen, kunt ge
+				- in een VM de library en -dev installeren, het programma compileren, en de binary en man-bestand naar VM-host kopiëren, b.v. in /opt of in eigen ~/bin als het op $PATH moet staan
+				- pseudo-installeren :
+					- package downloaden en uitpakken
+						- b.v. van [verzamelsite van Ubuntu](http://archive.ubuntu.com/ubuntu/pool/main/b/bzip2/)
+						- NIET laten installeren, gewoon opslaan
+						- data.tar.xz eruit uitpakken (fileroller, ...)
+						- data.tar.xz zelf uitpakken (fileroller, ...)
+							- hebben niet de hele directory-structuur nodig, zet de bestanden b.v. gewoon in ./include en ./lib
+					- makefile aanpassen :
+						- in CFLAGS bijzetten, om deze (vooraan) toe te voegen aan library-path en include-path van compiler (gcc) :
+							-L ./lib/
+							-I ./include/
+							[-v] : verbose, laat o.a. zien hoe die paden worden samengesteld en afgezocht
+					- compileren en linken :
+						$ make
+						[$ sudo make install] : installeert, na make, in systeem-directories
+						- zie voor fout "undefined reference" volgende paragraaf
+					- PROBLEEM programma's die niet voor Ubuntu en Debian geschreven werden (b.v. bsdiff voor FreeBSD) geven zelfs als de library en header gevonden worden, boodschappen zoals
+							>>> bsdiff.c:(.text.startup+0x2b0): undefined reference to `BZ2_bzWriteOpen' <<<
+							- zie [ToolchainTransition](https://wiki.ubuntu.com/NattyNarwhal/ToolchainTransition)
+							- door default linker-instelling van Ubuntu (en Debian) moeten de broncodes .c VOOR de -lLIBRARYNAAM staan
+							- ik weet nog niet hoe de makefile (CFLAGS) hiervoor kan aangepast worden, want dat is 1 parameter
+					- OPLOSSING : make toont de uitgevoerde opdrachten; die gewoon kopiëren, en de -lxxx argumenten na de yyy.c argumenten zetten
 
 === assembler maken van C ===
 	$ gcc -Wa,-adhln -masm=intel -g test.c > /media/ramdisk/test.asm
@@ -3818,7 +4625,7 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 
 - NOOT : "axi-cache search" is een betere vervanger voor "apt search" en "apt-cache search"
 
->>> man-page apt(8):
+>>> man apt(8):
 	The `apt` command is meant to be pleasant for end users and does not need to be backward compatible like apt-get(8). Take a look at this post for more information on the new tool: http://mvogt.wordpress.com/2014/04/04/apt-1-0/
 	A synopsis of the above link
 		The big news for this version is that we included a new “apt” binary that combines the most commonly used commands from apt-get and apt-cache. The commands are the same as their apt-get/apt-cache counterparts but with slightly different configuration options.
@@ -4057,9 +4864,23 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 		- Also look at the --root=dir option in the dpkg manual page. It's probably safer than using --admindir=YOURDIR and --installdir=YOURDIR
 	<<<
 
+=== programma uitvoerbaar maken zonder installeren ===
+
+- b.v. om alternatieve versie te gebruiken, cfr. programma's Independent Jpeg Group hebben meer opties /zijn verder ontwikkeld, maar niet zo snel als de turbo versie :
+	- downloaden (en bijhorende libraries ook)
+		- zie sectie "programma installeren naar eigen pad"
+		OF
+		- zie [https://packages.ubuntu.com/bionic] of ineens [https://packages.ubuntu.com/bionic/allpackages]
+	- uitpakken met fileroller o.i.d. naar pad van keuze
+	- pad naar bijhorende libraries instellen, en uitvoeren MET padprefix, al is het maar "./"
+		$ export LD_LIBRARY_PATH=...
+		$ ./opdracht
+		OF
+		$ LD_LIBRARY_PATH=... ./opdracht
+
 === eigen programmas en man pages toevoegen ===
 
-- eigen programma's moeten niet geïnstalleerd worden, als het pad ~/bin bestaat, wordt dit door de .bashrc scripts van Ubuntu aan PATH= toegevoegd. Voor man pages bestaat zoiets niet. De opdracht man gebruikt de opdracht manpath om man-bestanden te vinden. Als de variabele MANPATH bestaat, en begint met ':', b.v. ':mijnmanpad', wordt 'mijnmanpad' toegevoegd achteraan het resultaat van de opdracht manpath; anders geeft manpath gewoon de inhoud van MANPATH. In de mappen van MANPATH mogen ge-gzipte man broncode staan, b.v. fdupes.1.gz, of (een softlink naar) de broncode zelf.
+- eigen programma's moeten niet geïnstalleerd worden, als het pad ~/bin bestaat, wordt dit door de .bashrc scripts van Ubuntu aan PATH= toegevoegd. Voor man pages bestaat zoiets niet. De opdracht man gebruikt de opdracht manpath om man-bestanden te vinden. Als de variabele MANPATH bestaat, en begint met ':', b.v. ':mijnmanpad', wordt 'mijnmanpad' toegevoegd achteraan het resultaat van de opdracht manpath; anders geeft manpath gewoon de inhoud van MANPATH. In de mappen van MANPATH mogen ge-gzipte man broncode staan, b.v. fdupes.1.gz, of (een symlink naar) de broncode zelf.
 Voorbeeld:
 	$ mkdir ~/bin/man/man1
 	- man1 : directory voor manpages van sectie 1, executables en shell built-ins
@@ -4452,7 +5273,6 @@ maar dan verliezen ook alle directories die toelating, die daar iets anders bete
 		- To go back to graphical boot, use the graphical target instead:
 			# systemctl set-default graphical.target
 			- boots to the usual lightdm (or gmd) prompt instead of a console.
-
 		- to start X11 once in a while (I actually work in X11, but log out nightly so that way memory is not as tight and X11 is reset at least daily). Instead of startx (zie b.v. system rescue cd), we now want to run X11 with systemd which will make sure that all the necessary parts get loaded as expected.
 			0 startx would start the X11 screen but not Unity; you have to do that manually (setsid unity)
 			# systemctl start graphical.target
@@ -4473,6 +5293,61 @@ maar dan verliezen ook alle directories die toelating, die daar iets anders bete
 	- 1 : rotate  90° clockwise
 	- 2 : rotate 180° clockwise
 	- 3 : rotate 270° clockwise
+
+=== Swap file instellen ===
+- zie (https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-16-04)
+
+- Maak de swapfile aan
+	0 fallocate -l 16G /media/sdata/.swapfile
+	>>> man swapon
+		The swap file implementation in the kernel expects to be able to write to the file directly, without the assistance of the filesystem. This is a problem on preallocated files (e.g. fallocate(1)) on filesystems like XFS or ext4, and on copy-on-write filesystems like btrfs. It is recommended to use dd(1) and /dev/zero to avoid holes on XFS and ext4.
+	<<<
+	- het argument is niet overtuigend (geldt misschien alleen voor de --*-hole opties van fallocate), maar swapfile maken is zo zelden nodig, dat ik het maar bij de aanbevelingen houdt :
+	# dd bs=1M count=16k if=/dev/zero of=/media/sdata/.swapfile
+		- size en count in 'b' blocks van 512 bytes, 'c' 1-byte (char), 'w' 2-byte (word) of in 1024^n (K, M, G, ...; enkel k mag kleine letter)
+		- beter grote bs en kleine count dan omgekeerd (b.v. bs=1 count=12G duurt eeuwen), maar (zeker voor /dev/zero) <= 1G (2G is te groot)
+		>>>  info '(coreutils) dd invocation'
+			The numeric-valued strings above (N and BYTES) can be followed by a multiplier: ‘b’=512, ‘c’=1, ‘w’=2, ‘xM’=M, or any of the standard block size suffixes like ‘k’=1024 (*note Block size::). Any block size you specify via ‘bs=’, ‘ibs=’, ‘obs=’, ‘cbs=’ should not be too large—values larger than a few megabytes are generally wasteful or (as in the gigabyte..exabyte case) downright counterproductive or error-inducing.
+		<<<
+- Defragmenteren
+	- zie "_Xubuntu truuks & commandos.adoc" sectie "fragmentatie van bestand"
+	 # e4defrag -c /media/sdata/.swapfile
+- Beperk tot root
+	# chmod 600 /media/sdata/.swapfile
+- Maak er een swapfile van
+	# mkswap -L SSWAPFILE /media/sdata/.swapfile
+	- zet o.a. een UUID en een paar codes in .swapfile, tussen bytes 0x400 en 0x1000, maar verder niets
+- Meld aan voor swappen
+	# swapon /media/sdata/.swapfile
+- Meld aan voor swappen bij elke opstart
+	# cp /etc/fstab /etc/fstab~
+	# mousepad /etc/fstab
+	- lijn toevoegen:
+		/media/sdata/.swapfile none swap sw 0 0
+- Verlaag swapgretigheid van default 60 (servers) naar 10 (desktop pc):
+	- maak custom sysctl-script, of voeg er een lijn aan toe :
+	# echo "vm.swappiness=10" >> /etc/sysctl.d/40_mijn_swappiness.conf
+- Na opstarten checken met
+	$ cat /proc/sys/vm/swappiness
+	$ cat /proc/swaps
+	OF
+	$ sudo swapon -s
+- Afzetten met
+	# swapoff /media/sdata/.swapfile
+	OF
+	# swapoff -a
+	-a --all : alles in /etc/fstab, behalve "noauto"
+
+=== systeeminstellingen configureren ===
+
+- Ubuntu gebruikt hiervoor sysctl, b.v. swapgretigheid :
+	- instellingen te zien in pseudo-bestanden onder /proc/sys/ :
+		$ cat /proc/sys/vm/swappiness
+	- instellingen voor lopende sessie te wijzigen met sysctl :
+		# sysctl vm.swappiness=60
+	- instellingen voor elk opstarten te wijzigen in /etc/sysctl.conf en /etc/sysctl.d/*.conf
+		# echo "vm.swappiness=60" >> /etc/sysctl.d/40_mijn_swappiness.conf
+	- zie [Documentation for /proc/sys/](https://www.kernel.org/doc/Documentation/sysctl/)		
 	
 == BACKUP ==
 
@@ -4609,39 +5484,7 @@ maar dan verliezen ook alle directories die toelating, die daar iets anders bete
 	- /boot["grub"|"/efi/EFI/ubuntu"]/grub.cfg identifiëert boot-partitie met filesystem-UUID, /etc/fstab naar keuze met o.a. filesystem-LABEL of -UUID
 	- als filesystem-UUID mee gearchiveerd wordt (WEL fsarchiver savefs, NIET squashfs, tar of cpio), moet hij bij restore naar andere partitie/schijf veranderd worden door b.v.
 		# fsarchiver restfs archief.fsa id=0,dest=/dev/partitie,label=mijn_label,uuid=mijn_uuid
-	- ZIE OOK volgende:
-
-==== zelf random-uuid genereren ====
-	$ uuidgen
-
-==== zelf uuid en label instellen ====
-
-- ext2/3/4)
-	# tune2fs -U mijn_uuid /dev/ext#partitie
-	EN
-	# tune2fs -L mijnlabel /dev/ext#partitie
-	OFWEL
-	# /sbin/e2label /dev/ext#partitie mijn_label
-
-- ntfs,fat,fat16,fat32 met de hand
-	- uuid heet "volume serial number"
-	# dd if=/dev/partitie of=EersteNtfsBlok.hex bs=512 count=1
-	- ntfs: uuid op offset 0x48-0x4f (8 bytes) in EersteBlok.hex, wijzigen met hex-editor
-	- fat/fat16/fat32: uuid op offset 0x43-0x46 (4 bytes) in EersteBlok.hex, wijzigen met hex-editor
-	# dd if=EersteBlok.hex of=/dev/partitie bs=512 count=1
-
-- ntfs met tool
-	- uuid heet "volume serial number"
-	- install the ntfsprogs package
-		# ntfslabel --new-serial=x1x2x3x4x5x6x7x8 /dev/ntfspartitie mijn_label
-		--new-serial	: 8 bytes, 16 hex digits
-
-- fat/fat16/fat32 met tool
-	- uuid heet "volume serial number"
-	- install the mtools utility package.
-		# mlabel [-n|-N mijn_serial] -i /dev/partitie ::mijn_label
-		-n		: Assigns a new (random) serial number to the disk
-		-N serial	: Sets the supplied serial number, an 8 digit (4 bytes) hexadecimal number, without spaces
+	- ZIE OOK sectie "zelf partition uuid en label instellen", sectie "zelf filesystem uuid en label instellen" en sectie "zelf random-uuid genereren"
 
 ==== vergelijk backups of directory trees ====
 - b.v. kandidaten voor herstel vergelijken, met origineel en met elkaar

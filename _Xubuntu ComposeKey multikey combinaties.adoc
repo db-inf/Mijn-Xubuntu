@@ -19,6 +19,13 @@
 		<<<
 
 - voorbeelden :  [compose key], dan 1ste en 2de (en 3de)) toets (meestal vrije volgorde):
+=== EIGEN (zie ~/.XCompose) ===
+	✝ : RightWin | +
+	† : RightWin + |
+	ℕ : RightWin | N
+	ℚ : RightWin | Q
+	ℝ : RightWin | R
+	ℤ : RightWin | Z
 === accenten ===
 	é : RightWin e '
 	ô : RightWin o ^

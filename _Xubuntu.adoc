@@ -3,20 +3,40 @@
 
 - USC : "geinstalleerd via Ub Softw Cntr"
 
-Nuttig te weten voor setup:
+== Nuttig te weten voor setup ==
 Filesystem Hierarchy Standard : http://www.pathname.com/fhs/pub/fhs-2.3.html#THEFILESYSTEM
 	. o.a. welke basisdirectories deelbaar zijn met andere systeem-installaties: /usr, /opt, /var/mail, /var/spool/news
 Linux Filesystem Hierarchy : http://www.tldp.org/LDP/Linux-Filesystem-Hierarchy/html/index.html
 
+== andere docs ===
+=== _Xubuntu truuks en commandos.adoc ===
+===  _Xubuntu composekey multikey combinaties.adoc  ===
+===  _ffmpeg truuks en commandos.adoc  ===
+===  _Tex-LaTex.adoc  ===
+===  _Wine-PlayOnLinux.adoc  ===
+===  _POLwineprefix 2.11 Win7x86PROGS.txt  ===
+===  _VirtualBox.adoc  ===
+===  _Xpra.adoc  ===
+===  _Dragon.adoc  ===
+===  _SW10 installatie.txt  ===
+
 == SCHIJVEN INDELEN EN FORMATTEREN ==
-[literal]
+
+- opm: parted reclameert wel wanneer alignment niet optimaal is, maar vertelt niet hoe die wel optimaal te maken. GParted doet dat vanzelf.
+	- parted interactief :
+		- unit s : sector
+		- "mkpart parttype fstype start end" met start en lengte=end+1-start voor b.v. seagate schijf in veelvouden van 2048 sectoren, dus einde (n*2048 - 1), b.v.
+			mkpart primary ext4 2048s 20479999s : 
+		
+....
 $ lsblk -o NAME,SIZE,label,partlabel,uuid,partuuid
 NAME          SIZE LABEL        PARTLABEL                    UUID                                 PARTUUID
-sda           2,7T
-├─sda1        2,6T SDATA        seag_data                    17b4dd08-b8a7-4858-8214-d002aa7843d2 ecd7d081-81c8-40a6-93c8-3b55c27c4ee0
-├─sda2        100M SEFI         seag_efi                     9358-956D                            fd7f6e45-7fe7-4016-baaf-3caa233f6814
-├─sda3         16M              Microsoft reserved partition                                      93c6cdae-5ecf-44bc-8d9d-33851203c1a2
-└─sda4      126,9G SW10         seag_w10                     2C35D6D1256F3C6E                     f6b2965a-d73c-4cf5-bbc1-1064c57203c4
+sda           2,7T                                                                          
+├─sda1        2,7T SDATA        seag_data                    17b4dd08-b8a7-4858-8214-d002aa7843d2 cd6d631d-9105-4b98-b263-19e7dfca9b79
+├─sda2         16G SSWP         seag_swp                     2f156ce0-48b2-4101-90a0-f4d59b139a55 85da21f0-4073-4ca3-9f82-14aa6698aa3f
+├─sda3         16M              Microsoft reserved partition                                      dbcede61-a30c-4b68-be66-78593d1fbee0
+├─sda4        100M SEFI         seag_efi                     9358-956D                            fd7f6e45-7fe7-4016-baaf-3caa233f6814
+└─sda5         48G SW10         seag_w10                     2C35D6D1256F3C6E                     f6b2965a-d73c-4cf5-bbc1-1064c57203c4
 sdb           2,7T
 ├─sdb1         10G TEFI         tosh_efi                     036E-FCF8                            70c59928-a23f-49d2-8823-208d9f57e68d
 ├─sdb2         64G TLINUX       tosh_linux                   f7158182-82e9-41b7-bebd-3c5cb23d3ca3 6e862183-8a96-4e63-bdb3-6fda78707b7f
@@ -29,17 +49,15 @@ sdd           1,9T
 └─sdd1        1,9T WDDATA       ?????????
 sr0          1024M
 loop0       545,5M sysrcd-5.2.2                              2018-04-02-13-43-43-00
-nvme0n1     119,2G
-├─nvme0n1p1   200M M2EFI        m2_efi                       38DE-9A48                            aff37567-68d4-47bb-81e9-cf7582f25f2b
-├─nvme0n1p2    32G M2ROOT       m2_root                      88e332dc-deb9-4c9c-9dfc-e0afe7ad45bd aa679962-a12e-4f09-b010-371956223d25
-├─nvme0n1p3    32G M2HOME       m2_home                      fc3ea6f3-69db-4540-8d4d-335f84e71b7d 267a252d-1dfa-4c01-97a4-6cf9e6a116e4
-└─nvme0n1p4    55G M2WIN        m2_win                       A6FC-3976                            80ee42d5-6ce1-45de-85b5-151f22d1e942
-
+nvme0n1     119,2G                                                       
+├─nvme0n1p1   200M M2EFI        m2efi                        38DE-9A48                            aff37567-68d4-47bb-81e9-cf7582f25f2b
+├─nvme0n1p2     5G M2ROOT       m2root                       88e332dc-deb9-4c9c-9dfc-e0afe7ad45bd ef595185-8351-4635-aa50-279d0ce71230
+└─nvme0n1p3   114G M2UOH        m2uoh                        6eb6c219-e07a-4c6d-b71d-a9cd815bb45e 31b120d8-a0fa-4dfb-8ac3-da3d959fc93d
+....
 === NVMe SDD schijf ===
 
 - Uit "Intel Linux* NVMe* Driver"
 	- zie https://www.intel.com/content/dam/support/us/en/documents/ssdc/data-center-ssds/Intel_Linux_NVMe_Guide_330602-002.pdf
-:prewrap:
 ....
 		Aligning Drive Partitions
 		-------------------------
@@ -121,13 +139,11 @@ nvme0n1     119,2G
 				-N 2097152 : wordt naar boven aangepast tot 2.796.032 inodes
 				-I 128 : inode size (2^n, minimum 128)
 				-J size=128 : betekent (man mkfs.ext4 is onduidelijk) journaal van 128MB groot, zoals gparted sdata formateerde; zonder deze optie werd het journaal 1GB groot
-			# dd bs=1M count=32k if=/dev/zero of=/media/sdata/.swapfile
-			# chmod 600 /media/sdata/.swapfile
-			# mkswap /media/sdata/.swapfile
-			# swapon /media/sdata/.swapfile
+			- 16GB /media/sdata/.swapfile maken (bovenop 16GB swappartitie) : zie "_Xubuntu truuks en commandos.adoc" sectie "Swap file instellen"
 		- TARCH :
 			 # mkfs.ext4 -m 0 -N 2097152 -I 128 -J size=128 -O ^huge_file -L TARCH -U 5e558340-6729-4f68-83d4-3be0a66ba274 /dev/sdb3
 				-m 0 : geen reserved blocks, wordt niet gebruikt voor werking systeem
+			- 16GB /media/tarch/.swapfile maken : zie "_Xubuntu truuks en commandos.adoc" sectie "Swap file instellen"
 		- sdata naar tarch kopiëren en terug :
 			# rsync -aASXx --exclude={/.swapfile,/lost+found,"/dirk/kaarten/16deEeuw/?16k.wlm~",/.Trash,/.Trash-1000} /media/sdata/ /media/tarch/
 				# cd /media/tarch;mklost+found
@@ -309,6 +325,8 @@ Bios instellingen: zie GEZIPTE.PRG/FLOP&FAQ/MSI H170 PC Mate/BIOS instellingen s
 == INSTELLINGEN ==
 
 === op netwerk gedeelde directories ===
+- zie "_Xubuntu truuks en commandos.adoc" sectie "computernaam wijzigen" :
+	- hostnaam (FRT voor mijn pc) zou daar goed ingevuld moeten zijn bij installatie Ubuntu
 
 - zie "_Xubuntu truuks en commandos.adoc" sectie "Folders delen op het netwerk"
 
@@ -533,44 +551,24 @@ Bios instellingen: zie GEZIPTE.PRG/FLOP&FAQ/MSI H170 PC Mate/BIOS instellingen s
 # namelijk systeem-zaken zoals "cpu,cpuacct", memory, devices, security uit de mappen
 #  /sys/fs/cgroup, /sys/fs/fuse, /sys/fs/pstore, /proc/sys/fs enzovoorts
 
-=== Swap file instellen ===
+=== 0 Viewsonic scherm wakker maken na start of resume ===
 
-(https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-16-04)
-Maak de swapfile aan
-	0 fallocate -l 32G /media/sdata/.swapfile
-	>>> man swapon
-		The swap file implementation in the kernel expects to be able to write to the file directly, without the assistance of the filesystem. This is a problem on preallocated files (e.g. fallocate(1)) on filesystems like XFS or ext4, and on copy-on-write filesystems like btrfs. It is recommended to use dd(1) and /dev/zero to avoid holes on XFS and ext4.
+- NIET MEER nodig in bionic :
+	- in /etc/pm/sleep.d/99_mijn-etc_pm_sleep.d-script mijn script ~/bin/beeldpc uitvoeren
+
+=== Swapruimte ===
+
+- zie "_Xubuntu truuks en commandos.adoc" sectie "Swap file instellen"
+
+- 2x 16GB op seagate, dus niet == prioriteit : swapfile met hogere prioriteit, zodat swappartitie zoveel mogelijk vrij blijft voor hibernate :
+	$ cat /proc/swaps
+	>>>
+	Filename				Type		Size		Used	Priority
+	/dev/sda2               partition	16766972	0		1
+	/media/sdata/.swapfile  file		16777212	8940928	2
 	<<<
-	- het argument is niet overtuigend, maar swapfile maken is zo zelden nodig, dat ik het maar bij de aanbevelingen houdt :
-	# dd bs=1M count=32k if=/dev/zero of=/media/sdata/.swapfile
-		- size en count in 'b' blocks van 512 bytes, 'c' 1-byte (char), 'w' 2-byte (word) of in 1024^n (K, M, G, ...; enkel k mag kleine letter)
-		- beter grote bs en kleine count dan omgekeerd (b.v. bs=1 count=12G duurt eeuwen), maar (zeker voor /dev/zero) <= 1G (2G is te groot)
-		>>>  info '(coreutils) dd invocation'
-			The numeric-valued strings above (N and BYTES) can be followed by a multiplier: ‘b’=512, ‘c’=1, ‘w’=2, ‘xM’=M, or any of the standard block size suffixes like ‘k’=1024 (*note Block size::). Any block size you specify via ‘bs=’, ‘ibs=’, ‘obs=’, ‘cbs=’ should not be too large—values larger than a few megabytes are generally wasteful or (as in the gigabyte..exabyte case) downright counterproductive or error-inducing.
-		<<<
-Beperk tot root
-	# chmod 600 /media/sdata/.swapfile
-Maak er een swapfile van
-	# mkswap /media/sdata/.swapfile
-	- zet o.a. een UUID en een paar codes in .swapfile, tussen bytes 0x400 en 0x1000, maar verder niets
-Meld aan voor swappen
-	# swapon /media/sdata/.swapfile
-Meld aan voor swappen bij elke opstart
-	# cp /etc/fstab /etc/fstab.bak
-	# mousepad /etc/fstab
-	- lijn toevoegen:
-		/media/sdata/.swapfile none swap sw 0 0
-Verlaag swapgretigheid van default 60 (servers) naar 10 (desktop pc):
-	- maak custom sysctl-script, of voeg er een lijn aan toe :
-	# echo "vm.swappiness=10" >> /etc/sysctl.d/40_mijn_swappiness.conf
-Na opstarten checken met
-	$ cat /proc/sys/vm/swappiness
-	$ sudo swapon -s
-Afzetten met
-	# swapoff /media/sdata/.swapfile
-	OF
-	# swapoff -a
-	-a --all : alles in /etc/fstab, behalve "noauto"
+
+- swapiness voorlopig nog 10 op algemene aanbeveling, voor b.v. zware swapper john-the-ripper is dit beter 50 of meer (anders al eens een logout bij begin van swappen, wschlk. Out-Of-Memory (OOM) kill.
 
 === firefox search plugins ===
 
@@ -682,7 +680,7 @@ nog altijd installeren door te kopieren naar %profile%/searchplugins/, maar word
 		# fysieke cds mounten (mits lijn in /etc/fstab daarvoor)
 		dirk	ALL= NOPASSWD: /bin/mount */cdrom
 	<<<
-	- ALL= : "host=". B.v. FRT= zou moeten werken, maar geeft fout "visudo: Error: Host_Alias `FRT' referenced but not defined", ook al is FRT goed gedefinieerd in zowel /etc/hostname als in /etc/hosts (die laatste moet misschien 1287.0.0.1 zijn i.p.v. 127.0.1.1)
+	- ALL= : "host=". B.v. FRT= zou moeten werken, maar geeft fout "visudo: Error: Host_Alias `FRT' referenced but not defined", ook al is FRT goed gedefinieerd in zowel /etc/hostname als in /etc/hosts
 	- optie : ALL=(ALL:ALL) : host=(user:group)
 		- , of desnoods 127.0.0.1= of localhost=
 	- NOPASSWD: sudo vraagt geen wachtwoord bij de volgende commando's
@@ -967,8 +965,7 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 
 - scripts in /etc/pm/sleep.d worden uitgevoerd met als $1 het bovenstaande commando
 	- zie "man pm-action"
-	- helaas enkel als de toestand werd aangezet met aangeroepen met pm-suspend, pm-hibernate of pm-suspend-hybrid
-	- helaas zijn dat sudo-opdrachten
+	- helaas enkel als de toestand werd aangezet met aangeroepen met sudo pm-suspend, pm-hibernate of pm-suspend-hybrid
 	- Zelfs dit help niet
 		0# chown :dirk /usr/lib/pm-utils/bin/pm-action /usr/sbin/pm-suspend
 			- geeft voor dirk nog altijd :
@@ -1084,7 +1081,7 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 			- zie sectie "geany 1.33 bionic"
 		- ppa.launchpad.net/ubuntuhandbook1/avidemux/ubuntu (Panda Jim "while www.getdeb.net is not updated")
 			- avidemux2.7 	2.7.1-1build2+ubuntu18.04
-			- zie sectie avidemux 2.7.1 bionic
+			- zie sectie "avidemux 2.7.1 bionic"
 		0 Panda Jim is recenter - ppa.launchpad.net/rebuntu16/avidemux+unofficial (Thanh Tung Nguyen)
 			0 avidemux2.6-qt
 				- nu 1:2.7.0-1~getdeb1 van ppa getdeb
@@ -1258,9 +1255,187 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 	- noauto : anders blijft systeem proberen te mounten, eerst om de 5 minuten, dan om het uur
 	- user : om toch gemakkelijk en zonder sudo te kunnen mounten op ingesteld mountpoint, b.v.
 		$ mount /media/tarch
+		- TEDOEN: voor de NTFS-geformateerde partities is dit nog niet genoeg
+			- zie https://www.tuxera.com/community/ntfs-3g-faq/#useroption2 en .../#useroption
+				- enige niet voldane voorwaarde de toegang van 'dirk' tot het device (/dev/sd?#) van die partities, want die zijn root:disk en dirk zit niet in de disk-group
 	- [exec] : indien gewenst, uit user volgt noexec, terwijl defaults exec bevat
 - USB-schijven die ntfs zijn, en cdrom : uid=1000,gid=1000
+
+=== 0 /snap verplaatst naar /media/sdata/.stacks met symlink ===
+
+- NIET DOEN : /snap is maar de hoofddirectory waarbinnen snap-packages (in squashfs formaat) gemount worden; mislukt als dat een symlink is
+	0 mv /snap /media/sdata/.stacks/snaps
+	0 ln -s /media/sdata/.stacks/snaps /snap
+
+- snap packages worden gedownload onder UUID-naam naar /var/lib/snapd/cache, en daarnaar komt dan een hardlink met een normale in /var/lib/snapd/snaps (?en .../snapd/snaps/partial ?)
+	-  MISSCHIEN WEL :
+	# mkdir -p /media/sdata/.stacks/snapd/cache /media/sdata/.stacks/snapd/snaps/partial
+	# rmdir /var/lib/snapd/snaps/partial
+	# ln -sf /media/sdata/.stacks/snapd/cache /media/sdata/.stacks/snapd/snaps /var/lib/snapd
+
+- opdrachten uit een snap zijn beschikbaar op Ubuntu's default $PATH voor een user (component /snap/bin), maar met de snap package naam als prefix
+	- "snap install <package>" maakt ook een directory /var/snaps/package, wschlk. voor data
+
+- OPM : eerste "snap install" installeert ook de core-snap, zeg maar de snap-versie van Ubuntu zelf
+
+- snaps gebruiken : zie "https://codeburst.io/how-to-install-and-use-snap-on-ubuntu-18-04-9fcb6e3b34f9"
+	$ snap list
+	# snap disable <package> 
+	# snap enable <package> 
+	# snap remove <package>
+
+=== HP Printer system tray ===
+
+- start soms op, soms niet, met meerdere apparmor errors in journal (niet alleen op mijn oude fonts in ATM4) :
+	>>> dmesg
+	... audit: type=1400 audit(1577606748.469:53): apparmor="DENIED" operation="open" profile="/usr/share/hplip/systray.py" name="/opt/.win-gschijf/ATM4/TTFONTS/" pid=1495 comm="python" requested_mask="r" denied_mask="r" fsuid=1000 ouid=0
+	...
+	 audit: type=1400 audit(1577606748.485:60): apparmor="DENIED" operation="file_lock" profile="/usr/share/hplip/systray.py" name="/etc/xdg/Trolltech.conf" pid=1495 comm="python" requested_mask="k" denied_mask="k" fsuid=1000 ouid=0
+	...
+	<<<
+
+- OPLOSSING : wat meer tijd geven na opstart :
+	0 werkt NIET
+		>>> /etc/xdg/autostart/hplip-systray.desktop
+			X-GNOME-Autostart-Delay=10
+		<<<
+	- misschien met "bash -c "sleep 10; ..."
+
+=== lessedit ===
+
+- less opdracht v : huidig bestand openen met default programma :
+	>>> ~/.pam_environmnet
+		LESSEDIT="xdg-open %f 2>/dev/null"
+	<<<
+
+=== TEDOEN ===
+
+==== beter swappen ====
+- 16GB swap disk (afgepakt van windows-partitie op seagate) en 16GB swapfile (geeft 16GB meer aan SDATA)
+	- IN TEST, zie /etc/fstab
+OF
+- ?installeer swapspace, dynamisch swapfile beheer
+OF
+- ?gebruik zram (zit al in kernel of kernel module) : gecomprimeerd virtueel block device in RAM, waarop dan swappartitie of ext4 filesys kan gemaakt worden.
+	- nadeel : ik denk niet dat die zoals tmpfs terugvalt op gewone swap als hij vol geraakt
+OF
+- ?installeer of gebruik zswap, gecomprimeerde swap in RAM, met terugval op gewone swap
 	
+- zie https://askubuntu.com/questions/471912/zram-vs-zswap-vs-zcache-ultimate-guide-when-to-use-which-one
+	- zswap compressed swapspace in RAM met terugval op (niet-gecomprimeer) swapbestand of -schijf
+		- is al actief in Bionic :
+			$ dmesg | grep zswap:
+			>>> [    0.781404] zswap: loaded using pool lzo/zbud <<<
+			$ grep -R . /sys/module/zswap/parameters
+			>>>
+			/sys/module/zswap/parameters/enabled:N
+			/sys/module/zswap/parameters/max_pool_percent:20
+			/sys/module/zswap/parameters/compressor:lzo
+			/sys/module/zswap/parameters/zpool:zbud
+			<<<
+		- activeren :
+			- huidige sessie
+				# echo 1 > /sys/module/zswap/parameters/enabled
+				OF ?
+				# echo Y > /sys/module/zswap/parameters/enabled
+		- https://wiki.archlinux.org/index.php/Zswap
+		- https://www.kernel.org/doc/Documentation/vm/zswap.txt
+	- zram compressed RAM, te gebruiken als ramdisk i.p.v. tmpfs, of als swapdisk
+		- zit in kernel, behere met zramctl, zie man zramctl
+		- is zelf geen bestandssysteem, maar block device (/dev/zram0...), nog mkfs.ext[2|4] of mkswap nodig
+		- zie ook zram-config (USC, niet geinstalleerd)
+			- zie https://askubuntu.com/questions/864644/customisation-of-zram-and-enable-zram-disable-swap-partition/864645#864645
+			- OPGELET: installeert zram ineens als swapdevice naar compressed ram
+				# apt install zram-config
+				
+		- gemakkelijker te gebruiken met zram-init, zie https://github.com/vaeth/zram-init
+		- https://www.kernel.org/doc/Documentation/admin-guide/blockdev/zram.rst
+		- gebruik :
+			- laad de zram-module
+				# modprobe zram [num_devices=4]
+				- creates 4 devices (default 1): /dev/zram{0,1,2,3}
+				- to 'hot' add a new /dev/zramX device, perform read operation on hot_add attribute. This will return either new device's device id (meaning that you can use /dev/zram<id>) or error code :
+					# cat /sys/class/zram-control/hot_add
+					>>> 1 <<
+				- to 'hot' remove the existing /dev/zramX device (where X is a device id) :
+					# echo X > /sys/class/zram-control/hot_remove
+			0 set max number of compression streams: is nu == aantal cpus
+				- kijken hoeveel op b.v. zram 0 : cat /sys/block/zram0/max_comp_streams
+			- optie : select compression algorithm (can't' change once device initialised) :
+				# echo lzo > /sys/block/zram0/comp_algorithm
+				- show supported compression algorithms :
+					$ cat /sys/block/zram0/comp_algorithm
+					>>> lzo [lz4] <<< d.w.z. default lzo
+			- optie : configureer writeback (BEFORE disksize setting)
+				- OK in ubuntu enkel mits kernel gecompileerd met CONFIG_ZRAM_WRITEBACK
+				- set up backing device (only partition, niet naar bestand, swapfile of swapdisk)
+					# echo /dev/sda5 > /sys/block/zramX/backing_dev
+				- enable incompressible page writeback :
+					# echo huge > /sys/block/zramX/write
+				-  use idle page writeback
+					- declare all zram pages as idle :
+						# echo all > /sys/block/zramX/idle
+						- idle mark removed on access
+					- request writeback of pages that are still idle pages :
+						# echo idle > /sys/block/zramX/writeback
+						- gebeurt dus enkel op aanvraag, is geen blijvende instelling
+			- set zram blockdevice disksize, b.v. limit /dev/zram0 to 50MB disksize
+				# echo $((50*1024*1024)) > /sys/block/zram0/disksize
+				OF (met mem suffixes K, M, G, default in bytes)
+				# echo 50M > /sys/block/zram0/disksize
+				- zram uses about 0.1% of the size of the disk when not in use so a huge zram is wasteful.
+				- zram-geheugen loopt standaard NIET over naar swapfile, tmpfs wel
+			- optie : set memory limit (can be changed at runtime), b.v. limit /dev/zram0 to 50MB memory
+				echo $((50*1024*1024)) > /sys/block/zram0/mem_limit
+				OF (met mem suffixes K, M, G, default in bytes)
+				# echo 50M > /sys/block/zram0/mem_limit
+				- disable memory limit :
+				echo 0 > /sys/block/zram0/mem_limit
+			- activate
+				- als swap device :
+					# mkswap /dev/zram0
+					# swapon /dev/zram0
+				- als ramdisk
+					# mkfs.ext4 /dev/zram1
+					# mount /dev/zram1 /media/ramdisk
+			- info :
+				# cat /sys/block/zram<id>/NAME
+				- NAME en access :
+					disksize          	RW	show and set the device's disk size
+					initstate         	RO	shows the initialization state of the device
+					reset             	WO	trigger device reset
+					mem_used_max      	WO	reset the `mem_used_max` counter (see later)
+					mem_limit         	WO	specifies the maximum amount of memory ZRAM can use to store the compressed data
+					writeback_limit   	WO	specifies the maximum amount of write IO zram can write out to backing device as 4KB unit
+					writeback_limit_enable  RW	show and set writeback_limit feature
+					max_comp_streams  	RW	the number of possible concurrent compress operations
+					comp_algorithm    	RW	show and change the compression algorithm
+					compact           	WO	trigger memory compaction
+					debug_stat        	RO	this file is used for zram debugging purposes
+					backing_dev 		RW	set up backend storage for zram to write out
+					idle			  	WO	mark allocated slot as idle
+			- info best niet als root :
+				$ cat /sys/block/zram<id>/NAME
+				- NAME : stat : Represents block layer statistics
+				- NAME : io_stat : device's I/O statistics, a single line with following stats separated by whitespace: failed_reads failed_writes invalid_io notify_free
+				- NAME : mm_stat : device's mm statistics, a single line with following stats separated by whitespace: orig_data_size compr_data_size mem_used_total mem_limit mem_used_max same_pages pages_compacted huge_pages
+				- NAME : bd_stat : device's backing device statistics, a single line with following stats separated by whitespace (unit 4K bytes): bd_count	bd_reads bd_writes
+			- deactivate :
+				# swapoff /dev/zram0
+				OF
+				# umount /dev/zram1
+			- reset : write any positive value to 'reset' sysfs node. This frees all the memory allocated for the given device and resets the disksize to zero. You must set the disksize again before reusing the device
+				# echo 1 > /sys/block/zram0/reset
+				# echo 1 > /sys/block/zram1/reset
+
+==== hibernate ====
+- probleem : ik heb nu 2 swaplocaties : swappartitie en swapfile; naar welke wordt er geswapt ?
+	- vind alleen info over hoe ge instelt van welke resume moet gebeuren
+	
+- zie ook sectie "BIONIC dist-upgrade 181029" subsectie "trage boot" oplossing
+
+- beste uitleg zie : https://www.kernel.org/doc/html/latest/power/swsusp.html
+
 == PROGRAMMA-INSTALLATIES ==
 
 === 0 fsarchiver ===
@@ -1317,7 +1492,8 @@ daarom nieuwere versie van www.getdeb.net halen (die site compileert sneller nie
 
 === HP printer driver ===
 
-download van http://hplipopensource.com/hplip-web/install/install/index.html:
+- download van http://hplipopensource.com/hplip-web/install/install/index.html:
+	- zie "GEZIPTE.PRG/UBUNTU/HP Linux Imaging and Printing/"
 	. hplip-3.16.3.run
 	- is executable, uitvoeren, installeert in /usr/share/hplip/)
 
@@ -1372,7 +1548,8 @@ update 2509/2007 :
 	. met par2cmdline 0.6.14-1
 	. These programs are run from a terminal: par2, par2create, par2repair, par2verify
 
-=== Shutter screen capture (standaard prog. 'Screenshot' pakt altijd het Startpanel mee, en crasht teveel) ===
+=== 0 Shutter screen capture ===
+	- nooit gebruikt, xfce4 screenshot is goed genoeg
 
 === 0 PeaZip archive manager ===
 
@@ -1405,7 +1582,7 @@ update 2509/2007 :
 	0 configuratie /home/dirk/nginxstack-1.9.14-0/nginx/conf/bitnami/phpfastcgi.conf gewijzigd: location ~ \.php$ {
 		root           /media/sdata/dirk/Stamboom/localhost_onstrees/webroot;
 
-- Sinds MySql 5.5 is InnoDB de default database engine van MySql. Mijn tabellen (webtrees EN mysql-schema zelf) gebruiken nog allemaal MyISAM (zit in tabel-creatie van sql-dump), omdat ze altijd zijn meegenomen naar volgende versies. Dat is GOED, de voordelen van InnoDB zitten vooral in multi-user gebruik en betrouwbaarheid (echte transacties en roll back), maar dat is minder relevant voor localhost single-user gebruik. InnoDB vraagt ook veel meer geheugen, zet alle tabellen in 1 bestand, start (soms veel) trager op en is trager (moet heel zijn database lezen) voor simpele zaken als 'query count'. IK BLIJF ZOLANG MOGELIJK OP MyISAM. Om creatie (of backup/restore) van de grote InnoDB-bestanden ibdata1 en ib_logfile0 en ---1 te vermijden, heb ik ineens de InnoDB uitgeschakeld (zie https://dev.mysql.com/doc/refman/5.5/en/innodb-turning-off.html) met
+- Sinds MySql 5.5 is InnoDB de default database engine van MySql. Mijn tabellen (webtrees EN mysql-schema zelf) gebruiken nog allemaal MyISAM (zit in tabel-creatie van sql-dump), omdat ze altijd zijn meegenomen naar volgende versies. Dat is GOED, de voordelen van InnoDB zitten vooral in multi-user gebruik en betrouwbaarheid (echte transacties en roll back), maar dat is minder relevant voor localhost single-user gebruik. InnoDB vraagt ook veel meer geheugen, zet alle tabellen in 1 bestand (zie echter innodb-file-per-table)[https://dev.mysql.com/doc/refman/5.5/en/innodb-file-per-table-tablespaces.html], start (soms veel) trager op en is trager (moet heel zijn database lezen) voor simpele zaken als 'query count'. IK BLIJF ZOLANG MOGELIJK OP MyISAM. Om creatie (of backup/restore) van de grote InnoDB-bestanden ibdata1 en ib_logfile0 en ---1 te vermijden, heb ik ineens de InnoDB uitgeschakeld (zie https://dev.mysql.com/doc/refman/5.5/en/innodb-turning-off.html) met
 	0 beter op zijn plaats als "innodb=OFF" in /home/dirk/nginxstack-1.9.14-0/mysql/my.cnf) in ./mysql/scripts/ctl.sh definitie van variable
 		MYSQL_START="--- --skip-innodb "
 	. in ./mysql/my.cnf sectie [mysqld] (OPM: vanaf MySql 5.6 zijn er meer opties nodig, nu voorlopig als commentaar)
@@ -1594,17 +1771,21 @@ ZIE OOK _VirtualBox.txt
 
 - terminalgebruiker op root zetten:
 	$ sudo -i
-	- ZIE "_Xubuntu truuks en commandos.adoc"
+	- ZIE "_Xubuntu truuks en commandos.adoc" sectie "meerdere opdrachten (CLI en GUI) als root uitvoeren"
 	- vervangt ineens environment van user door die van root
 	- GUI commandos kunnen vanuit deze prompt veilig gestart worden
 	- GUI commando in achtergrond uitvoeren door er '&' achteraan te zetten, dan best stdout en stderr naar /dev/null pipen:
 		# guiopdracht >& /dev/null &
+		- zie mijn .bash_aliases functie spawn
 
 - Xubuntu docs http://docs.xubuntu.org/1604/user/C/command-line.html :
 	>>>
 		If the program you wish to run as an administrator is graphical, such as the Mousepad text editor, run the command prefixed with pkexec in the command line. For example, to run Mousepad with administrative rights, run the command pkexec mousepad /path/to/file.
 		[Note] Please note that for an application to run successfully with pkexec, it will need to ship a pkexec policy file. All default applications in Xubuntu that might need to be ran with administrative rights come with pkexec policy files.
 	<<<
+	- blijkbaar heeft xfce4-terminal (Xubuntu 18.04.1) geen policy file:
+		$ pkexec xfce4-terminal
+		>>> Gtk-WARNING **: 13:54:06.359: cannot open display <<<
 
 === 0 mkvtoolnix ===
 
@@ -2784,14 +2965,18 @@ wxmaxima 15.08.2-1 (USC) GUI voor maxima, zonder optie Tex Live (vermits die bij
 			- xprop : property displayer for X
 		<<<
 	- zie ook https://unix.stackexchange.com/questions/246827/geany-open-a-new-instance-per-workspace-when-opening-a-file-in-that-workspace
+	- zie ook "https://docs.xfce.org/xfce/xfwm4/faq" - "Firefox jumps between workspaces" :
+		- Xfce Menu > Settings > Window Manager Tweaks and go to the tab Focus, or you need to use the xfconf-query tool to change the setting:
+			>>> xfconf-query -c xfwm4 -p /general/activate_action -s bring|switch|none <<<
 
 - alternatief voor mousepad
 	0 mousepad
 		- crasht te dikwijls alle vensters bij veranderen van opties voor zoek en vervang
 		- kan niet zonder encoding
 	- geany : snel ladende teksteditor
+		- voor grote bestanden traag en geheugenhongerig
 		- kan bestanden laden zonder encoding
-	- gedit
+	0 gedit
 		- verloor zijn hoofdontwikkelaars in juli 2017, toekomst onduidelijk (is nochtans de Gnome editor)
 		- kan binaire bestanden laden, maar verandert dan elke byte die niet binnen de gebruikte encoding valt, in een soort escape code \xx, dus verminkte bestanden bij opslaan
 	0 Sublime text
@@ -3596,9 +3781,11 @@ oplossing:
 	>>> /etc/initramfs-tools/conf.d/resume
 		RESUME=UUID=205b666a-5d1c-4a47-9633-2b1f02966e5d
 	<<<
+	- OPM: weet niet welke UUID dat was, want originele /-partitie op SSD had 88e332dc-deb9-4c9c-9dfc-e0afe7ad45bd
+	- zie "man initramfs.conf"
 	- zet RESUME=none in /etc/initramfs-tools/conf.d/resume
 		- staat er zo al in backup 161115_ROOT_nvme0n1p2.fsa, toen ik nog geen swap had (file noch partitie)
-		- Xenial zocht blijkbaar maar efkes
+		- Xenial zocht blijkbaar maar efkes (maar toen bestond die UUID misschien nog, SSD is geherpartitioneerd)
 	# update-initramfs -u
 	>>> update-initramfs: Generating /boot/initrd.img-4.15.0-38-generic <<<
 
@@ -4095,8 +4282,284 @@ oplossing:
 - download .deb van https://www.downloadhelper.net/install-coapp?browser=firefox
 # apt install ./net.downloadhelper.coapp-1.3.0-1_amd64.deb 
 
+=== hexdiff ===
+
+- display an horizontally splitted hexadecimal view of the files compared
+	# apt-get update
+	# apt-get install hexdiff
+
+=== John the Ripper jumbo (snap) ===
+
+- wachtwoordzoeker, zie "https://www.openwall.com/john/"
+
+0 USC : heeft niet de extra's om b.v. wachtwoorden van zip te zoeken
+
+- Jonh the Ripper Jumbo bestaat als snap :
+	- zie ook "https://github.com/claudioandre-br/packages/tree/master/john-the-ripper"
+	# snap install john-the-ripper
+	- opdrachten nu via default $PATH-component /snap/bin beschikbaar, maar met prefix van snap package, in dit geval :
+		>>>
+		/snap/bin/john
+		/snap/bin/john-the-ripper
+		/snap/bin/john-the-ripper.dmg2john
+		/snap/bin/john-the-ripper.gpg2john
+		/snap/bin/john-the-ripper.hccap2john
+		/snap/bin/john-the-ripper.keepass2john
+		/snap/bin/john-the-ripper.opencl
+		/snap/bin/john-the-ripper.putty2john
+		/snap/bin/john-the-ripper.racf2john
+		/snap/bin/john-the-ripper.rar2john
+		/snap/bin/john-the-ripper.uaf2john
+		/snap/bin/john-the-ripper.vncpcap2john
+		/snap/bin/john-the-ripper.wpapcap2john
+		/snap/bin/john-the-ripper.zip2john
+		<<<
+	- sandbox van john-the-ripper :
+		- zie "https://www.openwall.com/lists/john-users/2016/06/14/1"
+		- zie "https://snapcraft.io/docs/interface-management"
+		- een interface is een benoemde link tss. een slot (resource op de host), en een plug (resource voor het snap-package)
+			- john-the-ripper ziet op de host alleen de home directory :
+				$ snap connections john-the-ripper
+				>>>
+				Interface  Plug                  Slot   Notes
+				home       john-the-ripper:home  :home  -
+				>>>
+			- core ziet meer :
+			$ snap connections core
+			>>>
+			Interface                 Plug                  Slot                       Notes
+			account-control           -                     :account-control           -
+			accounts-service          -                     :accounts-service          -
+			adb-support               -                     :adb-support               -
+			...
+			<<<
+		- de home-plug van een package is een directory in ~, zoals in dit geval "		/home/dirk/snap/john-the-ripper/297/.john", die door john gemaakt wordt bij 1ste gebruik			
+			- WERKT NIET: symlink in die home-plug directory naar een bestand ergens daarbuiten
+			- WERKT WEL : bind-mount op of onder die home-plug directory
+			- OPGELET : geef als parameters voor opdrachten van snap-package het volledige host-pad op
+	- gebruik :
+		- zie "https://www.openwall.com/john/doc/"
+		- zie ook "https://github.com/magnumripper/JohnTheRipper/tree/bleeding-jumbo/doc"
+		- zie ook "https://www.hackingarticles.in/beginner-guide-john-the-ripper-part-1/"
+		- zie ook "https://www.hackingarticles.in/beginners-guide-for-john-the-ripper-part-2/"
+		- geen man page, wel help output :
+			$ john -h
+				- john : symlink naar john-the-ripper
+			- meer opties :
+				$ john --list=hidden-options
+				>>> o.a. 
+				--help                     print usage summary, just like running the command without any parameters
+				--config=FILE              use FILE instead of john.conf or john.ini
+				--mem-file-size=SIZE       size threshold for wordlist preload (default 2048 MB)
+				--single-seed=WORD[,WORD]  add static seed word(s) for all salts in single mode
+				--single-wordlist=FILE     *short* wordlist with static seed words/morphemes
+				--log-stderr               log to screen instead of file [OPM: liever volgen in andere terminal met "tail -f john.log"]
+				--progress-every=N         emit a status line every N seconds
+				--crack-status             emit a status line whenever a password is cracked
+				--max-candidates=[-]N      gracefully exit after this many candidates tried. If negative, reset count on each crack
+				--max-run-time=[-]N        gracefully exit after this many seconds. If negative, reset timer on each crack
+				<<<
+		$ export SBOX="/home/dirk/snap/john-the-ripper/297/.john"
+			- OPM: lijkt niet te werken met '~'
+		- zip in SBOX zetten :
+			0 WERK NIET: symlink geraakt niet buiten de sandbox : ln -s x.zip "$SBOX"
+			OF
+			$ sudo mount -o bind /media/sdata/WERK/downloads/DRAGON15DU/ "$SBOX"
+			OF
+			$ cp x.zip "$SBOX"
+		- eerst de hash uit de zip halen, dan door john laten onderzoeken :
+		$ john-the-ripper.zip2john "$SBOX"/x.zip > "$SBOX"/x.hash
+		$ nice john-the-ripper --crack-status --save-memory=3 --fork=2 --rules --wordlist="$SBOX"/single-wordlist.txt "$SBOX"/x.hash
+		--save-memory=1 : do not waste memory on login names, 2 en vooral 3 voorkomen overdreven swapping -> toch sneller
+		--rules --wordlist : use single mode mangling rules, maar met toepasselijke woordenlijst i.p.v. de usernamen en -profielen van deze pc
+			- mog. zelfde als --single-wordlist=FILE *short* wordlist with static seed words/morphemes
+				- OPM : deze optie komt niet voor in "$john -h", wel in "$ john --list=hidden-options"
+
+		$ cat german.txt rockyou.txt|iconv -f ISO8859-14 -t UTF-8 - | tr A-Z a-z | sort -u >combi.txt
+		$ nice john-the-ripper --crack-status --save-memory=3 --fork=2 [--rules] --wordlist="$SBOX"/combi.txt "$SBOX"/x.hash
+		[--rules] : use word mangling rules like in --single mode
+		[--encoding=UTF-8] : UTF-8 is default
+			- log in "$SBOX"/john.log
+			- resultaat in "$SBOX"/john.pot
+		$ nice john-the-ripper --crack-status --incremental=ASCII --save-memory=3 --fork=2 "$SBOX"/DR15DU.HASH
+			--incrementel : zie "$ john --list=inc-modes", o.a.
+			>>>
+			pre-defined incremental modes are "ASCII" (all 95 printable ASCII characters), "LM_ASCII" (for use on LM hashes), "Alnum" (all 62 alphanumeric characters), "Alpha" (all 52 letters), "LowerNum" (lowercase letters plus digits, for 36 total), "UpperNum" (uppercase letters plus digits, for 36 total), "LowerSpace" (lowercase letters plus space, for 27 total), "Lower" (lowercase letters), "Upper" (uppercase letters), and "Digits" (digits only).
+			<<<
+
+==== John the ripper verwijderd ====
+
+- welke snaps zijn er geinstalleerd :
+	$ gemount
+	>>>
+	├─/snap/core/9289                     /dev/loop0                       97,1M  97,1M 100% squashfs     ro,nodev,relatime
+	├─/snap/core/9436                     /dev/loop1                       96,6M  96,6M 100% squashfs     ro,nodev,relatime
+	...
+	├─/snap/john-the-ripper/297           /dev/loop2                       52,8M  52,8M 100% squashfs     ro,nodev,relatime
+	<<<
+	$ snap list
+	>>>
+	Name             Version         Rev   Tracking       Publisher        Notes
+	core             16-2.45.1       9436  latest/stable  canonical✓       core
+	john-the-ripper  1.9J1-a16c8a7X  297   latest/stable  claudioandre-br  -
+	<<<
+		- dus core/9289 is wel gemount, maar staat niet in de lijst
+	$ snap list --all
+	>>>
+	Name             Version         Rev   Tracking       Publisher        Notes
+	core             16-2.43.1       9289  latest/stable  canonical✓       core (??disabled)
+	core             16-2.45.1       9436  latest/stable  canonical✓       core
+	john-the-ripper  1.9J1-a16c8a7X  297   latest/stable  claudioandre-br  -
+	<<<
+		- dus core/9289 is wel gemount, maar staat niet in de lijst
+
+- deze snap verwijderen
+	$ sudo snap remove john-the-ripper 
+	>>>
+	john-the-ripper removed
+	<<<
+- snapshots van deze snap verwijderen :
+	- zie in /var/lib/snapd/snapshots
+
+- PROBLEEM : core verwijderen (heb geen andere snaps) gaat niet vanzelf
+	$ sudo snap remove core
+	>>>
+	error: cannot remove "core": snap "core" is not removable: snap is used by the model
+	<<<
+	$ sudo snap disable core
+	>>>
+	error: cannot disable "core": snap "core" cannot be disabled
+	<<<
+	$ sudo umount /snap/core/9436 
+	>>>
+	umount: /snap/core/9436: target is busy.
+	<<<
+- OPLOSSING: zie sectie 'How to completely remove snap'
+	$ sudo systemctl stop snapd
+	>>>
+	Warning: Stopping snapd.service, but it can still be activated by:
+	  snapd.socket
+	<<<
+	$ sudo umount /snap/core/9436 /snap/core/9289 
+	$ sudo systemctl start snapd
+	$ sudo snap remove core
+	>>>
+	core removed
+	<<<
+		- lijkt ook 9289 te verwijderen, anders:
+			$ snap list --all
+			# snap remove core --revision 9289
+	- cache leegmaken :
+		# rm /var/lib/snapd/cache/*
+		- hierna is /snap quasi leeg, /var/snap helemaal leeg, en gebruikt /var/lib/snapd nog maar 400kB
+			- snapd zelf blijft natuurlijk behouden :
+				- /usr/lib/snapd/ 	: 50MB
+				- /usr/bin/snap 	: 12MB
+
+==== How to	completely remove snap ====
+
+- Find installed snaps:
+	$ snap list --all
+- Remove installed snaps:
+	# snap remove <package> <revision>
+	- b.v. # snap remove core --revision 9289
+	# snap remove <package>
+- cache van deze snap verwijderen :
+	- zijn squash archieven
+	- zoeken welk bestand in /var/lib/snapd/cache/ deze snap betreft, b.v.
+		- zie ook "/var/lib/snapd/sequence"
+		$ for i in /var/lib/snapd/cache/*;do ln -s "$i" /media/ramdisk/"${i%%*/}".squashfs;done
+		- mounten met squashfs (b.v. met mijn spacefm plugin)
+		- bekijk /mnt/snap/manifest.yaml
+- snapshots van deze snap verwijderen :
+	- zie in /var/lib/snapd/snapshots
+	
+- ook core verwijderen (als er geen andere snaps meer zijn):
+	- eerst snapd service uitschakelen
+		# systemctl stop snapd
+	- dan alle versies van core unmounten
+		# umount /snap/core/9436 /snap/core/9289
+	- snapd service terug starten
+		# systemctl start snapd
+	- core snap verwijderen
+		# snap remove core
+	- snap cache leegmaken  :
+		# rm /var/lib/snapd/cache/*
+
+0 Remove snapd: sudo apt purge snapd
+	- If you receive an error removing snapd then do the following sudo rm -rf /var/cache/snapd then run sudo apt purge snapd
+- Remove snap directory from home: rm -rf ~/snap
+
+=== avidemux2.7-jobs-qt5 2.7.4-0build1+ubuntu18.04 ===
+
+- USC
+- PATCH : is v.2.7, maar probeert al te delegeren naar avidemux3_cli. Mislukt natuurlijk als ook avidemux nog v.2.7 is
+	# ln -s /usr/bin/avidemux2.7_cli /usr/bin/avidemux3_cli
+	# ln -s /usr/bin/avidemux2.7_qt5 /usr/bin/avidemux3_qt5
+	- OPM : ook /usr/bin/avidemux verwijst via /etc/alternatives/avidemux naar de niet-bestaande /usr/bin/avidemux3_qt5, maar dat is niet het pad dat avidemux gebruikt: avidemux3_cli en avidemux3_qt5 zijn hard gecodeerd
+	- OPM : deze patch kon gevonden worden door avidemux2.7_jobs_qt5 in terminal uit te voeren, dan komt de (grote) log ook in de terminal
+
+- equivalent van VirtualDub jobs venster
+
+- zie "_ffmpeg truuks en commandos.adoc" sectie "AviDemux"
+
+- OPM: laatste avidemux ook beschikbaar als appimage (via "downloads" van http://avidemux.sourceforge.net/), maar zonder avidemux-cli, zodat avidemux-jobs, die wel in de appimage zit, ook niet werkt.
+
+=== 0 Video4Linux Control Panel (usc) ===
+- er is weinig te controleren aan de Hauppage WinTV, en v4l2 kan zelfs de ingang niet kiezen, het enige dat echt nodig is
+- te vinden in menu Settings
+
+===  v4l-utils ===
+
+- USC
+- "Collection of command line video4linux utilities"
+
+- contains the following video4linux command line utilities:
+	cec-compliance, cec-ctl, cec-follower, cx18-ctl, decode_tm6000, ir-ctl, ivtv-ctl, media-ctl, rds-ctl, v4l2-compliance, v4l2-ctl, v4l2-dbg, v4l2-sysfs-path
+	- decode_tm6000: decodes tm6000 proprietary format streams
+	- rds-ctl: tool to receive and decode Radio Data System (RDS) streams
+	- v4l2-compliance: tool to test v4l2 API compliance of drivers
+	- v4l2-ctl, cx18-ctl, ivtv-ctl: tools to control v4l2 controls from the cmdline
+	- v4l2-dbg: tool to directly get and set registers of v4l2 devices
+	- v4l2-sysfs-path: sysfs helper tool
+
+=== uGet (USC) ===
+
+- Uget is a simple, lightweight and easy-to-use download manager. It provides the following features:
+	- Resume downloads
+	- Queue downloads
+	- Classify downloads in categories
+	- Mozilla Firefox integration (through Flashgot plugin)
+	- Clipboard monitoring
+	- Import downloads import from HTML files
+	- Batch download
+	- also launch from the command line
+
+- GUI : xfce-menu Internet/uGet
+
+- CLI :
+	$ uget-gtk --quiet --filename=FILE --folder=FOLDER URL
+	--quiet : add download directly. Don't show dialog.
+	--folder=FOLDER : placed download file in FOLDER.
+	--filename=FILE : set download filename to FILE.
+	[--category-index=N] :add download to Nth category. (default -1)
+	
+- help :
+	$ uget-gtk --help
+	$ man uget-gtk (GUI Help gaat naar website, die is nog leeg)
+
 == TEDOEN ==
 
+- HPLIP 3.19.12 : NIET SUC, heeft maar (Bionic, 8jan20) 3.17.10, terwijl HPLIP maar geupdate is voor Bionic in 3.18.4
+	- al gedownload, best eens uitvoeren als printer opstaat
+		- GEZIPTE.PRG/UBUNTU/HP Linux Imaging and Printing/hplip-3.19.12.run
+		- autostart doen werken, zie sectie "HP Printer system tray"
+	
+=== x-tile ===
+
+- vensters schikken per workspace
+	- https://www.giuspen.com/x-tile
+	- https://launchpad.net/~giuspen/+archive/ubuntu/ppa
 
 === diverse ===
 - Wissen /home/dirk/.gimp-2.8 : nu ~/.config/GIMP/2.10
@@ -4126,6 +4589,7 @@ Boomaga (BOOklet MAnager) is a virtual printer for viewing a document before pri
 	Print several pages on one sheet.
 		1, 2, 4, 8 pages per sheet
 		Booklet. Folding the sheets in two, you’ll get a book.
+
 === qpdfview
 USC is v 0.4.14, ontwikkelaar heeft Xenial en Bionic 0.4.18
 	- pdf (en djvu) viewer met annotations, SyncTeX, en meerdere documenten in tabs
@@ -4312,12 +4776,21 @@ TEDOEN - zet '/var/lib/flatpak/exports/share' en '/home/dirk/.local/share/flatpa
 				# service lightdm start
 	- https://help.ubuntu.com/community/ManyButtonsMouseHowto
 		imwheelrc installeren
+
 === https://ignorantguru.github.io/udevil/#post om udevil te gebruiken om te verbinden met ftp-servers ===
 	- https://ignorantguru.github.io/udevil/udevil--help.html
+
+=== fuse filesystem in SQL (MySql, Sqlite, ) ===
+- zie [https://github.com/lstein/sqlfs-perl] en [https://metacpan.org/release/sqlfs-perl]
+	- specifiek voor database gericht op nabootsen van een bestandssysteem
+		- lijkt geschikt om b.v. de vele kleine bestanden van Zim efficienter op te slaan
+		- andere fuse-(my)sql oplossingen (meestal >15j oud, niet actief) proberen om willekeurge databasetabellen te mounten als bestandssysteem
+
 === sqlite en libsqlfs (fuse) ===
 - OPM: sqlite zit al in mijn bitnami LEMP stack
 - zie https://github.com/guardianproject/libsqlfs
 - zie http://www.nongnu.org/libsqlfs/
+
 === Cmdfs : a FUSE virtual filesystem  ===
  applies an arbitary filter command to selected files in a source directory tree to create the destination files	- o.a. om een muziek-map met flac-bestanden te mounten als een virtuele map met mp3-bestanden
 	- zie http://cmdfs.sourceforge.net/ en https://github.com/mikeswain/cmdfs
