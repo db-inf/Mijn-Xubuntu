@@ -1478,6 +1478,8 @@ $ find . /media/sdata/WERK/ -type d -name "TTC *" -and -not -name "*guidebook*" 
 
 - op exacte naam
 	$ apt-cache policy e2fsprogs
+	OF
+	$ apt policy e2fsprogs
 	e2fsprogs:
 	  Installed: 1.42.13-1ubuntu1
 	  Candidate: 1.42.13-1ubuntu1
@@ -2330,7 +2332,7 @@ $ sudo file -s /dev/sdb1
 			alsa_input.pci-0000_05_01.1.analog-stereo	---> (Bt878 video tuner)
 			alsa_input.pci-0000_00_1f.3.analog-stereo	---> (moederbord)
 		<<<
-		- met de monitors kunt ge niets aanvangen
+		- "ffmpeg -f alsa -i pulse" neemt op van de "Monitor of Built-in Audio analog stereo" (WAS: met de monitors kunt ge niets aanvangen)
 	- lijst van beschikbare uitgangen (afh. van pavucontrol/Configuration)
 		$ pactl list | grep -A2 'Sink #' | grep 'Name: ' | cut -d" " -f2
 		>>> vb.
@@ -3593,6 +3595,21 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 	- xt=urn:btih: gevolgd door de infohash (b.v. getoond op YourBitTorrent, die zelf geen magnet links geeft)
 	- dn= gevolgd door downloadnaam (URL-encoded, d.w.z. o.a. spaties vervangen door %20)
 	- tr=udp://tracker.archlinux.org:6969 : 1 of meer trackers, kunnen in Transmission ook nadien toegevoegd worden. De magnet links van [http://rarbgaccess.org/] hebben gewoonlijk maar een tracker of 3, meer zijn te vinden op o.a. [https://newtrackon.com/list]
+
+=== gepersonaliseerde e-mail naar lijst ===
+
+- bericht-template maken op ramdisk, met b.v. "veld" %%1 te vervangen door titel + achternaam
+- In Thunderbird/Edit/Preferences/Advanced/Config-editor zoeken naar de From-identiteit waarmee ge de e-mail wilt sturen, hier "id9"
+- namen en adressen exporteren naar .csv, b.v. in volgorde titel, achternaam, voornaam, e-mailadres
+- loop met read over die .csv
+- template met sed naar gepersonaliseerd bericht
+- gepersonaliseerd bericht als message aan thunderbird -compose geven :
+	$ export i=0;while IFS=, read -r titel anaam vnaam adres;do ((i++)); to="$vnaam $anaam <$adres>"; sed -E "s|%%1|$titel $anaam|" /media/ramdisk/template >/media/ramdisk/bericht$i;thunderbird -compose "to='$to',format='2',preselectid=id9,subject='Het belang van een eerste minister uit eigen partij',message='/media/ramdisk/bericht$i'" ;done < CD\&V\ Burgemeesters\ 2019-2024.csv
+	- thunderbird -compose opties (allemaal in 1 waarde-string)
+		- format='2' : tekstformaat, ='1' : HTML-formaat (allebei UTF-8)
+		- message=bestandsnaam : de body komt uit het bestand (!= bijlage)
+		OF
+		- body='tekst van het bericht'
 
 == RSYNC ==
 

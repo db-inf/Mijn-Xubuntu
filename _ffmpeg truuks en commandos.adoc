@@ -50,7 +50,7 @@ Press [q] to stop, [?] for help
 	$ /opt/ffmpeg/ffmpeg -h encoder=encoder_name
 		- Print detailed information about the encoder named encoder_name. Use the -encoders option to get a list of all encoders.
 		- voorbeeld :
-		>>> $ /media/sdata/WERK/ffmpeg/ffmpeg -hide_banner -h encoder=libfdk_aac
+		>>> $ /opt/ffmpeg-dirk/ffmpeg -hide_banner -h encoder=libfdk_aac
 			Encoder libfdk_aac [Fraunhofer FDK AAC]:
 				General capabilities: delay small
 				...
@@ -137,7 +137,7 @@ Press [q] to stop, [?] for help
 
 ffmpeg -i mydivxinput.avi hugefileoutput.yuv
 
-=== aspect-ratio wijzigen zonder hercoderen ===
+=== aspect ratio wijzigen zonder hercoderen ===
 
 ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 	- geprobeerd met (ffprobe) XVid-avi SAR 1:1 DAR 4:3, wordt dan in mp4 SAR 4:3 DAR 16:9, en aan 16:9 afgespeeld in VLC
@@ -160,7 +160,7 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 	...
 	<<<
 	- voor zelf gegenereerde A/V moet het volledige formaat opgegeven worden, b.v. voor het bovenstaande vb. van ffprobe:
-	$ /media/sdata/WERK/ffmpeg/ffmpeg -f lavfi -i anullsrc -f lavfi -i color=gold:854x480 -r 30 -pix_fmt yuv420p -video_track_timescale 15360 -vf drawtext='fontfile=/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf':fontcolor=blue:fontsize=70:text="1LijnTekst":'x=(main_w-text_w)/2:y=(main_h-text_h)/2',fade=in:st=0:d=1,fade=out:st=3:d=1 -c:v libx264 -b:v 250k -c:a libfdk_aac -profile:a aac_he_v2 -ar 22050 -ac 2 -vbr 1 -t 4 4minmis.mp4
+	$ /opt/ffmpeg-dirk/ffmpeg -f lavfi -i anullsrc -f lavfi -i color=gold:854x480 -r 30 -pix_fmt yuv420p -video_track_timescale 15360 -vf drawtext='fontfile=/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf':fontcolor=blue:fontsize=70:text="1LijnTekst":'x=(main_w-text_w)/2:y=(main_h-text_h)/2',fade=in:st=0:d=1,fade=out:st=3:d=1 -c:v libx264 -b:v 250k -c:a libfdk_aac -profile:a aac_he_v2 -ar 22050 -ac 2 -vbr 1 -t 4 4minmis.mp4
 		- video invoer
 			-f lavfi : Libavfilter input virtual device
 			-i color=gold:854x480 : input vaste kleur, en grootte zoals ffprobe
@@ -313,18 +313,24 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 	- SNELLE compressie door GPU, bijna zonder CPU-belasting : vaapi HW-versnelling voor scaling en compressie
 		- zie sectie "vaapi GPU-hardware versnelling"
 		- een paar opties voor hwaccell en vaapi mogen wschlk. weg of korter, maar dit werkt :
-		$ /media/sdata/WERK/ffmpeg/ffmpeg -thread_queue_size 512 -init_hw_device vaapi=intel:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device intel -filter_hw_device intel -f alsa -sample_rate 44100 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 1200x672 -i :0.0+0,624 -c:a flac -vf "format=nv12|vaapi,hwupload,scale_vaapi=w=768:h=432:mode=hq" -c:v h264_vaapi -profile:v high -b:v 2500k -t 3000 /media/ramdisk/test.mkv
-			-thread_queue_size 512 : tegen "[alsa @ 0x1c90640] Thread message queue blocking; consider raising the thread_queue_size option"; evt. herhalen VOOR -f x11grab
-			-f alsa ... -i pulse : geluid formaat alsa ingevoerd via pulseaudio
-				- EERST formaat -f met opties, dan pas invoer -i
-				- opties zoals -ar 44100 en -ac 2 werken ook wat het resultaat betreft, maar ik vermoed dat zo capture gebeurt met de defaults van het formaat -f, en dan pas omgezet naar formaat voor uitvoer; zou verspilling zijn
-			-f x11grab -i :0.0+0,624 : beeldinvoer van X11-display 0:0, offset x=0, y=624: 624=(1920-672)/2
-			- "scale_vaapi=w=768:h=432:mode=hq" : ineens in hardware herschalen naar echt 16:9-formaat 768x432
-			- video-encoder h264_vaapi heeft blijkbaar default pix_fmt yuv420p, is OK
-			-t 3000 : autom. stoppen na 3000 sec. == 50 min., anders neemt hij op tot toets 'q'
-			- cpu-gebruik :
-				$ cat /proc/loadavg
-				>>> ongeveer 2.5 <<<
+			- aspect 16x9, b.v. met h.264 (== h264_vaapi) :
+				$ /opt/ffmpeg-dirk/ffmpeg -thread_queue_size 512 -init_hw_device vaapi=intel:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device intel -filter_hw_device intel -f alsa -sample_rate 44100 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 1200x672 -i :0.0+0,624 -c:a flac -vf "format=nv12|vaapi,hwupload,scale_vaapi=w=768:h=432:mode=hq" -c:v h264_vaapi -profile:v high -b:v 2500k -t 3000 /media/ramdisk/test.mkv
+					-thread_queue_size 512 : tegen "[alsa @ 0x1c90640] Thread message queue blocking; consider raising the thread_queue_size option"; evt. herhalen VOOR -f x11grab
+					-f alsa ... -i pulse : geluid formaat alsa ingevoerd via pulseaudio
+						- EERST formaat -f met opties, dan pas invoer -i
+						- opties zoals -ar 44100 en -ac 2 werken ook wat het resultaat betreft, maar ik vermoed dat zo capture gebeurt met de defaults van het formaat -f, en dan pas omgezet naar formaat voor uitvoer; zou verspilling zijn
+					-f x11grab -i :0.0+0,624 : beeldinvoer van X11-display 0:0, offset x=0, y=624: 624=(1920-672)/2
+					- "scale_vaapi=w=768:h=432:mode=hq" : ineens in hardware herschalen naar echt 16:9-formaat 768x432
+					- video-encoder h264_vaapi heeft blijkbaar default pix_fmt yuv420p, is OK
+					-t 3000 : autom. stoppen na 3000 sec. == 50 min., anders neemt hij op tot toets 'q'
+					- cpu-gebruik :
+						$ cat /proc/loadavg
+						>>> ongeveer 2.5 <<<
+			- aspect 4x3, b.v. met h.265 (== hevc_vaapi) en libfdk_aac he2
+				- OPGELET: getest op reeksen Maurice De Wilde: in de praktijk niet 1200 maar 1184 breed, 1000kbps
+				$ /opt/ffmpeg-dirk/ffmpeg -thread_queue_size 512 -init_hw_device vaapi=intel:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device intel -filter_hw_device intel -f alsa -sample_rate 16000 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 1184x900 -i :0.0+0,510 -c:a libfdk_aac -profile:a aac_he_v2 -vbr:a 3 -vf "format=nv12|vaapi,hwupload,scale_vaapi=w=640:h=480:mode=hq" -c:v hevc_vaapi -q:v 4 -t 300 -y /media/ramdisk/test.mp4
+					-q:v 4 : video bijna max. kwaliteit (op schaal 0-52, default 25)
+						- OPM: nieuwere ffmpeg heeft optie "-rc_mode cqp" : streef naar gekozen kwaliteit "-q 99" zoals de optie "-crf" van libx26?
 	- VERLIESLOOS 
 		- met "-c:v libx265 -preset ultrafast -x265-params lossless=1" en fdk_aac HE2 : 1200x672 aan 36322 kb/s, 260MB/min
 			$ /opt/ffmpeg-dirk/ffmpeg -thread_queue_size 512 -f alsa -sample_rate 44100 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 1200x672 -i :0.0+0,624 -c:a libfdk_aac -profile:a aac_he_v2 -vbr:a 2 -pix_fmt yuv420p -c:v libx265 -preset ultrafast -x265-params "lossless=1" /media/ramdisk/test.mkv
@@ -346,7 +352,7 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 	- zie ook sectie 'opnemen van scherm (b.v. ook video in browser) 'screen capture''
 	- zie ook sectie 'ffplay echt in achtergrond uitvoeren'
 		- om ffplay-voortgangsrapport niet doorheen ffmpeg-voortgangsrapport te mengen
-	$ /media/sdata/WERK/ffmpeg/ffmpeg -hide_banner -nostdin -thread_queue_size 512 -init_hw_device vaapi=intel:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device intel -filter_hw_device intel -f alsa -sample_rate 44100 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 854x480 -i :0.0+173,720 -c:a flac -vf "format=nv12|vaapi,hwupload" -c:v h264_vaapi -profile:v high -b:v 2500k /media/ramdisk/uitvoer.mkv & ffplay -loglevel quiet -hide_banner -autoexit -x 854 -y 480 -noborder -i invoer ;kill $!
+	$ /opt/ffmpeg-dirk/ffmpeg -hide_banner -nostdin -thread_queue_size 512 -init_hw_device vaapi=intel:/dev/dri/renderD128 -hwaccel vaapi -hwaccel_output_format vaapi -hwaccel_device intel -filter_hw_device intel -f alsa -sample_rate 44100 -channels 2 -i pulse -f x11grab -draw_mouse 0 -show_region 1 -framerate 30 -video_size 854x480 -i :0.0+173,720 -c:a flac -vf "format=nv12|vaapi,hwupload" -c:v h264_vaapi -profile:v high -b:v 2500k /media/ramdisk/uitvoer.mkv & ffplay -loglevel quiet -hide_banner -autoexit -x 854 -y 480 -noborder -i invoer ;kill $!
 		- ffmpeg -nostdin ... & : draai ffmpeg in de achtergrond
 			-nostdin : belangrijk, anders wacht ffmpeg eeuwig tot hij stdin kan monitoren, hetgeen immers niet kan vanuit achtergrond
 		- ffplay -noborder : zonder frame en titelbalk, zodat netjes x_offset = (schermbreedte - videobreedte)/2, y_offset = ...
@@ -524,7 +530,7 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 		- oudere 'high efficiency' versie 1
 			$ ffmpeg -i invoer -c:a libfdk_aac -profile:a aac_he
 	- andere opties :
-		$  /media/sdata/WERK/ffmpeg/ffmpeg -hide_banner -h encoder=libfdk_aac
+		$  /opt/ffmpeg-dirk/ffmpeg -hide_banner -h encoder=libfdk_aac
 		>>>
 		Encoder libfdk_aac [Fraunhofer FDK AAC]:
 			General capabilities: delay small 
@@ -559,12 +565,12 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 	- mono lage bitrates :
 		- Medion TV speelt geen mp4 met mp3 geluid, wel met aac :
 			- als input stereo is :
-				$ /media/sdata/WERK/ffmpeg/ffmpeg -i stereo.mp4 -c:v copy -c:a libfdk_aac -profile:a aac_he_v2 -vbr 2 /media/ramdisk/stereo.mp4
+				$ /opt/ffmpeg-dirk/ffmpeg -i stereo.mp4 -c:v copy -c:a libfdk_aac -profile:a aac_he_v2 -vbr 2 /media/ramdisk/stereo.mp4
 			- als input stereo is, maar mono mag zijn vanwege toch maar spraak :
-				$ /media/sdata/WERK/ffmpeg/ffmpeg -i stereo.mp4 -af "pan=stereo|c0<c0+c1|c1<c0+c1" -c:v copy -c:a libfdk_aac -profile:a aac_he_v2 -vbr 2 pseudostereo.mp4
+				$ /opt/ffmpeg-dirk/ffmpeg -i stereo.mp4 -af "pan=stereo|c0<c0+c1|c1<c0+c1" -c:v copy -c:a libfdk_aac -profile:a aac_he_v2 -vbr 2 pseudostereo.mp4
 				-af "pan=stereo|c0<c0+c1|c1<c0+c1" : mix 2 kanalen gelijk naar opnieuw 2 kanalen
 			- als input al mono is :
-				$ /media/sdata/WERK/ffmpeg/ffmpeg -i mono.mp4 -ac 2 -c:v copy -c:a libfdk_aac -profile:a aac_he_v2 -vbr 2 pseudostereo.mp4
+				$ /opt/ffmpeg-dirk/ffmpeg -i mono.mp4 -ac 2 -c:v copy -c:a libfdk_aac -profile:a aac_he_v2 -vbr 2 pseudostereo.mp4
 				-ac 2 : -profile:a aac_he_v2 werkt alleen voor stereo, maar codeert de verschillen tss. de 2 kanalen apart. Bijgevolg is het zinvol om mono eerst naar stereo om t zetten om -profile:a aac_he_v2 te kunnen gebruiken
 		- best Fraunhofer Pro mp3 van Windows, b.v. met VirtualDub(Wine) :
 		- libfdk_aac met ffmpeg -profile:a aac_he_v2 ook goed voor mono, maar minder spectaculair beter dan ffmpeg -profile:a aac_low
@@ -650,6 +656,25 @@ OF
 	- ondertussen kunt ge wel opdrachten intikken in de terminal, maar die invoer is onleesbaar omdat hij zelfs tijdens het intikken wordt overschreven door de voortgangsrapportering, die immers "\r..." gebruikt.
 - OPLOSSING ffplay echt stil maken, en laten stoppen bij einde :
 	$ ffplay -hide_banner -loglevel quiet -autoexit -i bestand &
+
+=== afspelen met framenummer ===
+
+- om filters zoals crop mee te laten bewegen met het gebied van belang, is het framenr. nodig:
+	- nog zonder crop:
+		$ ffplay -hide_banner -an -vf "drawtext=text='%{frame_num}':start_number=1:x=(w-tw)/2: y=h-(2*lh):fontcolor=black:fontsize=20:box=1:boxcolor=white:boxborderw=5" bron
+			-an : effe geen geluid
+	- vb. met meebewegende overlay van gekleurde rechthoek, om crop-gebied te bepalen
+		- OPM: ffmpeg's drawbox filter kan niet bewegen, want kan geen framenr. of tijdstamp bepalen
+		- filter color...[c] maakt gekleurde rechthoek van gewenste grootte op kanaal [c]
+		- filter [in][c]overlay plaatst die over de input op de gewenste plaats
+		$ ffplay -hide_banner -an -vf "color=yellow@0.1:s=468x158[c],[in][c]overlay=y=0:x='clip((12-n)*30,30,172)',drawtext=text='%{frame_num}':start_number=1:x=(w-tw)/2: y=h-(2*lh):fontcolor=black:fontsize=20:box=1:boxcolor=white:boxborderw=5" 3\
+			- overlay : 'n' framenr
+			- 'clip(x,min,max)' : begrenst x tot interval [min, max], tussen '' omdat er komma's in staan
+	- vb. met meebewegende crop, zoals bepaald met overlay hierboven
+		$ ffplay -hide_banner -vf "crop=w=468:h=158:y=0:x='clip((12-n)*30,30,172)',drawtext=text='%{frame_num}':start_number=1:x=(w-tw)/2: y=h-(2*lh):fontcolor=black:fontsize=20:box=1:boxcolor=white:boxborderw=5" bron
+		- evt. pixel formaat zonder subsampling voor nauwkeurigheid:
+			-vf "format=pix_fmts=yuv444p,..."
+
 
 === titel-metadata verwijderen (b.v. rarbg-torrent) ===
 
@@ -797,7 +822,7 @@ $ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
 	- -c:a copy : in het vb. (recompressie geluid niet goed) te vervangen door nieuwe instellingen
 
 - voor hele directories, met misschien licht gewijzigde maar genummerde bestandsnamen :
-	$ audir="/media/sdata/.Trash/1000/files/TTC Visual Literacy Skills, How to See  (Carrie Patterson, guidebook, video)";for vid in *.mp4;do /media/sdata/WERK/ffmpeg/ffmpeg -i "$vid" -i "$audir"/${vid:0:2}*.mp4 -map 0:V:0 -map 1:a:0 -c:v copy -ar 22050 -af "pan=stereo|c0<c0+c1|c1<c0+c1" -c:a libfdk_aac -profile:a aac_he_v2 -vbr 2 /media/ramdisk/"$vid";done
+	$ audir="/media/sdata/.Trash/1000/files/TTC Visual Literacy Skills, How to See  (Carrie Patterson, guidebook, video)";for vid in *.mp4;do /opt/ffmpeg-dirk/ffmpeg -i "$vid" -i "$audir"/${vid:0:2}*.mp4 -map 0:V:0 -map 1:a:0 -c:v copy -ar 22050 -af "pan=stereo|c0<c0+c1|c1<c0+c1" -c:a libfdk_aac -profile:a aac_he_v2 -vbr 2 /media/ramdisk/"$vid";done
 
 - test afspelen met videospoor en audiospoor uit verschillende bestanden : ffplay neemt maar 1 input, maar dat kan stdin zijn, met de stdout van ffmpeg, b.v.
 	$ ffmpeg -i 01*.avi -i 01*.mp3 -map 0:V -map 1:a -c copy -f matroska - | ffplay -
@@ -841,7 +866,7 @@ $ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
 === vaapi samenvatting ===
 
 - heb geen vaapi decoder, enkel encoder en filters :
-	$ /media/sdata/WERK/ffmpeg/ffmpeg -hwaccel_device /dev/dri/renderD128 -i invoer.mp4 -vf [andere filters,]format=nv12,hwupload[,_vaapi-filters] -c:v h264_vaapi -profile:v high -b:v $vidbps...
+	$ /opt/ffmpeg-dirk/ffmpeg -hwaccel_device /dev/dri/renderD128 -i invoer.mp4 -vf [andere filters,]format=nv12,hwupload[,_vaapi-filters] -c:v h264_vaapi -profile:v high -b:v $vidbps...
 		- _vaapi-filters van default Ubuntu ffmpeg :
 			deinterlace_vaapi Deinterlacing of VAAPI surfaces
 			scale_vaapi       Scale to/from VAAPI surfaces.
@@ -873,12 +898,12 @@ $ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
 
 - decoders
 	$ ffmpeg -decoders|grep vaapi
-	$ /media/sdata/WERK/ffmpeg/ffmpeg -decoders|grep vaapi
+	$ /opt/ffmpeg-dirk/ffmpeg -decoders|grep vaapi
 		- bij mij GEEN ENKELE, Ubuntu's noch eigen compilatie
 
 - encoders
 	$ ffmpeg -encoders|grep vaapi
-	$ /media/sdata/WERK/ffmpeg/ffmpeg -encoders|grep vaapi
+	$ /opt/ffmpeg-dirk/ffmpeg -encoders|grep vaapi
 	>>> (zowel Ubuntu's als eigen compilatie)
 		h264_vaapi  H.264/AVC (VAAPI) (codec h264)
 		hevc_vaapi  H.265/HEVC (VAAPI) (codec hevc)
@@ -901,7 +926,7 @@ $ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
 			  -coder       <int>      Entropy coder type (from 0 to 1) (default cabac)
 				 cavlc, cabac, vlc OF ac            
 		<<<
-		$ /media/sdata/WERK/ffmpeg/ffmpeg -h encoder=h264_vaapi
+		$ /opt/ffmpeg-dirk/ffmpeg -h encoder=h264_vaapi
 		>>>
 			Encoder h264_vaapi [H.264/AVC (VAAPI)]:
 				General capabilities: delay hardware 
@@ -925,7 +950,7 @@ $ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
 		<<<
 
 - filters
-	$ /media/sdata/WERK/ffmpeg/ffmpeg -filters|grep vaapi
+	$ /opt/ffmpeg-dirk/ffmpeg -filters|grep vaapi
 	>>>	
 		deinterlace_vaapi Deinterlacing of VAAPI surfaces
 		denoise_vaapi     VAAPI VPP for de-noise
@@ -1259,7 +1284,7 @@ $ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
 - soms werkt dit, ffmpeg slaat beschadigde stukken gewoon over als vervolg gevonden kan worden
 	$ ffmpeg  -err_detect ignore_err -i fout.mkv -c copy /media/ramdisk/goed.mkv
 
-- voor avi : mencoder kan frame-index herstellen (wordt met mplauer geïnstalleerd)
+- voor avi : mencoder kan frame-index herstellen (wordt met mplayer geïnstalleerd)
 	$ mencoder -forceidx -oac copy -ovc copy corruptvideo.avi -o fixedvideo.avi
 		
 === waarschuwingen niet geven (komen soms in een stortvloed) ===
