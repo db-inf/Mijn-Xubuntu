@@ -2,6 +2,20 @@
 :description: vergeetachtige weetjes over Tex en LaTex, begonnen als samenvatting van "A guide to LaTeX Document preparation for beginners and advanced users ~ Kopka H, Daly PW (ed.4 2003).pdf"
 
 = LaTeX =
+
+== andere docs ===
+=== _Xubuntu.adoc ===
+=== _Xubuntu composekey multikey combinaties.adoc ===
+=== _bash readline keys.txt ===
+=== _ffmpeg truuks en commandos.adoc ===
+=== _Tex-LaTex.adoc ===
+=== _Wine-PlayOnLinux.adoc ===
+=== _POLwineprefix 2.11 Win7x86PROGS.txt ===
+=== _VirtualBox.adoc ===
+=== _Xpra.adoc ===
+=== _Dragon.adoc ===
+=== _SW10 installatie.txt ===
+
 == documentatie ==
 
 - Quickstart shortcut $, b.v. `$packagenaam`
@@ -1814,7 +1828,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 				- is duidelijker omdat het nog een onderscheid maakt met echte hoofdletter, maar slechts voor zover het gebruikte lettertype small caps heeft of simuleert (o.a. Libertine en [sc]{mathpazo} wel, Merriweather niet)
 	0 slechte workarounds : [implicit=false] of [draft], maar dat schakelt hyperlinks effectief uit, alleen blijven de opdrachten zoals \href bewaard
 
-=== package url  ===
+=== package url ===
 
 - wordt ook geladen door package hyperref, maar die moet als laatste geladen worden
 	\url{url}

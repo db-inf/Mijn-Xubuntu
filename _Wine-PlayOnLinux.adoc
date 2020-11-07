@@ -3,6 +3,19 @@
 
 . OPM : %WINEPREFIX% is GEEN environment variable - overal in deze tekst moet %WINEPREFIX% met de hand vervangen worden door de naam van de wineprefix, een map in "~/.PlayOnLinux/wineprefix"
 
+== andere docs ===
+=== _Xubuntu.adoc ===
+=== _Xubuntu composekey multikey combinaties.adoc ===
+=== _bash readline keys.txt ===
+=== _ffmpeg truuks en commandos.adoc ===
+=== _Tex-LaTex.adoc ===
+=== _Wine-PlayOnLinux.adoc ===
+=== _POLwineprefix 2.11 Win7x86PROGS.txt ===
+=== _VirtualBox.adoc ===
+=== _Xpra.adoc ===
+=== _Dragon.adoc ===
+=== _SW10 installatie.txt ===
+
 == versie
 
 . XUbuntu komt met een (oude: 1.6.1 64-bits) Wine-versie, maar PlayOnLinux (POL) maakt het gemakkelijk om meerdere versies te installeren, zowel 32- als 64-bits, naargelang de behoeften van elk te installeren programma, en heeft voor een aantal programma's zelfs voorgeteste install-scripts met bijhorende wine-versies (zie https://www.playonlinux.com/en/supported_apps.html). Meerdere versies (o.a. x86 naast x64) gebruiken zonder POL: https://wiki.winehq.org/FAQ#Can_I_install_more_than_one_Wine_version_on_my_system.3F
@@ -30,6 +43,10 @@
 
 === .exe in default Wineprefix op te starten door er in Thunar gewoon op te klikken : http://docs.slackware.com/howtos:emulators:binfmt_misc
 	OPM: werkt waarschijnlijk niet voor meerdere wine-versies, dus ook niet met POL (zie b.v. https://www.winehq.org/pipermail/wine-devel/2015-June/108096.html "For binfmt-misc to be workable a few things need to be known: what version of wine, what wineprefix, what setting overrides. None of these can be done by environmental vars because binfmt-misc might be directly executing the file.")
+
+=== wine-versies niet te vinden bij POL ===
+- als laatste/gewenste wine versie niet getoond wordt in PlayOnlinux Wine versions manager, kunt ge die van elders downloaden : "unarchive and then copy the resulting folder to your .PlayOnLinux/wine/linux-amd64 folder (or linux-x86 depending on architecture)"
+	- b.v. van (https://dl.winehq.org/wine-builds/ubuntu/dists/bionic/main/)
 
 == wine default prefix $HOME/.wine vermijden
 

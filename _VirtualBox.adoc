@@ -1,6 +1,19 @@
 = VirtualBox know-how
 :description:  handige commando's die te moeilijk en met tevelen zijn om te onhtouden
 
+== andere docs ===
+=== _Xubuntu.adoc ===
+=== _Xubuntu composekey multikey combinaties.adoc ===
+=== _bash readline keys.txt ===
+=== _ffmpeg truuks en commandos.adoc ===
+=== _Tex-LaTex.adoc ===
+=== _Wine-PlayOnLinux.adoc ===
+=== _POLwineprefix 2.11 Win7x86PROGS.txt ===
+=== _VirtualBox.adoc ===
+=== _Xpra.adoc ===
+=== _Dragon.adoc ===
+=== _SW10 installatie.txt ===
+
 == configuratiebestanden ==
 
 - sinds VBox 4.0 er zijn geen andere configuratiebestanden meer dan de globale config en de config per VM
@@ -22,7 +35,7 @@
 	[long] : meer info
 
 - info over niet (of wel) geregistreerde virtuele schijf
-	- b.v. verweesd schijfsnapshot of differential image :	
+	- b.v. verweesd schijfsnapshot of differential image :
 	$ vboxmanage showmediuminfo
 	- info bevat o.a. Parent UUID
 
@@ -49,7 +62,7 @@
 			- bij terug aan VM <StorageController> te hangen, wordt voor o.a. immutable en multi-attach schijven automatisch een (nieuwe) 'current' schijfsnapshot gemaakt, als ondersleutel binnen de <Harddisk> sleutel van de schijf gehangen, en het is die 'current' die aan de <StorageController> gehangen wordt.
 				- schijfsnapshots staan niet in de lijst met VM-snapshots, dus kunnen (tenzij het met shellopdracht vboxmanage ook kan) alleen in .vbox bestand uit de VM verwijderd worden (en dan nog eens apart op de echte schijf, voorzichtig)
 		- met de hand gewijzigde .vbox kan niet terug in GUI geïmporteerd worden als multi-attach of immutable schijf geen snapshot heeft in de .vbox. Als die snapshot er echt niet is, eerst type terug op normal zetten, dan releasen van storage controller, type wijzigen, en terug aan storage controller hangen (dat maakt opnieuw een snapshot, en die wordt aan de storage controller gehangen)
-		
+
 - OPGELET : immutable disk krijgt altijd een 'current' snapshot als ze aan een Storage controller wordt gehangen, en die 'current' wordt pas leeggegooid bij elke OPSTART van een VM, niet bij het afsluiten of bij het herstarten vanuit een bewaarde toestand van een lopende VM (saved state). Als er tussenin een snapshot van de VM wordt genomen, wordt de 'current' bewaard in die snapshot. Hier is dus af en toe behoefte aan handwerk.
 
 - OPGELET VBox 5.2.0 : als ge een immutable of multi-attach-schijf aan een 2de VM hangt, wordt ook voor die 2de VM een 'current' schijfsnapshot gemaakt IN DE 1ste VM (directory en .vbox <HardDisk>) waar die schijf geregistreerd is. In de 2de VM is er geen ander spoor van dan de UUID van de 'current' schijfsnapshot in de sleutel <AttachedDevice>, en geen enkel spoor naar de schijf waarop die 'current' een differential storage is. DE BASIS VAN ZO'N CLONE NIET WEGGOOIEN, ZELFS NIET DEREGISTREREN
@@ -61,11 +74,37 @@
 		- als ge in de VBox Manager GUI de schijven terug aan de 1ste VM Storage controller hangt, maakt hij nieuwe 'current' snapshot en kan zo de eigenlijke 'current' van de 1ste VM vergeten worden/verloren gaan
 		- Is niet op te lossen met VBox Manager GUI afsluiten en terug opstarten, enkel met afsluiten, .vbox bestanden editen (of vboxmanage leren gebruiken) en dan pas terug opstarten :
 		- <HardDisk> sleutels van een schijf en zijn schijfsnapshots allemaal in 1 van de 2 .vbox hangen, met juiste pad.
-	
+
 - /home/dirk/.config/VirtualBox/VBoxSVC.log[n]] :
 	- verschillende generaties van log, o.a. de plaats voor detail van foutmeldingen bij inlezen .vbox van VM die ik met de hand gewijzigd heb en nu verknoeid is
 
-== Windows VMs ===
+== linux VMs ==
+
+- niet in VBox Manager's lijst van VM-hotkeys :
+	- Super+F1 => Alt+Ctrl+F1
+
+=== Ubuntu tty openen ===
+
+- 't staat niet in de lijst van sneltoetsen, maar i.p.v. Ctrl+Alt+F[1-7] doet ge [Host]+F[1-7]
+
+- scherm roteren in console-mode :
+	- mijn host-scherm is geroteerd, guest-scherm volgt dat, maar als daar nog instellingen staan om ook het scherm te roteren, is het dubbel gedraaid
+	- rotatie uitlezen:
+		$ cat /sys/class/graphics/fbcon/rotate
+		- is getal van 0 (0°) tot 3 (270°)
+	- rotatie instellen:
+		- als root :
+			# echo 0 > /sys/class/graphics/fbcon/rotate
+			OF voor alle schermen
+			# echo 0 > /sys/class/graphics/fbcon/rotate_all
+		- als user : sudo geldt voor de opdracht, niet voor de redirect; daarom indirect naar fbcon schrijven met sudo tee :
+			$ echo 0 | sudo tee /sys/class/graphics/fbcon/rotate
+			OF
+			$ echo 0 | sudo tee /sys/class/graphics/fbcon/rotate_all
+
+- GUI openen in een tty: zie "_Xubuntu truuks en commandos.adoc" sectie "GUI starten in een tty"
+
+== Windows VMs ==
 
 === zie ook USB, netwerk, shared folders ===
 
@@ -100,7 +139,7 @@ Voorbeeld voor Windows XP:
 	. rsync -a --chmod=777 isosp2/ WXPVOL_NL/
 (noot: -a kopieert alles, ook read-only-eigenschap van cd-bestanden, vandaar de chmod; chmod=666 lukt niet: inconsistent file permissions)
 
-2. 	. In VBM een VM maken met /media/ramdisk als shared folder, 
+2. 	. In VBM een VM maken met /media/ramdisk als shared folder,
 	. daarop Windows installeren door de image van de installatie-cd te mounten in VBM en daarvan te booten
 	. geinstalleerde Windows starten
 	. nLite installeren met .NET runtime in zelfde map
@@ -110,14 +149,14 @@ Voorbeeld voor Windows XP:
 	. nLite uitvoeren
 
 === systeemschijf voor Windows VM voorbereiden ===
-			
+
 - VBox boot Windows alleen in BIOS mode, Windows boot in BIOS mode alleen van MBR-partitietabel, niet van GPT
 
 - als de (virtuele) schijf niet vooraf gepartitioneerd is, doet windows installer dat zelf, en reserveert 100-en megabytes voor recovery en leegte. Dus vooraf partitioneren (formatteren niet nodig)
 
 - zie sectie "virtuele schijf partitioneren en formateren"
 
-=== TEMP-schijf voorbereiden  ===
+=== TEMP-schijf voorbereiden ===
 
 - koppelen van een immutable of multi-attach schijf aan een VM gebeurt enkel via een automatisch koppelings-snapshot
 
@@ -131,7 +170,7 @@ Voorbeeld voor Windows XP:
 	- MBR partitietabel om ook voor WinXP te dienen, anders is GPT ook goed
 	- label TEMP
 	- OPGELET snelformateren met mkntfs -f : VBox zou blocks vol 0 niet doorschrijven naar fysieke schijf, maar mkntfs wschlk. wel (heeft geen optie -discard zoals mkfs.ext4)
-	
+
 - in linux op de gemountte virtuele schijfpartitie, gewoon de nodige mappen aanmaken
 	$ mkdir TEMP CACHE CACHE2 CACHE3 CACHE4
 		- tijdelijke en cache bestanden van Windows zelf en diverse programmas zoals internet browsers
@@ -144,14 +183,14 @@ Voorbeeld voor Windows XP:
 			- basis TEMP-schijf .vdi mounten in linux (zie sectie "Virtualbox Virtual Drive mounten in Linux")
 			- data kopiëren naar die mount
 			- umount
-			- alle VM attachements van deze schijf verwijderen en opnieuw attachen.			
+			- alle VM attachements van deze schijf verwijderen en opnieuw attachen.
 
 - umount en loskoppelen van /dev/ndbX : zie _VirtualBox.txt sectie "Virtualbox Virtual Drive mounten in Linux"
 
 - in 1 sessie van VBox Manager :
 	- schijf loskoppelen van de VM (remove storage attachement)
 	- Global Tools/Virtual Media Manager : Attributes/Type/Multi-Attach of Immutable
-	- schijf terug koppelen aan een VM (desnoods aan template), 
+	- schijf terug koppelen aan een VM (desnoods aan template),
 		- anders wordt het type (immutable of multi-attach) vergeten bij afsluiten van VBox Manager
 		- elke VM creëert bij storage attachement een snapshot van de nieuwe TEMP schijf; die kan Virtual Media Manager een betekenisvolle naam gegeven worden, en evt. verplaatst worden naar ander pad (best via het map-icoontje rechts van Attributes/Location)
 			- OPGELET : op APPLY klikken
@@ -159,7 +198,7 @@ Voorbeeld voor Windows XP:
 - Firefox cache instellen in User.js : user_pref("browser.cache.disk.parent_directory", "E:\\CACHEFF\\")
 
 - In Windows de TEMP-schijf als dusdanig gebruiken :
-	- pas als swapschijf (pagefile.sys) instellen na immutable of multi-attach maken (zie verder), zodat elke Windows-versie er zijn eigen versie op kan zetten.	
+	- pas als swapschijf (pagefile.sys) instellen na immutable of multi-attach maken (zie verder), zodat elke Windows-versie er zijn eigen versie op kan zetten.
 	- pagefile.sys :
 		OFWEL
 		- "Computer/Eigenschappen/Instellingen voor Computernaam. domein en werkgroepen - wijzigen/Geavanceerd/Prestaties - Instellingen/Geavanceerd/Virtueel geheugen - wijzigen"
@@ -183,7 +222,7 @@ Voorbeeld voor Windows XP:
 		- layer voor alle VMs met SVS-manager (of enkel registry?) + linux-mount verhuizen naar TEMP
 
 	- IE cache instellen : Internet Explorer/Internet Options/Tools/Internet Options/General Tab/Browsing History/Settings/Temporary internet files/Current Location [Move folder...]
-		- zie http://www.thewindowsclub.com/temporary-internet-files-folder-location	
+		- zie http://www.thewindowsclub.com/temporary-internet-files-folder-location
 	0 MS Edge cache instellen :
 		- maakt verse caches a la gogo, genummerd zelfs, in C:\Users\Dirk\AppData\Local\Packages\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\AC\#001\MicrosoftEdge\Cache, #002\... en ...\AC\MicrosoftEdge\Cache en bijhorende registry secties. Lijkt moeilijk te wijzigen
 		0 WERKT NIET :  er zit zelfs een auto-herstel op; volgende 2 gewijzigd naar E:\CACHE, werden na herstart hersteld, en dienden niet als template voor nieuwe #xxx :
@@ -194,14 +233,14 @@ Voorbeeld voor Windows XP:
 			- Run cmd from the start menu with admin rights (right-click command prompt and select run as administrator).
 			- Take full ownership of the cache folders to be safe, you may want to clear using disk cleanup first.
 				C:\> takeown /F "%USERPROFILE%\AppData\Local\Packages\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\AC" /A /R
-				- %USERPROFILE% should work, but if not replace it with [Drive]:\Users\[Username] 
+				- %USERPROFILE% should work, but if not replace it with [Drive]:\Users\[Username]
 			- When it finishes (depends on size) make an exact copy to your other drive (replace E:\CACHEDGE as desired; and make sure Edge\Groove\etc. isn't running or you will get 'in use' errors).
 				C:\> robocopy "%USERPROFILE%\AppData\Local\Packages\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\AC" "E:\CACHEDGE" /E /COPYALL /DCOPY:DAT
 				- ensure that there are no skipped\failed files, otherwise retry after disk cleanup.
 			- Instead of deleting the original as required for Symbolic Links, suggested you rename it:
 				C:\> ren "%USERPROFILE%\AppData\Local\Packages\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\AC" "AC Backup"
 			- Create the SymLink as follows (replacing E:\CACHEDGE as needed):
-				C:\> mklink /D "%USERPROFILE%\AppData\Local\Packages\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\AC" "E:\CACHEDGE" - restart your computer				
+				C:\> mklink /D "%USERPROFILE%\AppData\Local\Packages\Microsoft.MicrosoftEdge_8wekyb3d8bbwe\AC" "E:\CACHEDGE" - restart your computer
 		<<<
 
 === Windows 10 opstarten in veilige modus ===
@@ -213,7 +252,7 @@ Voorbeeld voor Windows XP:
 === Schijfletters Vbox Shared Folders ===
 
 WAT?
-. . . 
+. . .
 . Vbox Shared Folders zijn te zien als network shares op server \\VBOXSVR\
   OPGELET: Vbox Guest Additions gebruikt voor de automount van shared folders de server-naam \\vboxsrv\ i.p.v. \\VBOXSVR\ (kleine letters en srv i.p.v. svr)
 
@@ -222,8 +261,8 @@ WAT?
 . Vbox Guest Additions gebruikt niet de Windows-procedure 'netwerkverbinding maken' om die schijfletters toe te kennen
 
 . In Windows bepaalt de gebruiker de schijfletters van network shares :
-	- In verkenner: Netwerk, 
-		\\VBOXSVR\mijnshare rechtsklikken, 
+	- In verkenner: Netwerk,
+		\\VBOXSVR\mijnshare rechtsklikken,
 		- 'Netwerkverbinding maken
 		- schijfletter X:
 		v Opnieuw verbinden bij aanmelden
@@ -246,13 +285,13 @@ OPLOSSINGEN
 	net use f: \\VBOXSVR\F_ramdisk /persistent:yes
 	net use g: \\VBOXSVR\G_win-gschijf /persistent:yes
 	net use h: \\VBOXSVR\H_sdata /persistent:yes
-OPGELET: enkel voor Vbox Automount shared folders, die gaan niet via de registry HKCU/Network/(driveletter), en worden daarom niet overschreven door handmatige 'net use (driveletter)' opdrachten. 
-NIET DOEN voor zelf gemaakte netwerkverbindingen: gemaakt met Verkenner zijn die echt persistent, maar ze worden overschreven en zijn NIET persistent (ZELFS NIET met /persistent:yes), door die voor dezelfde gebruiker met elevated token. 
+OPGELET: enkel voor Vbox Automount shared folders, die gaan niet via de registry HKCU/Network/(driveletter), en worden daarom niet overschreven door handmatige 'net use (driveletter)' opdrachten.
+NIET DOEN voor zelf gemaakte netwerkverbindingen: gemaakt met Verkenner zijn die echt persistent, maar ze worden overschreven en zijn NIET persistent (ZELFS NIET met /persistent:yes), door die voor dezelfde gebruiker met elevated token.
 
 3. Bestanden eerst met gewone user naar Windows-schijf kopiëren, en van daar als admin installeren/kopieren (natuurlijk niet snelkoppelen naar)
 
 NEP-OPLOSSINGEN
-. . . . . . . . 
+. . . . . . . .
 Op het net circuleren verschillende andere oplossingen, die NIET werken:
 
 . de netwerkverbingen maken (net use X: share /persistent:yes)  vanop admin opdrachtprompt (vermits Verkenner in W10 nooit elevated draait):
@@ -265,16 +304,16 @@ Op het net circuleren verschillende andere oplossingen, die NIET werken:
 
 . group policy aanpassen:  (https://support.microsoft.com/nl-be/help/3035277/mapped-drives-are-not-available-from-an-elevated-prompt-when-uac-is-configured-to-prompt-for-credentials-in-windows)
 	>>>
-	In Local Group Policy Editor, locate Group Policy path: 
+	In Local Group Policy Editor, locate Group Policy path:
 		"Local Computer Policy\Windows Settings\Security Settings\Local Policies\Security Options"
 	  configure the following policy to Prompt for consent:
 		"User Account Control: Behaviour of the elevation prompt for administrators in Admin Approval Mode"
 	<<<
-	- Vertaling: 
+	- Vertaling:
 		- start gpedit.msc als admin
 		- ga naar "Beleid voor locale computer/Computerconfiguratie/Windows-instellingen/Beveiligingsinstellingen/Lokaal beleid/Beveiligingsopties"
-		- wijzig sleutel "Gebruikersccountbeheer: gedrag bij het vragen om benodigde bevoegdheden voor administrators in modus 'Door administrator goedkeuren'" 
-			- WAS: "vragen om toestemming voor niet-Windows binaire bestanden" 
+		- wijzig sleutel "Gebruikersccountbeheer: gedrag bij het vragen om benodigde bevoegdheden voor administrators in modus 'Door administrator goedkeuren'"
+			- WAS: "vragen om toestemming voor niet-Windows binaire bestanden"
 			- WORDT: "vragen om toestemming"
 	DOET NIETS, zelfs niet met instelling: 'met benodigde bevoegdheden uitvoeren zonder hierom te vragen'.
 
@@ -283,7 +322,7 @@ Op het net circuleren verschillende andere oplossingen, die NIET werken:
 . In order to have PCI passthrough you have to have a CPU/motherboard/BIOS that provides VT-d. Note the "-d" part, it's not the same as the more common VT-x. On top of that you have to have a Linux host with a kernel that has support for IOMMU.
 	- ik heb geen IOMMU in mijn Xubuntu 16.04.3 kernel vmlinuz-4.4.0-98-generic :
 		$ grep IOMMU /var/log/kern.log
-		- Most if not all Linux kernels these days support iommu but you need to enable it. Usually with a kernel parm in grub. IE: "intel_iommu=on" or similar, assuming your CPU and bios also supports the VT-d feature. 
+		- Most if not all Linux kernels these days support iommu but you need to enable it. Usually with a kernel parm in grub. IE: "intel_iommu=on" or similar, assuming your CPU and bios also supports the VT-d feature.
 
 . De VM moet de (experimentele) chipset ICH9 gebruiken voor PCI passthrough (b.v. de VM "XP spel")
 . blijkt dat die VM (in Virtual Box 5.0.26 r108824), en daarmee ook de hele Xubuntu sessie, niet meer kan afgesloten worden zonder de processen van Virtual Box te killen met de task manager van Xubuntu.
@@ -300,7 +339,7 @@ Op het net circuleren verschillende andere oplossingen, die NIET werken:
 	. in apparaatbeheer 'beeld/aparaten op verbinding' '%computer%/ACPI Multiprocessor-pc/Systeem dat voldoet aan Microsoft ACPI/PCI-bus' aparaten aflopen en eigenschappen vragen
 	of
 	. shareware pcitree.zip (http://www.pcitree.de) uitvoeren (HLP.SYS kopiëren naar %windows%/system32/drivers
-	of 
+	of
 	. DevCon.exe downloaden (http://support.microsoft.com/kb/311272/EN-US) en uitvoeren:
 	devcon find pci\*
 . Met de VM uit, het volgende terminalcommando uitvoeren, b.v. uit bovenstaand vb. de 2 functies voor Creative Labs SB Live! doorlussen naar bus 0, apparaat 16 (0x10), zelfde functienr:
@@ -359,7 +398,7 @@ Op het net circuleren verschillende andere oplossingen, die NIET werken:
 	- linux :
 		# mount /dev/sr0 /cdrom
 		# /cdrom/autorun.sh
-		
+
 - VirtualBox kan Guest Additions alleen installeren in op VM geïnstalleerd OS
 	- niet in live cd zoals SystemRescue, GParted, of Ubuntu : heel misschien raakt dit tijdelijk wel geinstalleerd in opgestartte sessie, maar wordt dan wschlk. niet effectief (vraagt immers herstart), mits :
 		- een 2de optical drive attachment, naast de live-cd, om de VBox Guest Additions iso te laden (of een omweg zoeken via netwerk shares om de iso direct te loop-mounten, zonder tussenkomst van VBox)
@@ -377,12 +416,13 @@ Op het net circuleren verschillende andere oplossingen, die NIET werken:
 
 === shared folders enkel root access ==
 
-- Dit probleem trad op een dag op, de dag voorheen niet, en systeem was op dezelfde manieer gemaakt (Xubuntu VM met _maakVMvanBackup, van zelfde backup)
+- Dit probleem trad op een dag op, de dag voorheen niet, en systeem was op dezelfde manieer gemaakt (Xubuntu VM met _maakVMvanBackup, van zelfde backup) :
+	- sharedfolders in Linux guest hebben owner (root) rwx, group (vboxsf) rwx, other r--
+	- om in guest user dirk toegang te geven
+		- in guest uitvoeren :
+			# usermod -aG vboxsf dirk
+		- herstarten
 
-- oplossen met in VM :
-	# usermod -G vboxsf -a dirk
-	- herstarten
-	
 === long delays when accessing shared folders ===
 
 The performance for accesses to shared folders from a Windows guest might be decreased due to delays during the resolution of the VirtualBox shared folders name service. To fix these delays, add the following entries to the file \windows\system32\drivers\etc\lmhosts of the Windows guest:
@@ -392,18 +432,65 @@ After doing this change, a reboot of the guest is required.
 
 === Symbolic links op shared folders ===
 
-- VirtualBox heeft problemen met symbolic links op shared folders, net zoals Samba op network shares. VirtualBox laat er geen maken in de guest, wel in host. Zo'n link is hoe dan ook dubbelzinnig en gevaarlijk: op host wordt hij gevolgd in de host-omgeving, op guest VM in de guest-omgeving (dus b.v. naar /home/dirk op host, danwel /home/dirk op guest)
+- VirtualBox heeft problemen met symbolic links op shared folders, net zoals Samba op network shares. VirtualBox laat er geen maken in de guest (natuurlijk wel in host) :
+	$ ln -s doel target
+	>>> ln: failed to create symbolic link 'target': Read-only file system <<<
+	- Zo'n link is hoe dan ook dubbelzinnig en gevaarlijk: op host wordt hij gevolgd in de host-omgeving, op guest VM in de guest-omgeving (dus b.v. naar /home/dirk op host, danwel /home/dirk op guest)
 	- Samba volgt die links NIET als ze buiten de share leiden
 
 - symbolic links maken op shared folders toch toelaten in guest VM, in te stellen per VM en shared folder :
-	$ VBoxManage setextradata VM-NAAM VBoxInternal2/SharedFoldersEnableSymlinksCreate/SHARED-FOLDER-NAAM 1
-		- zet in VM-NAAM.vbox :  <ExtraDataItem name="VBoxInternal2/SharedFoldersEnableSymlinksCreate/SHARED-FOLDER-NAAM" value="1"/>
+	$ VBoxManage setextradata $VM-NAAM VBoxInternal2/SharedFoldersEnableSymlinksCreate/$SHARED-FOLDER-NAAM 1
+		- dit zet in VM-NAAM.vbox :  <ExtraDataItem name="VBoxInternal2/SharedFoldersEnableSymlinksCreate/SHARED-FOLDER-NAAM" value="1"/>
 	>>> https://askubuntu.com/questions/446317/how-to-make-guest-os-follow-symlinks-from-shared-folder
 		Symbolic link creation from within a guest has been disabled in VirtualBox 4.1.8 for security reasons. A guest could create symbolic links which point outside the assigned host directory. This has nothing to do with any ext3/ext4 bug. And the guest is still able to read symlinks which are created on the host. Do
 			$ VBoxManage setextradata VM_NAME VBoxInternal2/SharedFoldersEnableSymlinksCreate/SHARE_NAME 1
 			- restart vBox for the change to activate.
 		to make guest able to create symlinks again. But for security reasons (see above) this is disabled by default. The fix to prevent dangerous symlinks from the guest is very complicated, therefore we decided to not allow any guest to create any symlink to work around the security problem.
 	<<<
+
+=== automount van shared folders ===
+
+- in Ubuntu e.a. linux guest krijgen die mountpoint /media/sf_"$sharename"
+	- zelf mountpoint of voorkeurs-schijfletter bepalen, in host :
+		>>>
+		The guest properties /VirtualBox/GuestAdd/SharedFolders/MountDir and the more generic /VirtualBox/GuestAdd/SharedFolders/MountPrefix can be used to override the automatic mount directory and prefix.
+		<<<
+		- b.v. zoals Thunar doet, in subdirectories van /media/user :
+			$ vboxmanage guestproperty set "VM naam of UUID" /VirtualBox/GuestAdd/SharedFolders/MountDir /media/dirk/
+	- blijkt niet te werken voor windows guest
+
+- in Windows guest krijgen die schijfletter vanaf 1ste vrije, in alfabetische volgorde van sharename, en LABEL=sharename
+	- automount shared folders zijn met elevated rights (admin rights) niet toegankelijk op hun driveletter van de gewone user, enkel via Netwerk, server \\VBOXSRV\%sharename%
+		- zie "https://support.microsoft.com/nl-nl/help/3035277/mapped-drives-are-not-available-from-an-elevated-prompt-when-uac-is-co"
+			- oplossing daar nog niet werkend gekregen
+		- eerst (b.v. via menu opstarten) als gewone user de schijfletters vastleggen, zodat ge met elevated rights dezelfde kunt gebruiken :
+			xx:\> net use
+			>>>
+				Nieuwe verbindingen worden opgeslagen.
+
+
+				Status       Lokaal    Extern                    Netwerk
+
+				-------------------------------------------------------------------------------
+							 F:        \\vboxsrv\F_ramdisk       VirtualBox Shared Folders
+							 G:        \\vboxsrv\G_win-gschijf   VirtualBox Shared Folders
+							 H:        \\vboxsrv\H_dirk          VirtualBox Shared Folders
+							 I:        \\vboxsrv\I_sdata         VirtualBox Shared Folders
+				De opdracht is voltooid.
+			<<<
+		- in opdrachtprompt als admin zelf aan schijfletters toe te wijzen :
+			xx:\> net use G: "\\vboxsrv\F_ramdisk" /persistent:yes
+				- zorgt dat vanaf nu alle "net use" opdrachten blijvend zijn, d.w.z. ook bij herstart
+			OF
+			- Create a scheduled task that has the following as an action:
+				%windir%\system32\cmd.exe /k start /min net use G: "\\vboxsrv\F_ramdisk"
+
+		OF
+		- eerst van uitvoer "net use" met gewone rechten (zie hoger)) een bat-file formatteren om op juist dezelfde drives te mounten, met opdrachten zoals hieronder :
+		- Create a scheduled task that has the following as an action:
+			%windir%\system32\cmd.exe /k start /min net use G: "\\vboxsrv\F_ramdisk"
+				...
+
 
 == USB keuze ==
 
@@ -422,7 +509,7 @@ After doing this change, a reboot of the guest is required.
 
 - Maak de VM wijs dat ze geen Intel, maar een Renesas uPD720201 (µPD720201) xHCI controller heeft
 	- zie https://forums.virtualbox.org/viewtopic.php?f=28&t=74575
-		>>> 
+		>>>
 			The VirtualBox 5.0.10 Extension Pack includes an experimental feature which allows Windows XP guests to use USB 3.0. The key is emulating a Renesas (formerly NEC) µPD720201 xHCI controller. To enable the Renesas xHCI controller, a VM must have xHCI enabled and have a extradata key. If a VM has that extradata key set, it also needs to have xHCI configured or it won't start.
 			...
 			Note that the xHCI controller completely replaces OHCI/EHCI (and UHCI) and supports USB 3.0 as well as existing USB 1.x and 2.0 devices. It performs much better than the OHCI/EHCI emulation even for USB 2.0 devices (USB 1.x devices are too slow to see a difference). In addition, there is no requirement for the host to support USB 3.0, or have any USB hardware at all for that matter.
@@ -440,7 +527,7 @@ After doing this change, a reboot of the guest is required.
 			 - zet in %Windows%\System32 40 mappen "0401" tot "3076" met taalbestand "rusb3co.dll.mui"
 				- alleen 0413 (Nederlands) en evt. 0409 (Engels) behouden
 		-  supports x32 and x64 Windows XP, Vista, and Windows 7; there is no advantage to using the Renesas drivers over the Intel drivers for Windows 7.
-		
+
 === USB 3 support in Windows 7 guests ===
 
 - zie ook sectie "USB keuze"
@@ -448,8 +535,8 @@ After doing this change, a reboot of the guest is required.
 - driver : FLOP&FAQ/MS Windows 7/Intel USB3 driver voor Windows 7
 
 >>>
-	If a Windows 7 or Windows Server 2008 R2 guest is configured for USB 3.0 (xHCI) support, the guest OS will not have any USB support at all. This happens because Windows 7 predates USB 3.0 and therefore does not ship with any xHCI drivers; Microsoft also does not offer any vendor-provided xHCI drivers via Windows Update. 
-	To solve this problem, it is necessary to download and install the Intel xHCI driver in the guest. Intel offers the driver as the USB 3.0 eXtensible Host Controller (xHCI) driver for Intel 7 Series/C216 chipsets. 
+	If a Windows 7 or Windows Server 2008 R2 guest is configured for USB 3.0 (xHCI) support, the guest OS will not have any USB support at all. This happens because Windows 7 predates USB 3.0 and therefore does not ship with any xHCI drivers; Microsoft also does not offer any vendor-provided xHCI drivers via Windows Update.
+	To solve this problem, it is necessary to download and install the Intel xHCI driver in the guest. Intel offers the driver as the USB 3.0 eXtensible Host Controller (xHCI) driver for Intel 7 Series/C216 chipsets.
 	Note that the driver only supports Windows 7 and Windows Server 2008 R2. The driver package includes support for both 32-bit and 64-bit OS variants
 <<<
 
@@ -464,9 +551,9 @@ After doing this change, a reboot of the guest is required.
 	- als ge daarvan wilt afwijken: zie https://www.virtualbox.org/manual/ch06.html#nichardware
 	>>>
 	- Intel PRO/1000 MT Desktop type works with Windows Vista and later
-	- Intel PRO/1000 T Server is recognized by Windows XP guests without additional driver 
+	- Intel PRO/1000 T Server is recognized by Windows XP guests without additional driver
 	<<<
-	
+
 === paravirtualized network ===
 
 - NIET met EFI boot (VBox 5.2.10)
@@ -511,7 +598,7 @@ After doing this change, a reboot of the guest is required.
 	OFWEL met dynamisch IP adres (maar Windows > XP ziet dan bij elke opstart met ander IP-adres een nieuw netwerk, waarvan hij vraagt of het openbaar of *particulier is)
 		- host-only adapter/eigenschappen/tab netwerken/deze verbinding heeft volgende onderdelen nodig/Internet Protocol versie 4 (TCP/IPv4)/Eigenschappen :
 			- gewoon op automatisch IP-adres en DNS-serveradres laten staan
-			- geavanceerd/tab IP-instellingen/Standaardgateways/Toevoegen : vul het IP-adres in (default 192.168.56.100) van de DHCP-server van VBox 
+			- geavanceerd/tab IP-instellingen/Standaardgateways/Toevoegen : vul het IP-adres in (default 192.168.56.100) van de DHCP-server van VBox
 				- zie VBox Manager/File/Host network manager
 					- selecteer vboxnet0 (het netwerk waar Host-only adapter in VM-config op verbonden is)
 					- Properties/tab DHCP server/Server Addres : het gateway adres is gebruikelijk hetzelfde als dat DHCP server adres
@@ -525,7 +612,7 @@ After doing this change, a reboot of the guest is required.
 				- HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\NetworkList\Profiles\{...uuid...}
 					- ProfileName
 					- Description
-		
+
 - Computernaam FRT-... (max. 15 chars), werkgroep BOCO
 	- Nu zijn in Verkenner/Netwerk alle pcs en VMs in de BOCO werkgroep zichtbaar (direct, ook al zegt windows dat ge moet heropstarten)
 
@@ -581,16 +668,16 @@ After doing this change, a reboot of the guest is required.
 		- Change the permissions of the file to prevent unwanted access to your credentials:
 			$ chmod 600 ~/.smbcredentials
 		- replace the insecure line of the example above :
-			>>> /etc/fstab 
-				//servername/sharename /media/eensambashare cifs credentials=/home/gebruiker/.smbcredentials,iocharset=utf8,sec=ntlm 0 0 
+			>>> /etc/fstab
+				//servername/sharename /media/eensambashare cifs credentials=/home/gebruiker/.smbcredentials,iocharset=utf8,sec=ntlm 0 0
 			<<<
 		- test the fstab entry by issuing:
 			# mount /media/eensambashare
-		- If there are no errors, you should test how it works after a reboot; your remote share should mount automatically.     
+		- If there are no errors, you should test how it works after a reboot; your remote share should mount automatically.
     <<<
     - uid=1000 : makes that user the owner of the mounted share, allowing them to rename files,
     - iocharset=utf8 : allows access to non-English filenames (doesn't work with shares of Windows machines exported using ISO8895-15)
-	-  If there is any space in the server path, you need to replace it by \040, for example //servername/My\040Documents 	
+	-  If there is any space in the server path, you need to replace it by \040, for example //servername/My\040Documents
 
 - met volgende wijzingen zou Samba's NETBIOS-naam (FRT) zichtbaar moeten zijn, maar lukt nog niet :
 	>>> netbios naam toevoegen aan /etc/samba/smb.conf sectie [global]
@@ -624,35 +711,57 @@ After doing this change, a reboot of the guest is required.
 
 - VBox schrijft blokken (1MB sinds v.5, onafh. blocksize van fysieke of virtuele schijf) met alles 0x00 niet fysiek weg
 	- zie b.v. VBox Create virtual hard disk, of VBox Media Manager/Copy/advanced : "storage on physical hard disk" "dynamically allocated"
-	
+
 - vrije ruimte op partitie van die schijf op 0x00 zetten :
-	- Windows: in admin-opdrachtprompt (b.v. C:-schijf) : 
+	- Windows: in admin-opdrachtprompt (b.v. C:-schijf) :
 		NIET "G:\PROGRAMS\Win7 Sysinternals\SDelete 2.0\sdelete", die is een pak trager dan de andere (v.1.6)
-		C:\> \\Vboxsrv\G_win-gschijf\PROGRAMS\Win7 Sysinternals\sdelete -z c:	
+		C:\> \\Vboxsrv\G_win-gschijf\PROGRAMS\Win7 Sysinternals\sdelete -z c:
 		- sdelete.exe uit "GEZIPTE.PRG/OFFICIELE DOWNLOADS/MS hulpprogrammas/SysinternalsSuite.zip"
 	- Linux : VM-schijf mounten (zie sectie "Virtualbox Virtual Drive mounten in Linux") en dan :
-		$ dd if=/dev/zero of=pad/dummy bs=4096k ; rm pad/dummy
+		- OPM : werkte in Xenial, waar ge .vdi met qemu-utils kon mounten en schrijven; in Bionic gaat dat niet meer. VBox 6 heeft zelf mount van .vdi, dan zal dit misschien terug werken.
+		$ dd if=/dev/zero of=pad/dummy bs=4096 ; rm pad/dummy
 		- OPGEPAST: check eerst mounts om goed pad voor "dummy" te kiezen :
 			- WEL in schrijfbare directory van de virtuele schijf zelf
 			- NIET in /tmp als /tmp een tmpfs-mountpoint is
 			- NIET in ander mountpoint
 		- dd schrijft tot de volledige virtuele grootte van de virtuele schijf, maar VBox schrijft 0-sectors toch  niet door naar de reële schijf als die sectors niet al eerder beschreven waren
+	- Linux, in gestarte VM :
+		- in lopende machine kan het problemen geven om met dd met bestand vol nullen de schijf te vullen, en dat dan te verwijderen: op een bepaald moment zien andere processen een volle schijf
+		- zerofree is veel sneller, en low-level: maakt geen bestand, maar schrijft rechtstreeks naar ongebruikte blocks van het bestandssysteem.
+			- OPM: doet alleen read-only schijven
+			- is bij mij geïnstalleerd, anders
+				# sudo apt-get install zerofree
+		- met Grub starten in recovery mode, geeft menu, kies laatste kernel, en kies root
+			- start default met schijven Read-Only, anders:
+				# mount -o remount,ro LABEL=M2ROOT
+				# mount -o remount,ro LABEL=M2U_OH
+				...
+			- bepaal welke /dev/sd?? de schijven zijn
+				# df
+			- zet van de gewenste /dev/sdXX de ongebruikte blocks op 0x00 :
+				# zerofree -v /dev/sdXX
 
 - nu klaar voor compacteren :
-	$ VBoxManage modifymedium disk uuid --compact
-		- uuid met of zonder {}
-		--compact : currently only implemented for VDI files
-		- ENKEL .vdi
-		- werkt ook voor differencing image
-	OF (niet als disk aan VM attached is)
-	$ VBoxManage modifymedium disk VIRTUELE_SCHIJF.vdi --compact
-	OF
-	- clone the image and then use the cloned image in the VM configuration.
-		- alle formaten
-	OF
-	- "copy" in VBox media manager
-		- OPGELET : maakt nieuwe virtuele schijf met andere naam en UUID, extra werk nodig om in plaats van oude in de VM te hangen
-	WERKT NIET : snapshot nemen, VM starten en sectoren (op differencing image) op 0x00 zetten, snapshot deleten zodat differencing image en originele vdi gemerged worden, zelfs niet (waarom niet!?) als ge daarna expliciet compacteert met VBoxManage
+	- bij copy van schijf naar vdi compacteert VirtualBox altijd
+	- via VBox GUI
+		- "copy" in VBox media manager
+			- OPGELET : maakt nieuwe virtuele schijf met andere naam en UUID, extra werk nodig om in plaats van oude in de VM te hangen :
+				- in Global tools/Virtual Media Manager release oude
+				- in Machine tools, details, storage : add disk, existing disk
+				- VM opstarten om te proberen of ze werkt
+				- in Global tools/Virtual Media Manager remove oude met delete
+		0 WERKT NIET : snapshot nemen, VM starten en sectoren (op differencing image) op 0x00 zetten, snapshot deleten zodat differencing image en originele vdi gemerged worden, zelfs niet (waarom niet!?) als ge daarna expliciet compacteert met VBoxManage
+	- via CLI
+		$ VBoxManage modifymedium disk uuid --compact
+			- uuid met of zonder {}
+			--compact : currently only implemented for VDI files
+			- ENKEL .vdi
+			- werkt ook voor differencing image
+		OF (niet als disk aan VM attached is)
+		$ VBoxManage modifymedium disk VIRTUELE_SCHIJF.vdi --compact
+		OF
+		- clone the image and then use the cloned image in the VM configuration.
+			- alle formaten
 
 === Virtualbox Virtual Drive mounten in Linux ===
 
@@ -685,7 +794,7 @@ DOE DIT NIET ALS DE VIRTUAL DRIVE IN GEBRUIK IS, b.v. IN EEN VM
 		- zonder gevolg als module al geladen is
 		- Nu zijn in file manager nbds_max (16) network block devices /dev/nbd0 - /dev/nbd15 te zien.
 		- NOOT: voor sommigen moet er een aantal partities opgegeven worden, b.v. "sudo modprobe nbd max_part 8" of "... 16"
-		- optionele nbd driver parameters: 
+		- optionele nbd driver parameters:
 			max_part ## (Number of partitions per device, default 0)
 			nbds_max ## (Number of block devices that should be initialized, default 16)
 - kies een nbd waaraan nog geen device (netwerkschijf of schijfimage) verbonden is :
@@ -703,22 +812,22 @@ DOE DIT NIET ALS DE VIRTUAL DRIVE IN GEBRUIK IS, b.v. IN EEN VM
 	>>> nbd0 verbonden aan niet-gepartitioneerde virtuele schijf :
 		NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
 		...
-		nbd0         43:0    0    50G  0 disk 
+		nbd0         43:0    0    50G  0 disk
 		...
 	<<<
 	>>> nbd0 verbonden aan gepartitioneerde virtuele schijf :
-		nbd0         43:0    0    25G  0 disk 
-		└─nbd0p1     43:1    0    25G  0 part 
+		nbd0         43:0    0    25G  0 disk
+		└─nbd0p1     43:1    0    25G  0 part
 	<<<
 - verbindt (de -c van connect) een virtual drive met een network block device driver, b.v. /dev/nbd0:
 	$ sudo qemu-nbd -c /dev/nbd0 /media/sdata/.virtualbox//XPproSP3vol/XPproSP3vol.vdi
 	- Nu zijn in /dev ook de evt. de partities van de virtual disk te zien, in dit geval slechts 1: /dev/nbd0p1, b.v. met lsblk:
-	nbd0         43:0    0    80G  0 disk 
+	nbd0         43:0    0    80G  0 disk
 	└─nbd0p1     43:1    0    80G  0 part
 - zie sectie "virtuele schijf partitioneren en formateren"
-- mount de gewenste partities, b.v. 
+- mount de gewenste partities, b.v.
 	$ sudo mount /dev/nbd0p1 /mnt
-- Na gebruik, de partities terug unmounten: 
+- Na gebruik, de partities terug unmounten:
 	$ sudo umount /mnt
     OF
 	$ sudo umount /dev/nbd0p1
@@ -734,7 +843,7 @@ DOE DIT NIET ALS DE VIRTUAL DRIVE IN GEBRUIK IS, b.v. IN EEN VM
 	- alternatief :
 		$ VBoxManage modifyhd "<absolute path to file>" --resize <size in MB>
 	- met snapshots: ge kunt zelfde doen voor elke differencing image, maar daarmee maakt ge alleen de fysieke schijf groter; als ge in de basis-image de partitie groter maakt om die ruimte ook te gebruiken, zijn uw snapshots op slag waardeloos, en de partities daarop 'gesynchroniseerd' laten groeien, vereist kennis van het bestandssysteem erop, die kennis heeft VBox niet. Ge kunt wel, met clone, de snapshots integreren in een nieuwe image (en misschien zelf iets schrijven waarmee ge dan een difference kunt maken van die nieuwe geintegreerde image, en de vergroting van de oorspronkelijke basis image)
-		
+
 OFWEL met GParted op een linux bootable iso, b.v. systemrescuecd
 	- is vooral partitioneergereedschap
 		- weinig opties voor formatteren (zoals free blocks, blocksize, aantal inodes; wel veel bestandssystemen ondersteund)
@@ -765,12 +874,12 @@ OFWEL met linux fdisk partitioneren, met mkfs.xxx formateren en mounten :
 			- GParted ziet de aan nbd verbonden virtuele schijven niet
 	- bekijk voor de zekerheid eerst de partitioneringstoestand :
 		$ sudo fdisk -l /dev/nbd0
-	- fdisk werkt interactief, 'm' toont help	
+	- fdisk werkt interactief, 'm' toont help
 		$ sudo fdisk /dev/nbd0
 		vb. sessie om 1 primaire NTFS-partitie over ganse schijf te maken, met MBR (voor XP)
-		- bekijk vrije ruimte "F   list free unpartitioned space" : 
+		- bekijk vrije ruimte "F   list free unpartitioned space" :
 			> Command (m for help): F
-			>>> 
+			>>>
 				Unpartitioned space /dev/nbd0: 50 GiB, 53686042624 bytes, 104855552 sectors
 				Units: sectors of 1 * 512 = 512 bytes
 				Sector size (logical/physical): 512 bytes / 512 bytes
@@ -791,8 +900,8 @@ OFWEL met linux fdisk partitioneren, met mkfs.xxx formateren en mounten :
 				   e   extended (container for logical partitions)
 				> Select (default p): p
 				> Partition number (1-4, default 1): 1
-				> First sector (2048-104857599, default 2048): 
-				> Last sector, +sectors or +size{K,M,G,T,P} (2048-104857599, default 104857599): 
+				> First sector (2048-104857599, default 2048):
+				> Last sector, +sectors or +size{K,M,G,T,P} (2048-104857599, default 104857599):
 				Created a new partition 1 of type 'Linux' and of size 50 GiB.
 			<<<
 			- heeft dus een linux-partitie gemaakt. Wij willen NTFS
@@ -866,7 +975,7 @@ OFWEL met linux fdisk partitioneren, met mkfs.xxx formateren en mounten :
 	# blockdev --getsize64 /dev/nbd0
 		0
 	- de virtuele schijf (het block device image) verbinden met nbd0 doet de partities /dev/nbd0p? verschijnen :
-	# qemu-nbd -c /dev/nbd0 /media/sdata/.virtualbox/Xoebidoebi/Xoebidoebi.vdi 
+	# qemu-nbd -c /dev/nbd0 /media/sdata/.virtualbox/Xoebidoebi/Xoebidoebi.vdi
 	# ls -al /dev | grep nbd
 		nbd0
 		nbd0p1
@@ -925,7 +1034,7 @@ OFWEL met linux fdisk partitioneren, met mkfs.xxx formateren en mounten :
 	- eerste keer heeft hij blijkbaar wat werk met file system checks, uiteindelijk ben ik erdoor geraakt (o.a. via Grub menu, Advanced options, Recovery mode (is dat altijd in R/O-mode?) om een foute file system label te wijzigen, waardoor /etc/fstab niet alles mountte)
 	- voor de volledigheid grub-menu opnieuw aanmaken:
 	# cp /boot/ubuntu/grub.cfg /boot/ubuntu/grub.cfg~
-	# grub-mkconfig > /boot/ubuntu/grub.cfg	
+	# grub-mkconfig > /boot/ubuntu/grub.cfg
 
 - Virtual Box guest additions laden, mounten en installeren :
 	# mount /dev/sr0 /cdrom
@@ -952,10 +1061,14 @@ OFWEL met linux fdisk partitioneren, met mkfs.xxx formateren en mounten :
 	$ mkfs.msdos floppy.vfd
 - Mount it via loop and write the contents to it
 	$ sudo mount -o loop floppy.vfd /mnt
-	- sudo copy your files on to the "drive" 
+	- sudo copy your files on to the "drive"
 	$ sudo umount /mnt
-	
+
 == vboxmanage ==
+
+- vboxmanage is het host-programma waarmee een VM kan beheerd worden, met verschillende mogelijkheden ngl. de VM draait of niet.
+
+- vboxcontrol is het guest-programma om de VM en VBox te beheren van in de (draaiende) guest
 
 === newline in b.v. Description ===
 
@@ -964,10 +1077,14 @@ OFWEL met linux fdisk partitioneren, met mkfs.xxx formateren en mounten :
 
 - Oplossing : zie "man bash" sectie QUOTING :
 	$ vboxmanage opdracht ... --Description "lijn1"$'\n'"lijn2"
-	
+
 === clonen met opties ===
 
 - clonen commandline
+
+- b.v. herstelde backup van ramdisk naar harddisk:
+	- schijven converteren van raw of .vdmk naar .vdi moet in aparte stap met copy naar .vdi, voor vb. zie sectie "Virtuele schijf (HDD) compacteren"
+	$ vboxmanage clonevm bu201011_09u02m-op201027_09u38m --mode all --options keepdisknames --name bu201011_0902m-opgekuist --groups "/Xubuntu backupherstel" --basefolder "/opt/.virtualbox/" --register
 
 - zie "https://www.virtualbox.org/manual/ch08.html#vboxmanage-clonevm"
 
@@ -991,7 +1108,7 @@ OFWEL met linux fdisk partitioneren, met mkfs.xxx formateren en mounten :
 			- als basefolder relatief pad is, dan is dit t.o.v. ~/.config/virtualbox
 			- bij clonen via VBox Manager, is basefolder ingesteld in Preferences/Default machine folder : "/media/sdata/.virtualbox/"
 
-=== clone zonder merge van differencing image  ===
+=== clone zonder merge van differencing image ===
 
 - VBox Manager (GUI) kan 'copy' maken van basis-schijf, niet beschikbaar voor differencing image
 	- 'copy' van basisschijf is meer dan een copy in het OS : UUID wordt aangepast, dus de differencing image werkt daar niet meer mee samen
@@ -1028,7 +1145,66 @@ OFWEL met linux fdisk partitioneren, met mkfs.xxx formateren en mounten :
 		$ vboxmanage showmediuminfo /media/ramdisk/diff.vdi
 		- kan ook met vboxmanage
 
-== VM-toepassing starten vanuit host ==
+=== communicatie guest-host ===
+
+- via guestproperty kunnen host en guest strings uitwisselen, beetje zoals env. variabelen :
+	- host v.b. :
+		$ vboxmanage guestproperty set "VM naam OF UUID" testkey testval [--flags TRANSIENT]
+		--flags :
+			- TRANSIENT : enkel deze VM-sessie
+			- TRANSRESET: The value will be deleted as soon as the VM restarts or exits.
+			- RDONLYGUEST: The value can only be changed by the host, but the guest can only read it.
+			- RDONLYHOST: The value can only be changed by the guest, but the host can only read it.
+			- READONLY: The value cannot be changed at all.
+	- guest (Windows) v.b. :
+		C:\Users\Dirk>vboxcontrol --nologo guestproperty get testkey
+		>>> Value: testval <<<
+
+- list all the guest properties that are available for the given VM, including the value :
+	$ [vboxmanage|vboxcontrol] --nologo guestproperty enumerate <vm> [--patterns <pattern[|pattern]...>]
+	- pattern : wildcards * en ?
+
+- wachten tot een waarde veranderd (set, get, remove) :
+	$ [vboxmanage|vboxcontrol] --nologo guestproperty wait <vm> <pattern[|pattern]... [--timeout milliseconden] [--flags TRANSIENT]
+	>>>
+		Name: testkey
+		Value: testval
+		Timestamp: 1574972739211526000 ns
+		Flags: TRANSIENT
+	<<<
+
+=== VM booten van USB ===
+
+- zelfs als USB-schijf is toegewezen aan de VM, komt die te laat om van op te starten.
+
+- OPLOSSING 1 : zie "GEZIPTE.PRG/UBUNTU/Plop Boot Manager" en "https://askubuntu.com/questions/693719/how-to-boot-from-a-usb-drive-in-virtualbox"
+	- ALTERNATIEF : rEFInd boot manager (http://www.rodsbooks.com/refind/), die kan ook UEFI-boot, zelfs in VBox VM
+
+- OPLOSSING 2 : zie "https://www.virtualbox.org/manual/ch09.html#rawdisk" - "9.7.1. Using a Raw Host Hard Disk From a Guest"
+	- OPGELET: bij deze oplossing ziet de VM geen USB-stick, maar een gewone harde schijf; b.v. W10 hiervan geïnstallateerd beschouwt die blijvend als opstartschijf
+		- OPM : TE PROBEREN VM-schijf als 'hot plugable' aan VM hangen
+	- de USB-schijf NIET toewijzen aan de VM
+	- user moet volledige toegang hebben tot de USB-schijf :
+		# chmod o+rwx /dev/sdX
+		- OPM in principe is dit genoeg: "add your user to the vboxusers group and to the disk group" MAAR "Adding your user to the disk group can be dangerous and a security risk. It is as dangerous as having sudo access to write to a raw disk."
+	- maak een verwijzing naar dat device :
+		$ vboxmanage internalcommands createrawvmdk -filename /opt/.virtualbox/modellen/usb_sdX.vmdk -rawdisk /dev/sdX
+		- vmdk is leesbaar tekstbestandje
+		- opgelet : de X van sdX komt in de vmdk, dus bij herstarten van host, of verwijderen/insteken van usb kan die letter veranderen.
+	- hang die vmdk-verwijzing als gewone harde schijf aan de VM
+		- ALTIJD als eerste, zelfs een andere schijf kiezen in VBox VM's boot menu blijft hangen
+		- voorlopig werkt dit alleen met de vmdk als 1ste schijf; W10 install is slim genoeg om de juiste schijfletters toe te wijzen, maar wil blijven booten van de USB
+	- VM starten (niet nodig : F12 om opstartapparaat te kiezen, en kies 1ste HDD)
+	- ALTERNATIEF : another solution that works flawlessly
+		- Insert USB stick and identify it (mine is /dev/sdb , running Sabayon Linux);
+		- Create a .vmdk disk by converting the raw device (i.e. the USB stick) to a VirtualBox disk
+			# VBoxManage convertfromraw /dev/sdb ./usb.vmdk --format vmdk
+		- Now you have a usb.vmdk disk created from your bootable USB stick. I tried also dd the USB stick to an image file and create the .vmdk disk from the image file. It works, as well as .vdi disks created the former way (or from the image file)
+		- Now, give permissions to the created disk in order VirtualBox can access the file. It just means change the file owner to an user that are in vboxusers group. If your VirtualBox install is running OK, than this owner would be, probably, you:
+			# chown `whoami`:`whoami` ./usb.vmdk
+		- Now, you just have to attach the usb.vmdk disk to a Virtual Machine. But it must be attached to an IDE controller. I tried SATA with no success.
+
+=== VM-toepassing starten vanuit host ===
 
 - VBoxManage guestcontrol opdrachten : zie "https://www.virtualbox.org/manual/ch08.html#vboxmanage-guestcontrol"
 	- toepassingen starten, bestanden/mappen kopieren van/naar host, maken of verwijderen
@@ -1067,3 +1243,10 @@ OFWEL met linux fdisk partitioneren, met mkfs.xxx formateren en mounten :
 	$ VBoxManage guestcontrol "WXP basis" run --exe "e:\werk\doeecho.bat"
 	- opent "guest session" in VM, met stdin, stdout en stderr van guest omgeleid naar host (terminal blijft dus bezet daarvoor)
 	- opties zoals opdracht "start"
+
+=== VM unattended install ===
+- maak nieuwe VM, en installeer automatisch van iso
+	- zie "https://www.virtualbox.org/manual/ch03.html#unattended-guest-install-example"
+
+- maak make-script om packages te installeren
+	- zie "https://github.com/db-inf/dylan-ubuntu-makefile" (mijn fork van  "https://github.com/dylanmtaylor/dylan-ubuntu-makefile")

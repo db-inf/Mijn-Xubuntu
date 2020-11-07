@@ -1,5 +1,20 @@
 Xpra = X (Windowing system) persistent remote application
 
+== andere docs ===
+=== _Xubuntu.adoc ===
+=== _Xubuntu composekey multikey combinaties.adoc ===
+=== _bash readline keys.txt ===
+=== _ffmpeg truuks en commandos.adoc ===
+=== _Tex-LaTex.adoc ===
+=== _Wine-PlayOnLinux.adoc ===
+=== _POLwineprefix 2.11 Win7x86PROGS.txt ===
+=== _VirtualBox.adoc ===
+=== _Xpra.adoc ===
+=== _Dragon.adoc ===
+=== _SW10 installatie.txt ===
+
+== Xpra ==
+
 === Voorbeeld ===
 
 - zonder proxy (zie _Xubuntu.adoc sectie "BIONIC dist-upgrade 181029" subsectie "Xpra" "PROBLEEM 2")
@@ -85,7 +100,7 @@ In VBox host-guest xpra combo (Zowel Windows VM als Ubuntu VM met Xpra_2.1.3) he
 					0 kunt 0.0.0.0 NIET vervangen door mask zoals 192.168.255.255
 				- Using bind-tcp without using the tcp-auth option is major security risk (especially when passing 0.0.0.0); anyone may connect to this port and access your session.
 				- alternatief voor -tcp : -ssl en -vsock
-			--pulseaudio=no : per user maar 1 pulseaudio, en die draait al; bovendien wordt regelt vbox het geluid in een host-guest xpra-combo. Desnoods xpra server met een 'dedicated user' draaien.
+			--pulseaudio=no : per user maar 1 pulseaudio, en die draait al; bovendien regelt vbox het geluid in een host-guest xpra-combo. Desnoods xpra server met een 'dedicated user' draaien.
 				TEDOEN : proberen of mijn noise-cancelling microphone even goed werkt met pulseaudio over xpra, als met USB passthrough
 			--webcam=no : geen behoefte aan, en anders foutboodschap omdat ik geen webcam heb
 			--mdns=no : disable the publication of new sessions via mDNS; mDNS blijkt niet nodig in mijn setup, en anders fout "Warning: failed to load the mdns avahi publisher: No module named avahi"
@@ -96,7 +111,7 @@ In VBox host-guest xpra combo (Zowel Windows VM als Ubuntu VM met Xpra_2.1.3) he
 			--start[-child]=CMD... : After starting the server, runs the command CMD using the default shell. The command is run with its $DISPLAY set to point to the newly-started server. This option may be given multiple times to start multiple commands. --start-child is identical to --start, except that the commands are taken into account by --exit-with-children. Zie ook sectie : "programma toevoegen aan sessie"
 			[--exit-with-children=yes] : only if --start-child is given : xpra server terminates when last of children started by --start-child has exited.
 			[--clipboard=no] : als er interferentie is met VBox clipboard-delen
-	- toepassing overnemen in windows (VBox guest, die FRT kan zien op het netwerk)
+	- toepassing overnemen in MS Windows (b.v. VBox guest, die FRT kan zien op het netwerk)
 		- volledig pad, of in Computer/eigenschappen/geavanceerd/Omgevingsvariabelen/User
 			- "PATH" : "G:\PROGRAMS\Xpra" voor Win7-10
 			- "PATH" : "G:\PROGRAMS\Xpra_XP" voor WinXP
@@ -111,7 +126,7 @@ In VBox host-guest xpra combo (Zowel Windows VM als Ubuntu VM met Xpra_2.1.3) he
 	- toepassing overnemen in linux
 		$ xpra attach
 			[--tray=yes] : icoon+menu in notification area
-			[:1] : displaynr. als er meerdere draaien; enkel local (xpra server) genoeg, windows client heeft de hele "tcp:FRT[:poort]" nodig
+			[:1] : displaynr. als er meerdere draaien; enkel local (xpra server) genoeg, Windows-client heeft de hele "tcp:FRT[:poort]" nodig
 	- ge kunt toepassing zo over en weer pingpongen tussen server en 1 of meer clients
 	- server stoppen die niet met "--exit-with-children=yes" is gestart
 		OFWEL in ander terminalvenster :
@@ -128,11 +143,11 @@ In VBox host-guest xpra combo (Zowel Windows VM als Ubuntu VM met Xpra_2.1.3) he
 
 === programma toevoegen aan sessie ===
 
-	OFWEL GUI (xpra system tray menu)
+	OFWEL in GUI van gast (xpra system tray menu)
 		"Run command"
-	OFWEL CLI linux
+	OFWEL CLI van linux-gast
 		$ xpra control [:1] start[-child] mousepad
-	OFWEL CLI Windows 
+	OFWEL CLI van Windows-gast
 		??C:\> xpra control tcp:FRT[:poortnr] start[-child] mousepad
 	- als server niet gestart is met optie "--start-new-commands=yes" : "server returned error code 127 this feature is currently disabled"
 

@@ -1,5 +1,5 @@
 $ bind -p
->>>
+>>> # OPM: [Esc]  is Escape-toets, soms is ook Alt-toets goed
 	[Ctrl]+x[Ctrl]+v	: display-shell-version
 	[Ctrl]+x[Ctrl]+r	: re-read-init-file
 	[Ctrl]+x[Ctrl]+e	: edit-and-execute-command

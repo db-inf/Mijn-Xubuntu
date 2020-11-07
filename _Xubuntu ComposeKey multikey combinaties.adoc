@@ -1,3 +1,16 @@
+== andere docs ===
+=== _bash readline keys.txt ===
+=== _Xubuntu.adoc ===
+=== _Xubuntu truuks en commandos.adoc ===
+=== _ffmpeg truuks en commandos.adoc ===
+=== _Tex-LaTex.adoc ===
+=== _Wine-PlayOnLinux.adoc ===
+=== _POLwineprefix 2.11 Win7x86PROGS.txt ===
+=== _VirtualBox.adoc ===
+=== _Xpra.adoc ===
+=== _Dragon.adoc ===
+=== _SW10 installatie.txt ===
+
 == Unicode escape ==
 - [Ctrl+Shift+U]XXXX[Enter] of [Ctrl+Shift+U]XXXX[Space], b.v.
 	✝ : [Ctrl+Shift+U]271d[Enter] (latin cross)

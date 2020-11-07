@@ -11,16 +11,17 @@
 - array BASH_REMATCH[] bevat na uitvoeren gematchte subgroepen
 
 == andere docs ===
-===  _Xubuntu truuks en commandos.adoc  ===
-===  _Xubuntu composekey multikey combinaties.adoc  ===
-===  _ffmpeg truuks en commandos.adoc  ===
-===  _Tex-LaTex.adoc  ===
-===  _Wine-PlayOnLinux.adoc  ===
-===  _POLwineprefix 2.11 Win7x86PROGS.txt  ===
-===  _VirtualBox.adoc  ===
-===  _Xpra.adoc  ===
-===  _Dragon.adoc  ===
-===  _SW10 installatie.txt  ===
+=== _Xubuntu.adoc ===
+=== _Xubuntu composekey multikey combinaties.adoc ===
+=== _bash readline keys.txt ===
+=== _ffmpeg truuks en commandos.adoc ===
+=== _Tex-LaTex.adoc ===
+=== _Wine-PlayOnLinux.adoc ===
+=== _POLwineprefix 2.11 Win7x86PROGS.txt ===
+=== _VirtualBox.adoc ===
+=== _Xpra.adoc ===
+=== _Dragon.adoc ===
+=== _SW10 installatie.txt ===
 
 == NOODGEVALLEN ==
 
@@ -65,7 +66,7 @@
 	- 176 is 128+32+16
 		 0 - disable sysrq completely
 		 1 - enable all functions of sysrq
-		>1 - bitmask of allowed sysrq functions : 
+		>1 - bitmask of allowed sysrq functions :
 			  2 =   0x2 - enable control of console logging level
 			  4 =   0x4 - enable control of keyboard (SAK, unraw)
 			  8 =   0x8 - enable debugging dumps of processes etc.
@@ -218,53 +219,44 @@
 
 === mimetype van bestanden ===
 
-- samengevat:
-	- mimetype definieren met xml-bestand in ~/.local/share/mime/packages/:
-		>>> mijn-type.xml
-			<?xml version="1.0" encoding="UTF-8"?>
-			<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
-			  <mime-type type="application/x-mijnmimetype">
-				<comment>new mime type</comment>
-				<glob pattern="*.xyz"/>
-			  </mime-type>
-			</mime-info>
-		<<<
-		- als globbing niet volstaat om type vast te stellen, maar het (begin van) het bestand gelezen moet worden om een kenmerkende sleutel te vinden: een magic key definieren, zie [https://docs.oracle.com/cd/E19253-01/819-0918/6n3aglfe9/index.html#mimetypes-16], b.v.
-		>>>
-			<magic priority="50">
-				<match offset="0" type="string" value="\x89PNG" />
-			</magic>
-		<<<
-	- Update the MIME database for your changes to take effect:
+- zie ook sectie "mimetype default applications"
+
+- opvragen, b.v.:
+	$ xdg-mime query filetype "mijnbestand.txt"
+	>>> text/plain <<<
+
+- mimetypes gedefiniëerd door xml-bestanden in ~/.local/share/mime/ :
+	- voor alle gebruikers in /usr/[local/]share/mime/
+	- WIJZIG ENKEL IN .../mime/packages
+	- in blok <mime-info>...</mime-info>
+		- herkenning bestanden aan extensie :
+			~~ <glob pattern="*.extensie"/> ~~
+			- meerdere glob-tags toegestaan
+			>>> mijn-type.xml
+				<?xml version="1.0" encoding="UTF-8"?>
+				<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+				  <mime-type type="application/x-mijnmimetype">
+					<comment>new mime type</comment>
+					<glob pattern="*.xyz"/>
+				  </mime-type>
+				</mime-info>
+			<<<
+	- als globbing niet volstaat om type vast te stellen, maar het (begin van) het bestand gelezen moet worden om een kenmerkende sleutel te vinden: een magic key definieren, zie [https://docs.oracle.com/cd/E19253-01/819-0918/6n3aglfe9/index.html#mimetypes-16], b.v.
+	>>>
+		<magic priority="50">
+			<match offset="0" type="string" value="\x89PNG" />
+		</magic>
+	<<<
+	- NIET VERGETEN: Update the MIME database for your changes to take effect:
 		$ update-mime-database ~/.local/share/mime
-	- default toepassing vastleggen met desktop-bestand in ~/.local/share/mime/applications/:
-		- b.v. met diverse vaste parameters, en 1 bestandsnaam (plaatshouder %f, voor alle bestandsnamen %F) als laatste
-		>>> mijntoepassing.desktop
-			[Desktop Entry]
-			Type=Application
-			MimeType=application/x-mijnmimetype
-			Name=mijntoepassing
-			Exec=mijntoepassing parameters %f
-		<<<
-	- Update the application database:
-		$ update-desktop-database ~/.local/share/applications
-	- bestand kan nu geopend worden met
-		$ xdg-open mijnbestand
-		OF
-		$ gio open mijnbestand
-		OF
-		$ gvfs-open mijnbestand
-		- als het een tekstbestand is dat met less bekeken wordt, en $LESSEDIT is ingesteld als xdg-open, kan het bestand met zijn standaardtoepassing geopend worden vanuit less met 'v'
-		
+
+- Er is ook, maar niet duidelijk wie dat nog gebruikt, /etc/mime.types : mimetype en evt. extensies die daarmee verbonden zijn
+	- eigen mime types in "~/.mime.types" hebben voorrang
+
 - zie [https://docs.oracle.com/cd/E19253-01/819-0918/mimetypes-0/index.html]
 - zie [https://help.gnome.org/admin/system-admin-guide/stable/mime-types-custom-user.html.en]
 
 - /usr/share/mime : xml-bestanden in subdirs definiëren mimetypes, globbing patterns voor bestandsnamen, en omschrijvingen
-	- wijzigingingen ENKEL IN /usr/share/mime/packages
-		- in blok <mime-info>...</mime-info>
-		- herkenning bestanden aan extensie :
-			~~ <glob pattern="*.extensie"/> ~~
-			- meerdere glob-tags toegestaan
 		- herkenning bestanden aan magic bytes in bestand, vb. :
 			~~ <magic priority="80">	<match value='Content-Type: text/x-zim-wiki' type="string" offset="0"/> </magic> ~~
 		- van daar vertalen naar xml's in de rest van de directory tree :
@@ -274,22 +266,42 @@
 			$ update-mime-database ~/.local/share/mime
 	- minstens sinds Ubuntu 12.04
 
-- Er is ook, maar niet duidelijk wie dat nog gebruikt, /etc/mime.types : mimetype en evt. extensies die daarmee verbonden zijn
-	- eigen mime types in "~/.mime.types" hebben voorrang
-
-- zie ook sectie "mimetype default applications"
-
 ==== mimetype default applications ====
 
+- zie ook sectie "mimetype van bestanden"
 - zie ook sectie "xfce applications menu"
+
+- opvragen, b.v. :
+	$ xdg-mime query default text/plain
+	>>> mousepad.desktop <<<
+	OF
+	$ xdg-mime query default $(xdg-mime query filetype "mijnbestand.odt")
+	>>> libreoffice6.4-writer.desktop <<<
+
+- default toepassing vastleggen met desktop-bestand in ~/.local/share/applications/:
+	- b.v. met diverse vaste parameters, en 1 bestandsnaam (plaatshouder %f, voor alle bestandsnamen %F) als laatste
+	>>> mijntoepassing.desktop
+		[Desktop Entry]
+		Type=Application
+		MimeType=application/x-mijnmimetype
+		Name=mijntoepassing
+		Exec=mijntoepassing parameters %f
+	<<<
+- Update the application database:
+	$ update-desktop-database ~/.local/share/applications
+- bestand kan nu geopend worden met
+	$ xdg-open mijnbestand
+	OF
+	$ gio open mijnbestand
+	OF
+	$ gvfs-open mijnbestand
+	- als het een tekstbestand is dat met less bekeken wordt, en $LESSEDIT is ingesteld als xdg-open, kan het bestand met zijn standaardtoepassing geopend worden vanuit less met 'v' : zie "_Xubuntu.adoc" sectie "lessedit"
 
 - Startmenu/Settings/Mimetype editor
 	- spacefm "contextmenu/Open/Set as default" wijzigt dit ook
 - in "~/.config/mimeapps.list"
 - in de bestanden ./applications/default.lst en ./applications/mimeinfo.cache op het pad in de environment variabele XDG_DATA_DIRS, in die volgorde, b.v.:
 	. $XDG_DATA_DIRS=/usr/share/xubuntu:/usr/share/xfce4:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop:/usr/share
-
-- zie ook sectie "mimetype van bestanden"
 
 === Snel openen ===
 
@@ -309,6 +321,10 @@
 	$ xdg-open (bestand | url | map)
 	$ gvfs-open (bestand | url | map)
 	$ gnome-open (bestand | url | map)
+	$ mimeopen bestand
+		[-a, --ask] : kies (in terminal) a.d.h.v. mimetype van bestand welke van het lijstje toepassingen het bestand moet openen
+		[-d, --default] : kies (in terminal) a.d.h.v. mimetype van bestand welke van het lijstje toepassingen in het vervolg als default bestand en andere met zelfde mimetype moet openen
+		[-M, --magic-only] : Do not check for extensions, globs or inode type, only look at the content of the file. This is particularly useful if for some reason you don't trust the name or the extension a file has.
 
 === xfce applications menu ===
 
@@ -342,7 +358,7 @@
 	. nieuwe icons als bestandsnaam opgeven, of vooraf van bestand installeren naar de iconfolders met
 		. xdg-icon-resource install
 	. volgorde van menuentries/submenus wijzigen met pijlen onder de lijst van alle menu-items
-	
+
 === Xubuntu startmenu whisker ===
 
 - De instellingen staan in /home/dirk/.config/xfce4/panel/whiskermenu-1.rc
@@ -472,7 +488,7 @@ OFWEL
 		motion as 1 : naar voren-achter bewegen (altijd positief)
 
 - knoppen wisselel, b.v. :
-	 $ xinput set-button-map 12 3 2 1 4 5 6 7 8 9 
+	 $ xinput set-button-map 12 3 2 1 4 5 6 7 8 9
 
 === viewframe van staatsarchief maximaliseren ===
 - viewer van search.arch.be is browser popup; om die te maximaliseren in zijn browservenster, in de url van de viewer voor het gedigitaliseerde document :
@@ -497,7 +513,7 @@ ZIE OO: Filesystem Hierarchy Standard www.pathname.com/fhs/pub/fhs-2.3.html
 Dat bestand kunnen we mounten of kopiëren ==>
 
 
-=== unmount bij busy  ===
+=== unmount bij busy ===
 	- b.v. fusermount: failed to unmount /media/ramdisk/nw: Device or resource busy
 	- zoek open bestanden:
 		$ lsof | grep "relevant deel van pad mountpoint"
@@ -581,7 +597,7 @@ Dat bestand kunnen we mounten of kopiëren ==>
 	$ pkexec thunar
 	- vermits de tablet geen 'dirk' heeft, alleen root
 
-=== mount fat of ander oud bestandssysteem  ===
+=== mount fat of ander oud bestandssysteem ===
 
 - Dergelijke oude bestandssystemen hebben geen gebruikers-beveiliging, alleen algemene read en write toestemming. Daarom kan met b.v. mount en in fstab opgegeven worden welke gebruiker/groep toegang heeft tot de hele mount, b.v. uid=1000,gid=1000 (zie sectie lijst-opdrachten)
 
@@ -1069,9 +1085,6 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 === andere ls-opdrachten ===
 - lsb_release, lscpu, lsipc, lspcmcia, lsusb, lsdiff, lsinitramfs, lslocks, lsmod, lspgpot
 
-=== list all installed packages ===
-	$ apt list --installed
-
 === list filesystems supported by currently running Linux kernel ===
 	$ cat /proc/filesystems
 	>>> 2018/03/10
@@ -1110,8 +1123,13 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 	- bevat niet (noodzakelijk) geinstalleerde fuse bestandssystemen
 
 === list all executable files installed by given package ===
+
 	$ dpkg-query -L packagename | xargs file | grep executable
-  If you want to only see executables installed in /usr/bin, use:
+	OF
+	$ dpkg -L packagename | xargs file | grep executable
+	-L, --listfiles package-name... : List files installed to your system from package-name.
+
+-If you want to only see executables installed in /usr/bin, use:
 	$ dpkg-query -L packagename | xargs file | grep ^/usr/bin | grep executable
 
 === zoek bestanden en directories ===
@@ -1176,113 +1194,6 @@ $ find . /media/sdata/WERK/ -type d -name "TTC *" -and -not -name "*guidebook*" 
 	-o --order=WORD : order files according to WORD: time - sort by modification time (default), ctime - sort by status change time, path - sort by full path, arg - sort by directory argument number, name - sort by filename. Append '-' to the sort key (like name-) to reverse order
 	[-g --regex=pattern] : test only files matching a Posix.2 extended regular expressions pattern. The pattern is matched against the full file path when reaching that file, not against the directories while recursing through them. As a custom extension, start a pattern with '//' to match the remainder of that pattern against the filename only (last part of path)
 	[-G --reGex=pattern] : case-insensitive regex, further as above
-
-== SHELL EN ENVIRONMENT VARIABELEN ==
-
-- shell variabelen gelden enkel in de shell of in een script dat door de shell wordt uitgevoerd. Een executable ziet alleen environment variabelen. De opdracht printenv toont de waarde van een environment variabele, de interne bash-opdracht "echo $naam" toont de waarde van een shell variabele.
-	- De bash-opdracht "export naam[=waarde] ..." markeert een of meer shell variabelen voor export naar het environment van elke executable die vanuit de huidige shell gestart wordt, en kent die variabelen evt. ineens een waarde toe.
-		- OPGELET: het blijven shell variabelen, maar met een vlagje "exporteer deze naar environment als ge een opdracht uitvoert", met de waarde van de shell variable op dat moment. B.v.
-			$ a=b
-			$ printenv a
-			>>><<<
-			$ export a
-			$ printenv a
-			>>>b<<<
-	- Een bash opdrachtlijn die een executable start, kan vooraan een of meer environment variabelen opsommen en een waarde geven, en die aan de opdracht doorgeven:
-		$ [naam=waarde ] ... opdracht ...
-		- OPGELET: die komen enkel in het environment van opdracht; in b.v. een opdrachtlijn als "n=w opdracht $n" is "n" nog een (al dan niet bestaande) shell variabele, NIET de environment variabele die de waarde w gaat krijgen binnnen "opdracht" zelf.
-
-=== laatste exit code ===
-
-	$ echo $?
-
-=== process id van script ===
-
-- De expansie van "$$" is de process id van het script in uitvoering (of shell bij sourcen van script vanuit shell) :
-	$ $$
-	>>> 2624 <<<
-		- In a () subshell, $$ expands to the process ID of the current shell, not the subshell.
-
-- De speciale variabele ! (gebruiken als "$!") geeft de process id van het meest recente process dat in de achtergrond werd geplaatst, door af te sluiten met een '&' (asynchronous command) dan wel door de bash opdracht "bg" 
-
-=== lijst van bash set opties ===
-
-- met de opties van de built-in bash opdracht "set" stelt ge interne bash attributes in (!= de shell options van shopt), b.v.
-	$ set -C
-	-C, -o noclobber : geef fout als redirect ">" een bestaand bestand zou overschrijven
-	$ set +C
-	+C : zet die optie terug uit
-
-- de expansie van "$-" is een lijst met de ingestelde (short) option letters van set
-
-=== shellfunctie tonen ===
-	$ type mijnfunctie
-
-=== op naam ===
-	$ echo $NAAM
-
-=== op (deel van) naam ===
-	$ printenv | grep NAAMDEEL
-
-=== allemaal ===
- 	$ set
-	- an internal bash command, so it shows all the "shell variables" (unexported environment variables) as well as the exported environment variables.
-	$ printenv
-	- an external command, so it only knows about (and prints) exported environment variables.
-	$ env
-	- an external command to run a program in a modified environment (bash can do this without env); also, when no argument given, displays variables like printenv does
-
-=== environment available to any GUI application ===
-
-- in Gnome Shell:
-	. press Alt-F2 (application finder)
-	. 'xterm -e bash --noprofile --norc'
-		to open a terminal with a shell that did not add any environment variables; it only has the environment variables added by the system files, that are available (by inheritance) to all programs in the system.
-	$ printenv
-	- in that terminal to list all your environment variables
-
-=== environment permanent instellen ===
-
-- zie https://help.ubuntu.com/community/EnvironmentVariables
-	- environment variable settings that affect the system as a whole (rather than just a particular user) is /etc/environment. An alternative is to create a file for the purpose in the /etc/profile.d directory.
-	- ~/.profile is run after ~/.pam_environment has been read
-	- ~/.pam_environment
-		(not a script, but list of assignment expressions, one per line. Some variables, like HOME, might not be set at the time ~/.pam_environment is parsed)
-	- ~/.profile
-		(script, gets executed automatically by the DisplayManager during the start-up process desktop session as well as by the login shell when one logs in from the textual console)
-	- OPM: als ik het goed begrijp, roept .profile als BASH wordt uitgevoerd ook .bashrc aan, dat zelf dan weer (en dat is zeker) ~/.bash_aliases uitvoert
-
-=== test of veranderlijke alleen witruimte is ===
-
-- gemakkelijkst door te testen op de echo ervan met standaard IFS " \t\n" :
-	$ if [ -z "$(echo $var)" ] ; then echo var is blanco; else echo -${var}- bevat tekens; fi
-	- "$(echo $var)" is "" als var alleen IFS-chars " \t\n" bevat
-
-=== prompts en xterm commandos ===
-
-- zie ook https://www.davidpashley.com/articles/bash-prompts/
-
-- bash kent 4 prompts :
-	- PS0 : wordt getoond nadat commando gelezen is en voor het wordt uitgevoerd
-	- PS1 : prompt wanneer de shell wacht op nieuw commando
-	- PS2 : prompt wanneer de shell wacht op vervolglijn van nieuw commando
-	- PS3 : prompt voor interne select-opdracht
-	- PS4 : prompt tijdens execution trace van script tonen
-
-- prompts kunnen terminal-escapecodes gebruiken (terminal Xubuntu Xenial : xterm, Bionic : $TERM = xterm-256color)
-	- 1-teken-escapes : zie man bash sectie "PROMPTING"
-	- \[ : Begin a sequence of non-printing characters, which could be used to embed a terminal control sequence into the prompt 		
-	- \] : End a sequence of non-printing characters 		
-		- markeer escapes als non-printing characters door ze tussen \[ en \] (in script \\[ en \\])  te zetten, zodat terminal line editor niet in de war geraakt voor positionering:
-			>>> \[...\] tells bash to ignore the non-printing control characters when calculating the width of the prompt. Otherwise line editing commands get confused while placing the cursor. <<<
-	- tekstkleur en -decoratie :
-		- \e[...m : begin of wijziging, met ... een ';'-gescheiden lijst van 2-cijferige codes
-		- zie ~/.dircolors voor de codes
-		- \e[m : einde
-	- set title patterns :
-		- \e]0;titel\a : icon and window
-		- \e]1;titel\a : icon
-		- \e]2;titel\a : window
 
 == INFORMATIE ZOEKEN ==
 
@@ -1395,22 +1306,6 @@ $ find . /media/sdata/WERK/ -type d -name "TTC *" -and -not -name "*guidebook*" 
 	$ which vlc
 	>>> /user/bin/qvlc <<<
 
-=== welk package installeerde dit bestand ===
-
-- voor executables kunnen we which het volledige pad laten bepalen van de versie die uitgevoerd zal worden (zoekt $PATH af)
-	$ dpkg -S $(which qvlc)
-	>>> vlc-plugin-qt:amd64: /usr/bin/qvlc <<<
-
-- maar pad is niet nodig :
-	$ dpkg -S libbz2.so
-		>>>
-		libbz2-1.0:amd64: /lib/x86_64-linux-gnu/libbz2.so.1.0.4
-		net.downloadhelper.coapp: /opt/net.downloadhelper.coapp/converter/build/linux/64/libbz2.so.1.0
-		libbz2-1.0:amd64: /lib/x86_64-linux-gnu/libbz2.so.1.0
-		libbz2-1.0:amd64: /lib/x86_64-linux-gnu/libbz2.so.1
-		<<<
-		- in dit vb. zijn /lib/x86_64-linux-gnu/libbz2.so.1.0 en /lib/x86_64-linux-gnu/libbz2.so.1 symlinks naar /lib/x86_64-linux-gnu/libbz2.so.1.0.4
-
 === welke libraries zijn nodig voor executable ===
 
 - welke libraries worden dynamisch geladen door programma (cfr. windows dll)
@@ -1424,92 +1319,11 @@ $ find . /media/sdata/WERK/ -type d -name "TTC *" -and -not -name "*guidebook*" 
 ===  welke (versie van) een library is geïnstalleerd ===
 
 - b.v. gtk en python :
-	OFWEL
+	OFWEL met ldconfig - configure dynamic linker run-time bindings
 	$ ldconfig -p | grep -e python -e libgtk
 	- voor 1 library is de -e niet nodig
 	OFWEL
 	$ whereis libjpeg
-
-=== van welke andere packages hangt een package af ===
-
-	$ apt-cache depends vlc-plugin-qt:amd64
-	>>>
-	vlc-plugin-qt
-	  Depends: libc6
-	  Depends: libgcc1
-	  Depends: libqt5core5a
-	  Depends: libqt5gui5
-	  Depends: libqt5svg5
-	  Depends: libqt5widgets5
-	  Depends: libqt5x11extras5
-	  Depends: libstdc++6
-	  Depends: libvlccore9
-	  Depends: libwayland-client0
-	  Depends: libx11-6
-	  Depends: <vlc-plugin-abi-3-0-0f>
-		libvlccore9
-	  Breaks: vlc
-	  Recommends: vlc-bin
-	  Replaces: vlc
-	<<<
-
-=== welke andere packages hangen van deze package af ===
-
-	$ apt-cache rdepends libqt5webkit5
-	- lijst wordt samengesteld uit de package database; moeten niet geinstalleerd zijn, maar gewoon beschikbaar in de geconfigureerde resources (zie sectie "lijst van alle definieerde repositories (ppa)"
-
-=== versie van een package ===
-
-- moet niet geinstalleerd zijn, maar gewoon beschikbaar in de geconfigureerde resources (zie sectie "lijst van alle definieerde repositories (ppa)"
-
-- met wildcards als ge de naam maar ongeveer kent
-	$ dpkg-query -l e2fs*
-	>>>
-		Desired=Unknown/Install/Remove/Purge/Hold
-		| Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
-		|/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
-		||/ Name                        Version            Architecture       Description
-		+++-===========================-==================-==================-===========================================================
-		un  e2fsck-static               <none>             <none>             (no description available)
-		ii  e2fslibs:amd64              1.42.13-1ubuntu1   amd64              ext2/ext3/ext4 file system libraries
-		ii  e2fsprogs                   1.42.13-1ubuntu1   amd64              ext2/ext3/ext4 file system utilities
-	<<<
-	- packages met "ii" in 1ste kolom zijn geinstalelerd
-
-- op exacte naam
-	$ apt-cache policy e2fsprogs
-	OF
-	$ apt policy e2fsprogs
-	e2fsprogs:
-	  Installed: 1.42.13-1ubuntu1
-	  Candidate: 1.42.13-1ubuntu1
-	  Version table:
-	 *** 1.42.13-1ubuntu1 500
-			500 http://archive.ubuntu.com/ubuntu xenial/main amd64 Packages
-			100 /var/lib/dpkg/status
-
-- zie ook sectie "details van een package"
-
-- systemrescuecd heeft die progs niet, zie gewoon :
-	- bij download
-	- http://www.system-rescue-cd.org/Detailed-packages-list
-
-=== details van een package ===
-
-- zie ook sectie "Which PPA Repository A Package Belongs To"
-
-$ dpkg-query -s e2fsprogs
-	>>>
-		Package: e2fsprogs
-		Essential: yes
-		Status: install ok installed
-		...
-		Version: 1.42.13-1ubuntu1
-		...
-		 /etc/mke2fs.conf f3de4385c498ee9e01d1d703f0c3795d
-		Description: ext2/ext3/ext4 file system utilities
-		 The ext2, ext3 and ext4 file systems are ...
-	<<<
 
 === (maximum) aantal open bestanden of filedescriptors ===
 	- Get max open files allowed per process:
@@ -1611,7 +1425,7 @@ $ dpkg-query -s e2fsprogs
 		> x : ga naar expert mode
 		> ? : help
 		> p : print
-		> c : change partition uuid 
+		> c : change partition uuid
 			> # : partitienr, zoals in print
 			> xxxx-xxx...-xxx : gewenste uuid
 		> w : write to disk
@@ -1621,7 +1435,7 @@ $ dpkg-query -s e2fsprogs
 		> x : ga naar expert mode
 		> m : help
 		> p : print
-		> u : change partition uid 
+		> u : change partition uid
 			> # : partitienr, zoals in print
 			> xxxx-xxx...-xxx : gewenste uuid
 		> r : return naar standard mode
@@ -1656,7 +1470,7 @@ $ dpkg-query -s e2fsprogs
 			-n		: Assigns a new (random) serial number to the disk
 			-N serial	: Sets the supplied serial number, an 8 digit (4 bytes) hexadecimal number, without spaces
 	OF met de hand (zie verder)
- 
+
 - ntfs,fat,fat16,fat32
 	- met de hand
 		- uuid heet "volume serial number"
@@ -1920,7 +1734,7 @@ $ sudo file -s /dev/sdb1
 	- OPM : '-' voor opties noch ' ' tss. optieletter en waarde zijn verplicht
 	[-o [+|-]veld] : sorteer op dat veld, + hoog naar laag, - omgekeerd
 		- print alleen lijst van beschikbare velden :
-			$ top -O 
+			$ top -O
 	[-d ss.t] : ververs om de ss sec. en t/10 sec. (default 3.0 of ~/.toprc)
 	[-p pid[,pid]...] OF [-p pid]... : alleen die process ids
 		- alleen bepaalde processen op naam :
@@ -1954,7 +1768,7 @@ $ sudo file -s /dev/sdb1
 		1 : toggle alle cpus samen/per (hyperthreading) kern
 		E : toggle schaal geheugen (B, KB, MB, GB, ...)
 	- interactie huidige tasks window
-		i : toggle toon idle processen 
+		i : toggle toon idle processen
 		f : interactief scherm om getoonde kolommen en sortering te kiezen
 		c : toggle commandline/processname
 		e : toggle schaal geheugen (B, KB, MB, GB, ...)
@@ -1969,7 +1783,7 @@ $ sudo file -s /dev/sdb1
 			R : toggle reverse/normaal sorteren
 			- legacy shortcuts
 				M : %MEM
-				N : PID 
+				N : PID
 				P : %CPU
 				T : TIME+
 			x : toggle highlight voor sorteerkolom
@@ -2029,7 +1843,7 @@ $ sudo file -s /dev/sdb1
 	[-D ...] : directory naar ander journal, b.v. van gemounte andere systeemschijf
 
 - lijst van alle gejournaleerde opstartsessies
-	# journalctl --list-boots 
+	# journalctl --list-boots
 
 - journals verkleinen :
 	# journalctl --disk-usage
@@ -2081,7 +1895,54 @@ $ sudo file -s /dev/sdb1
 	- /usr/share/doc-base
 	- /var/lib/doc-base
 
+=== welke tty in gebruik ===
+- toon wie op welke tty terminal is aangemeld:
+	$ w
+
 == HANDELINGEN ==
+
+=== offset van string in binary file ===
+
+- GUI zoeken met hex viewer zoals
+	- tweak : Ctrl+S hsqs
+	- GHex : Ctrl-F
+
+- CLI met grep, b.v.
+	>>> $ grep -boa hsqs Mapton-2.0.1-x86_64.AppImage
+		32609:hsqs
+		188392:hsqs
+	<<<
+	>>> $ grep -boaP "\x01CD001" *.iso
+		32768:CD001
+		98304:CD001
+	<<<
+		-b, --byte-offset : Print 0-based offset before each line of output.
+		-o, --only-matching : Print only the matched (non-empty) parts
+		-a, --text : Process a binary file as if it were text
+		[-P, --perl-regexp] : hex bytes in zoekstring opgeven met \x voor, b.v. \x0F
+	- opgelet: wildcards kunnen meer bestanden matchen, en dan zet grep "bestandsnaam:" voor de uitvoer van elke lijn :
+	   -H, --with-filename : default when there is more than one file to search.
+	   -h, --no-filename : default when there is only one file
+- CLI met strings (toont alle strings van minstens 4 opeenvolgende afdrukbare chars) :
+	$ strings -t d *.AppImage | grep hsqs
+		-t d : toon offsets, decimaal
+
+=== bytes op offset in binary file ===
+
+- b.v. lees de 6 bytes op offset 0x8000 = 32768
+	$ 2>/dev/null dd skip=32768 iflag=skip_bytes,count_bytes count=6  if=bestand
+	- dd verstaat geen hex getallen, desnoods bash arithmetic $((0x8000)) gebruiken
+
+- testen of die bytes een bepaalde waarde hebben : pipen naar hexdump, met -e formaat
+
+- b.v. test of de 6 bytes op offset 0x8000 = 32768 gelijk zijn aan 0x01 "CD001" (ISO 9660 magic word)
+	$ 2>/dev/null dd skip=32768 iflag=skip_bytes,count_bytes count=6  if=bestand | hexdump -e '1/1 "%02X" 5 "%_c""\n"' | grep 01CD001
+	- hexdump -e formaat: '[herhaling][/byte-lengte] "%printf-formaat"'
+		- altijd tss. '', want de printf-formaten moeten tss. en met "" doorgegeven worden
+		- 1 printf-formaat per "", elk evt. voorafgegaan door [herhaling][/byte-lengte]
+		- speciale printf-formaten:
+			- de gebruikelijke escapes \t, \n, ...
+			- %c, %_c, %_p, %_u : altijd 1 byte lang
 
 === sed - zoek en vervang in een bestand ===
 
@@ -2089,6 +1950,8 @@ $ sudo file -s /dev/sdb1
 
 - man sed is beknopt :
 	$ info sed
+
+- zie [Useful one-line scripts for sed](http://sed.sourceforge.net/sed1line.txt)
 
 ==== sed search/replace regexp op 1 lijn ====
 	$ sed -Esi s/zoek/vervang/g file.txt [file2.txt]...
@@ -2114,7 +1977,7 @@ $ sudo file -s /dev/sdb1
 	-i : in place
 	- eerst blindweg een \r voor elk lijneinde ('$') zetten, dan alle \r\r vervangen door \r (fallback voor als het bestand al (deels) dos CRLF heeft) :
 	- OPM: in for-loop bestand per bestand, want met b.v. "sed ... *.srt" concateneert alle inputbestanden
-	
+
 ==== sed hold en pattern space ====
 
 - hold space : a long-term storage, such that you can catch something, store it and reuse it later when sed is processing another line. You do not directly process the hold space, instead, you need to copy it or append to the pattern space if you want to do something with it.
@@ -2142,7 +2005,7 @@ $ sudo file -s /dev/sdb1
 - opdrachtlijst:
 	- opdracht
 	- "opdracht;opdracht" : deze vorm ALTIJD tss. aanhalingstekens, t.b.v. shell
-	
+
 - opdracht:
 	- opdracht
 	- {opdracht[;opdracht]...} : deze vorm ALTIJD tss. aanhalingstekens, t.b.v. shell
@@ -2199,6 +2062,7 @@ $ sudo file -s /dev/sdb1
 		- execute the contents of pattern space as command, and replaces the pattern space with its output; a trailing newline is suppressed
 		- uitvoeringsfouten krijgen de prefix "sh: ", vanwege de shell die door execute wordt aangeroepen om de contents of pattern space uit te voeren
 		- OPM : typisch wordt de opdracht in pattern space samengesteld door voorafgaande substitute 's', met & (volledige pattern match) en \N (gematchte capturing group)
+			- OPGELET: niet \& maar gewoon &, behalve als de opdracht niet tss. '' of "" staat, want dan is & voor bash het teken voor einde-opdracht-en-voer-uit-in-achtergrond; in dat geval moet de '&' wel ge-escaped worden als \&, zodat bash een letterlijke '&' doorgeeft aan sed.
 		- OPM : volledige pattern space wordt als opdracht uitgevoerd; evt. jongleren met hold space, of opdracht opsplitsen met meerdere capturing groups en echo om diegene te behouden die niet door opdracht bewerkt moeten worden, b.v.:
 			's/(prefix)(opdrachtparams)(suffix)/echo "\1" "$(opdracht \2)" "\3"/;e'
 				- OPGELET : 's///', NIET "s///", zodat de $() command substitution pas wordt uitgevoerd door de shell die de execute doet, met substitutie van \N en &, en niet reeds vooraf door de shell die sed uitvoert
@@ -2231,7 +2095,7 @@ $ sudo file -s /dev/sdb1
 - veilig en snel, maar in tekst-interface (nano)
 	$ sudoedit tekstbestand
 		- bewerkt (met nano) een tijdelijke kopie (bewaar ook naar die naam), en hernoemt die pas na afsluiten terug naar originele naam
-	
+
 - met sudo, sudo -i, pkexec, mijn bash-alias spawn etc. kunt ge alles bewerken
 
 === eigenaar of groep van bestand veranderen ===
@@ -2786,7 +2650,7 @@ Meerdere sequenties samen in 1 bestand bewaren:
 			- Alt-space voor systeemmenu, o.a. move, resize, always on top ...
 		--font=lettertype
 		--zoom=+-n : standaard lettergrootte x1.2^+n of /1.2^-n
-		
+
 	- na afloop openhouden voor vervolgopdracht :
 		$ xfce4-terminal -T titel -e "bash -c \"opdracht ; exec bash\""
 	b.v.	$ xfce4-terminal -T titel -e "bash -c \"./Documents/shellscripts/mijnscript.sh ; exec bash\""
@@ -2802,7 +2666,7 @@ Meerdere sequenties samen in 1 bestand bewaren:
 					  -a   The shell passes name as the zeroth argument to command.
 				If command is supplied, it replaces the shell without creating a new process. If no command is specified, redirections can be used to affect the current shell environment. If there are no redirection errors, the return status is zero; otherwise the return status is non-zero.
 			<<<
-	
+
 - vanuit script nieuwe interactieve shell openen (in zelfde terminal) om opdrachten te aanvaarden, bij exit daaruit gaat script verder:
 	- zet op die plaats in het script de opdracht
 		bash -i
@@ -2852,7 +2716,7 @@ Meerdere sequenties samen in 1 bestand bewaren:
 	- job herstarten
 		$ [fg] %n
 		[fg] : herstart in voorgrond, is default
-		- koppelt job n aan de terminal (o.a. stdin) en laat ze verder lopen 
+		- koppelt job n aan de terminal (o.a. stdin) en laat ze verder lopen
 	- job herstarten, maar in achtergrond (lukt niet voor interactieve opdrachten)
 		$ %n &
 		OF
@@ -2876,28 +2740,36 @@ Meerdere sequenties samen in 1 bestand bewaren:
 
 === beheer processen ===
 
-- processen worden niet door bash, maar door ?systemd beheerd, op basis van pid (process id)
+==== overzicht van alle processen, met pid ====
 	$ ps
-	- overzicht van alle processen, met pid
+
+==== process stoppen, afsluiten, naar achtergrond ====
+
+- processen worden in Xenial door systemd beheerd, op basis van pid (process id)
 	$ kill -STOP [pid | %n]
 		- zoals ctlr+z in bash shell: stopt process met pid, zonder zijn resources vrij te geven
-		- OPM : kill is een bash internal, maar aanvaardt als argument om signaal naar te sturen zowel %jobnr v.d. bash shell, als pid (volledig numeriek), zie sectie "bash jobs"		
+		- OPM : kill is een bash internal, maar aanvaardt als argument om signaal naar te sturen zowel %jobnr v.d. bash shell, als pid (volledig numeriek), zie sectie "bash jobs"
 	$ kill -CONT [pid | %n]
 		- zoals 'bg n': laat job pid terug lopen, maar in de achtergrond(?), los van de terminal
 	$ kill -l
 		- lijst van alle SIGxxxx die we naar jobs en processen kunnen sturen als 'kill -xxxx pid' of 'kill -xxxx %jobnr'
 
-- allerlei info van processen, en besturing ervan, via virtueel bestandssysteem in /proc :
+==== info van processen in /proc ====
+- in het virtueel bestandssysteem gemount op /proc, staat voor elk PID een map met info en voor besturing ervan :
 	- /proc/1234 : alle info van process 1234; hierin staan allemaal pseudo-bestanden van 0 lang, uit te lezen met redirect of cat.
-		- OPGELET : niet alles is leesbaar, bevat o.a. link naar de binary in uitvoering :
-			$ realpath /proc/1234/exe
+		- OPGELET : niet alles is leesbaar, meeste niet schrijfbaar
+			- exe is symlink naar de binary in uitvoering :
+				$ realpath /proc/1234/exe
 				>>> /usr/bin/huppeldepup <<<
-			$ realpath /proc/1234/cwd
+			- cwd is symlink naar de PWD :
+				$ realpath /proc/1234/cwd
 				>>> /home/1000/Documents <<<
-			$ cat /proc/1234/cmdline
+			- cmdline toont volledige opdrachtlijn :
+				$ cat /proc/1234/cmdline
 				>>> huppeldepup -arg1 -arg2 <<<
-			$ realpath /proc/1234/fd/*
-				>>> geopende filedesriptors, vooraan het trio stdX
+			- fd/ directory met symlinks naar geopende filedesriptors, vooraan het trio stdX
+				$ realpath /proc/1234/fd/*
+				>>>
 				/dev/pts/1
 				/dev/pts/1
 				/dev/pts/1
@@ -2907,7 +2779,8 @@ Meerdere sequenties samen in 1 bestand bewaren:
 				/dev/tty
 				/snap/john-the-ripper/297/run/ascii.chr
 				<<<
-			$ catfiles /proc/1234/fdinfo/*
+			- fdinfo/ info van geopende filedesriptors, zoals huidige offset
+				$ catfiles /proc/1234/fdinfo/*
 				>>>
 				...
 				fdinfo/4
@@ -2916,6 +2789,15 @@ Meerdere sequenties samen in 1 bestand bewaren:
 					 3	mnt_id:	483
 				...
 				<<<
+
+==== toon lopende opdrachten, hun argumenten en process id ====
+
+	$ pstree -lap [-s] [user | pid]
+		-l, --long : kap niet af op terminalbreedte
+		-a, --arguments
+		-p, --show-pids
+		-s, --show-parents : toon parent van gevraagde pid
+		[ user | pid ] : beperk tot de user of process id
 
 === pipe naar bestand maar ook naar scherm ===
 
@@ -2934,7 +2816,7 @@ Meerdere sequenties samen in 1 bestand bewaren:
 - JDK zelf heeft een geschikte opdracht om .java bronbestand om te zetten naar ASCII met Java-stijl Unicode-escapes
 	$ native2ascii -encoding windows-1252 in.java uit.java
 
-=== directory van mijn website synchroniseren over FTP  ===
+=== directory van mijn website synchroniseren over FTP ===
 
 - NIET rsync met FTP server gemount (b.v. met gigolo) op local file system : "is designed to compute file hashes remotely to compare files without transferring them, but doing that with virtual files transfers the files anyway"
 
@@ -3145,7 +3027,7 @@ ZIE http://mywiki.wooledge.org/UsingFind
 	- WERKT : met brace expansion find-opdracht samenstellen, en uitvoeren met eval
 	$ eval find -type f "\! -iname \*."{pdf,djvu,epub,mobi,ps,txt,html,doc,docx,rtf,odt,cbz,chm}
 	0 NIET find-opdracht rechtstreeks aanmaken :
-		0 find -type f "\! -iname *".{pdf,djvu,epub,mobi,ps,txt,html,doc,docx,rtf,odt,cbz,chm} 
+		0 find -type f "\! -iname *".{pdf,djvu,epub,mobi,ps,txt,html,doc,docx,rtf,odt,cbz,chm}
 		- "iets"{x,y} expandeert tot "iets"x "iets"y
 	- WERKT : genereer eerst de find-opdracht, toon die met echo, en dan kopieren, plakken, uitvoeren
 		$ echo find -type f "\! -iname \"*\"".{pdf,djvu,epub,txt,html,htm,chm,doc,docx,ps,rtf,mobi,odt}
@@ -3301,7 +3183,7 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 
 - zie "_VM model restore Ubuntu-backup.txt"
 
-=== in standby of uit zetten na verloop van tijd (b.v. 45 minuten)  ===
+=== in standby of uit zetten na verloop van tijd (b.v. 45 minuten) ===
 
 - voor standby of uit na download met nzbget: zie hierna
 - standby of uit na vast aantal minuten:
@@ -3408,13 +3290,125 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 		$ /opt/GeoExpress/bin/mrsidgeodecode -h : korte help
 		$ /opt/GeoExpress/bin/mrsidgeodecode -help : lange help
 
+
+=== Schermopstelling wijzigen ===
+
+- met xrandr, CLI-interface voor RandR (X Resize, Rotate and Reflect Extension)
+	$ xrandr --help
+
+- lijst van monitors ("outputs") en hun modes, met '+' na preferred modes en '*' na current mode
+	$ xrandr -q
+	OF
+	$ xrandr --current	# zonder pollen naar gewijzigde hardware
+	OF
+	$ xrandr			# waarschijnlijk == -q
+	- via aliassen in ~/.bash-aliases, en scripts in ~/bin/beeld* om hotkeys toe te wijzen of ook geluidsinstelling te wijzigen
+
+- beeldinstelling van een monitor wijzigen, b.v. :
+	$ xrandr --output HDMI-2 [--mode 1280x1024] [--rate 60.02] [--rotate left] [--pos XxY | [--left-of | --right-of | --above | --below | --same-as] another-output ] [--gamma 1.2:1.3:1.1] [--brightness 1.5]
+	--output : de monitor die op die output is aangesloten
+	--mode [naam | WxH], -s WxH, --size WxH : de gewenste (al dan niet benoemde) resolutie
+	-r, --rate : een geldige verversingssnelheid voor die resolutie (zie "$ xrandr")
+	--rotate : stand (normal, left, right, inverted)
+	--pos : positie van de monitor op output HDMI-2 in een multi-monitor-screen van X11
+	--left-of HDMI-1 : positie van monitor is links van b.v. HDMI-1 in een multi-monitor-screen van X11
+	--gamma red:green:blue : floating point values
+	--brightness brightness : floating point value
+	- andere opties:
+	     --panning    widthxheight[+x+y[/track_widthxtrack_height+track_x+track_y[/border_left/border_top/border_right/border_bot‐
+       tom]]]
+       --transform a,b,c,d,e,f,g,h,i	# transformation matrix
+											 a b c
+											 d e f
+											 g h i
+       --scale XxY			# shortcut version of the --transform option.
+       --scale-from wxh		# shortcut version of the --transform option.
+       --primary			# Set the output as primary. It will be sorted first in Xinerama and RANDR geometry requests.
+
+- beeldinstelling van een monitor herstellen, maar met rotatie :
+	$ xrandr --output HDMI-2 --preferred --rotate left
+
+- uitvoer naar monitor stoppen:
+	$ xrandr --output HDMI-1 --off
+
+- uitvoer naar monitor stoppen als hij niet aangesloten is, of starten in -preferred mode als hij wel aangesloten is:
+	$ xrandr --output HDMI-1 --auto
+
+=== Scherm roteren in tty-terminal ===
+
+- zie https://www.kernel.org/doc/Documentation/fb/fbcon.txt "Framebuffer Console"
+
+- in tty-terminals mijn Viewsonic scherm roteren naar portrait :
+	- tijdelijk : vie tee om een sudo in de redirect te kunnen doen
+		$ echo 3 | sudo tee /sys/class/graphics/fbcon/rotate
+	- blijvend : in /etc/default/grub of /etc/default/grub.d/mijndefaults.cfg
+		>>> GRUB_CMDLINE_LINUX="fbcon=rotate:3" <<<
+		>>>
+		GRUB_CMDLINE_LINUX
+			Entries on this line are added to the end of the 'linux' command line (GRUB legacy's "kernel" line) for both normal and recovery modes. It is used to pass options to the kernel.
+		GRUB_CMDLINE_LINUX_DEFAULT
+			This line imports any entries to the end of the 'linux' line (GRUB legacy's "kernel" line). The entries are appended to the end of the normal mode only.
+		<<<
+	- terug landscape : 0 i.p.v. 3
+
 === helderder beeld ===
 
 - b.v. om video te spelen op monitor; puur software regeling, en niets voor overlay apart
 	- Bionic HDMI-n, Xenial : HDMIn
-	$ xrandr --output HDMI-2 --brightness 1.2
-	$ xrandr --output HDMI-2 --gamma 1.6:1.6:1.6
+	$ xrandr --output HDMI-2 --brightness 1.2 --gamma 1.6:1.6:1.6
 	- voor hardware regeling helpt misschien xbacklight (te installeren)
+
+=== zelf schermresolutie definieren ===
+
+- met xrandr kunt ge eigen schermresoluties toevoegen:
+
+- gebruik cvt om de timings voor een bepaalde resolutie te berekenen:
+	$ cvt 1280 800 60	# horz vert [verversingssnelheid (default 60)]
+	>>>
+		# 1280x800 59.81 Hz (CVT 1.02MA) hsync: 49.70 kHz; pclk: 83.50 MHz
+		Modeline "1280x800_60.00"   83.50  1280 1352 1480 1680  800 803 809 831 -hsync +vsync
+	<<<
+	- geef alles van de 2de lijn na "Modeline" aan xrandr als waarde van de optie --newmode
+		$ xrandr --newmode "1280x800_60.00"   83.50  1280 1352 1480 1680  800 803 809 831 -hsync +vsync
+	- kijk na of de nieuwe mode bestaat
+		$ xrandr
+		>>>
+			Screen 0: minimum 320 x 200, current 1200 x 1920, maximum 8192 x 8192
+			HDMI-1 connected (normal left inverted right x axis y axis)
+			   ...
+			HDMI-2 connected primary 1200x1920+0+0 left (normal left inverted right x axis y axis) 547mm x 350mm
+			   ...
+			DP-1 disconnected (normal left inverted right x axis y axis)
+			HDMI-3 disconnected (normal left inverted right x axis y axis)
+			  1280x800_60.00 (0x1a3) 83.500MHz -HSync +VSync
+					h: width  1280 start 1352 end 1480 total 1680 skew    0 clock  49.70KHz
+					v: height  800 start  803 end  809 total  831           clock  59.81Hz
+		<<<
+	- wijs de nieuwe mode toe aan een monitor :
+		$ xrandr --addmode HDMI-2 "1280x800_60.00"
+	- test nu of ze werkt : doe Ctrl-C om de ingestelde nieuwe mode te bewaren als ze werkt, anders gaat de monitor na 5s terug naar zijn voorkeursinstelling
+		$ xrandr --output HDMI-2 --mode "1280x800_60.00" --rotate left;sleep 5s; xrandr --output HDMI-2 --preferred
+
+- blijven niet bewaard over opstarten heen:
+	- zet de "xrandr --newmode" en "xrandr -addmode" in uw ~/.profile (executed by the command interpreter for login shells)
+	OF
+	- definieer de mode in /usr/share/X11/xorg.conf.d/
+	>>>
+		Section "Monitor"
+		  Identifier "Monitor0"
+		  <INSERT MODELINE HERE>
+		EndSection
+		Section "Screen"
+		  Identifier "Screen0"
+		  Device "<INSERT DEVICE HERE>"
+		  Monitor "Monitor0"
+		  DefaultDepth 24
+		  SubSection "Display"
+			Depth 24
+			Modes "<INSERT MODENAME HERE>"
+		  EndSubSection
+		EndSection
+		<<<
 
 === cat zonder commentaar en lege lijnen ===
 
@@ -3479,7 +3473,7 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 		<?php
 		if (preg_match('/\.(?:png|jpg|jpeg|gif)$/', $_SERVER["REQUEST_URI"])) {
 			return false;    // serve the requested resource as-is.
-		} else { 
+		} else {
 			echo "<p>Welcome to PHP</p>";
 		}
 		?>
@@ -3496,7 +3490,7 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 		$ grep "xxx$(printf '\t')yyy"
 	- command substitution met echo :
 		$ grep "xxx$(echo -e '\t')yyy"
-	- bash string quoting : Words of the form $'string' are treated specially. The word expands to string, with backslash-escaped characters replaced as specified by the ANSI C standard. 
+	- bash string quoting : Words of the form $'string' are treated specially. The word expands to string, with backslash-escaped characters replaced as specified by the ANSI C standard.
 		$ grep $'xxx\tyyy'
 		- om b.v. te combineren met variable expansion, gewoon 2 (quoted) strings concateneren, b.v.
 			$ grep $'xxx\tyyy'"en een $variabele"
@@ -3506,7 +3500,41 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 	$ apt-cache show node.js | grep -e "^" -e "^Description"
 	-e "^" : matcht elk lijnbegin, toont dus elke lijn, maar heeft niets te highlighten
 	-e "^Description" : heeft wel iets te highlighten
-	
+
+=== opdracht uit bash history terug uitvoeren ===
+
+- zie ook _Xubuntu.adoc sectie ".inputrc gemaakt" : selectief door history bladeren met pijl omhoog/omlaag a.d.h.v begin-string opdracht :
+	"\e[A": history-search-backward
+	"\e[B": history-search-forward
+
+- !-1 : vorige opdracht
+	- !-2 : opdracht daarvoor
+	...
+
+- history maar met wijzigingen: modifiers beginnen met ':', b.v.
+	$ !-2:gs=drama=griezel=
+	- Voert de op 2 na laatste opdracht terug uit, maar met modifier (de ':') om alle (de 'g') "drama" te vervangen (de 's') door "griezel"; '=' is een zelf te kiezen scheidingsteken, zoals voor de sed-opdracht s.
+	- Alt-^ (d.w.z. Alt-Shift-6) i.p.v. <Enter> : breidt de opdrachtlijn uit tot de opdracht uit history met de vervanging
+	- Alt-Ctrl-E idem, maar dan worden ook variabelen (en aliassen) ingevuld, en dat is dikwijls vervelend.
+
+- opdrachtgeschiedenis van bash is zoekbaar (met grep) en genummerd. b.v. wat heb ik nu ook weer gedaan met het bestand "floep" :
+	$ history | grep "floep"
+	>>>
+		231 echo $REPLY > floep
+		235 ls -l floep
+		238 cat floep
+	<<<
+	- zet opdracht 238 terug op de opdrachtlijn met shell-expand-line toetsencombinatie <Alt>+<Ctrl>+e : Expand the line as the shell does (alias, history en shell word expansions)
+		$ !238 # <Alt>+<Ctrl>+e (Expand)
+			$ cat floep
+		- alternatief: enkel history-expand-line met <Alt>+<Shift>+^ (Shift omdat ^ boven de 6 staat), dus geen variabelen of aliassen
+	- voer opdracht 238 terug uit met <Enter>
+		$ !238 # <enter>
+		>>>
+			cat floep
+			....
+		<<<
+
 === history wissen ===
 
 - alle behalve open terminals :
@@ -3514,7 +3542,7 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 
 - sommige opdrachten
 	$ mousepad ~/.bash_history
-	
+
 - huidige bash prompt
 	- enkel vorige opdrachten niet toevoegen, latere wel :
 		 $ history -c
@@ -3542,7 +3570,7 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 === genummerde bestanden van ramdisk naar HDD verplaatsen naarmate ze aangemaakt worden ===
 
 - een reeks bestanden aanmaken op ramdisk, kan ze vol doen lopen (b.v. media-bestanden in niet-gecomprimeerd formaat). Als ze genummerd zijn, in dit vb. van 01 tot 08, kunt ge ze naar HDD verplaatsen telkens als het volgende bestand gemaakt wordt :
-	- genummerd zonder voorloopnullen : 
+	- genummerd zonder voorloopnullen :
 		$ for i in {2..99};do while ! [ -f $i*.avi ] ; do sleep 10;done;mv $((i-1))*.avi /media/sdata/WERK;done;klaar;sleep 30;cp $i*.avi /media/sdata/WERK/;sleep 30;slaap
 			- als bestand 2 verschijnt, wordt verondersteld dat bestand 1 klaar is, en dat wordt naar HDD verplaatst
 			- als alles klaar is (volgens mijn script "klaar") wordt tenslotte het laatste bestand (99 in dit voorbeeld) naar de HDD gekopiëerd (niet verplaatst, om niet te struikelen over evt. foute interpretatie van "klaar")
@@ -3560,7 +3588,7 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 		- NIET "for i in {02..99}" : i zelf is string, maar in $(()) wordt die string geinterpreteerd als getal, octaal als er een voorloop-0 is, en 08 en 09 zijn octaal niet geldig
 			- voorloop-0 van i evt. verwijderen met $((${i#0}-1) : remove prefix 0
 			- evt. expliciteren dat i radix 10 heeft :  $((10#$i-1)) : syntax is radix#string; moeten dan wel $i gebruiken, want i zou geïnterpreteerd worden als digit, en dit zou in dit vb. " value [d.w.z. i] too great for base [d.w.z. 10]" geven
-		- NOOIT voorloopnullen in output van $(()) 
+		- NOOIT voorloopnullen in output van $(())
 	- genummerd met altijd 1 voorloopnul, 01 tot 10 :
 		- expliciet de voorloopnul toevoegen wanneer we van i een bestandsnaam maken :
 		$ for i in {2..9};do while ! [ -f 0$i*.avi ] ; do sleep 10;done;mv 0$((i-1))*.avi /media/sdata/WERK;done;klaar;sleep 30;cp 0$i*.avi /media/sdata/WERK/;sleep 30;slaap
@@ -3611,6 +3639,102 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 		OF
 		- body='tekst van het bericht'
 
+=== meerdere tty gebruiken ===
+
+- zie ook sectie "in tty of console de display draaien"
+- zie ook sectie "welke tty in gebruik"
+- zie ook (https://wiki.ubuntu.com/Multiseat)
+- zie ook (https://help.ubuntu.com/community/MultiseatOneCard)
+
+- Met Ctrl+Alt+F[1-7] kunt ge wisselen tss. de 7 tty-terminals die Ubuntu maakt. De default GUI start in tty7
+	- Ubuntu toont het tty-nummer zelf, anders:
+		$ tty
+	- in elke tty kunt ge inloggen met dezelfde of met een verschillende gebruiker
+		- zie sectie "in tty of console de display draaien"
+	- in VirtualBox VM is de toetscombinatie [Hostkey]+F[1-7]
+		- OPGELET: met [Hostkey] verliest VM ook keyboard focus aan VM-host. Let vooral op met sneltoetsen op dat moment.
+
+=== in tty of console de display draaien ===
+
+- is tegenwoordig altijd via framebuffer
+	- als root:
+		# echo 3 > /sys/class/graphics/fbcon/rotate
+		OF
+		# echo 3 > /sys/class/graphics/fbcon/rotate_all
+		- 0 : rotate   0°
+		- 1 : rotate  90° clockwise
+		- 2 : rotate 180° clockwise
+		- 3 : rotate 270° clockwise
+	- als user: een sudo geldt niet voor de redirect, misbruik daarom tee om in sudo naar bestand te schrijven:
+		$ echo 3 | sudo tee /sys/class/graphics/fbcon/rotate
+
+=== GUI starten in een tty ===
+
+- zie ook sectie "meerdere tty gebruiken"
+
+- In elke tty kan een GUI gestart worden
+	- dit b.v. gebruikt verder tty2 en X11-DISPLAY :1 (de default, op tty7, is :0)
+    - Ctrl+Alt+F2 : ga naar tty2
+	- log in
+	- zie sectie "in tty of console de display draaien"
+    - start Xserver (NIET als sudo) :
+		- OPM: lightdm hiervoor gebruiken zou niet kunnen, zou te simpel zijn om een display op te geven. Mij lukte het zeker niet
+		$ startx -display :1 -- :1
+		OF (vollediger)
+		$ startx -display :1 -- :1 vt2 &
+			- met de '2' in vt2 het tty-nr
+			- opties vóór '--' zijn opties voor de X11 client (xinit), die erna voor de X11 server
+			- '&' : in background, is dit nodig?
+		- startx delegeert zijn parameters naar xinit, met volledige syntax:
+			"xinit [[client] options ...] [ -- [server] [:n] options ...]"
+				- default client is xterm, met o.a. optie "-display :n", met n zelfde displaynr. als aan serverkant van de '--'
+		- X11 toont nu een xterm terminal-venster (met bash, ngl. gebruikersconfig), maar zonder vensterdecoraties (dus ook geen frame menu, sluitknoppen, ...)
+			- aanklikken om focus te geven
+			- Daarin kunt ge ook GUI programmas starten, maar zorg dat ge de prompt terug krijgt, want ge hebt nog maar 1 terminal:
+				- OFWEL met mijn 'spawn', b.v.
+					$ spawn mousepad
+				- OFWEL opdracht afsluiten met '&', b.v.
+					$ mousepad &
+			- om meer en controleerbare vensters te gebruiken, start ge een windowmanager of ineens de hele desktop (die ook xfwm4 start):
+				$ spawn xfce4-session
+				OF alleen windowmanager
+				$ xfwm4 --daemon &
+		- OPGELET:
+			- met zelfde bestanden openen als in een andere tty
+				- DENK OM config-bestanden
+			- In VM opletten met de toetsen Host+Fn waarmee ge van terminal wisselt: met Host-toets verliest VM ook keyboard focus, en gaat die terug naar de VM-host. Let vooral op met sneltoetsen op dat moment.
+
+- OPM: in 2de DISPLAY opnemen van het scherm met ffmpeg werkt (-f x11grab ... -i :1.0+x,y), maar bij wisselen van tty is die DISPLAY niet meer gekoppeld aan de grafische kaart, en dan neemt ffmpeg gewoon zwart beeld op.
+
+=== CUPS configureren ===
+
+- Common? Unix Printer Spooler
+
+- te configureren op http://localhost:631/
+	- daar ook online handleiding
+	- volgens Ubuntu docu wordt cups-genppd al een tijd niet meer geinstellerd met gutenprint omdat dat niet meer nodig is. Hoe de geinstalleerde printerdriver voor gutenprint dan met cups moet werken, staat er niet bij.
+
+=== asciidoc naar markdown ===
+
+- geen tool die dat rechtstreeks kan, wel via AsciiDoctor naar docbook, en met pandoc van docbook naar b.v. markdown :
+	>>> (https://gist.github.com/cheungnj/38becf045654119f96c87db829f1be8e)
+	- Adapted from https://tinyapps.org/blog/nix/201701240700_convert_asciidoc_to_markdown.html
+	- Using asciidoctor 1.5.6.1 and pandoc 2.0.0.1
+	- Install pandoc and asciidoctor : beide werken ook zonder installeren, zie GEZIPTE.PRG/Xubuntu
+			0 sudo apt install asciidoctor
+			0 sudo wget https://github.com/jgm/pandoc/releases/download/2.0.0.1/pandoc-2.0.0.1-1-amd64.deb
+			0 sudo dpkg -i pandoc-2.0.0.1-1-amd64.deb
+	- Convert asciidoc to docbook using asciidoctor
+		$ asciidoctor -b docbook foo.adoc
+		- foo.xml will be output into the same directory as foo.adoc
+	- Convert docbook to markdown
+		$ pandoc --wrap=none -f docbook -t gfm foo.xml -o foo.md
+		--wrap=none : else Pandoc inserts hard line breaks at 72 characters
+		[--columns=120] : insert line breaks at 120 chars
+	- Unicode symbols were mangled in foo.md. Quick workaround:
+		$ iconv -t utf-8 foo.xml | pandoc -f docbook -t gfm | iconv -f utf-8 > foo.md
+	<<<
+
 == RSYNC ==
 
 === MIJN VOORKEUR voor synchronisatie van directories ===
@@ -3621,26 +3745,26 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 - rsync heeft zoveel opties, en is zo gevoelig aan '\' :
 	ALTIJD : -n, --dry-run : perform a trial run with no changes made
 
-	- voor linux schijven :
+	- voor EXTn schijven (linux) :
 		$ rsync -aASXx [-civ] [--delete | --delete-before] bronpad/ doelpad/
 		-a , --archive	: archive mode; equals -rlptgoD (no -H,-A,-X) (preserve symbolic links, devices, attributes, permissions, ownerships, etc.)
 		-A, --acls : preserve ACLs (implies -p)
 		-S, --sparse : handle sparse files efficiently
 		-X, --xattrs : preserve extended attributes
 		-x, --one-file-system : (o.a. linux eigen mounts her en der niet archiveren)
-		[-c, --checksum] : skip based on checksum, not mod-time & size
+		[-c, --checksum] : skip based on checksum (duurt VEEL langer), not mod-time & size
 		[-i, --itemize-changes] : output a change-summary for all updates
 		[-v, --verbose] : increase verbosity
 		[--delete] : delete extraneous files from dest dirs
 		[--delete-before] : receiver deletes before xfer, not during (variant op --delete, geen optie van)
-	- voor NTFS schijven :
+	- voor NTFS schijven (Windows en veel USB) :
 		$ rsync -rltDSx [-civ] [-delete | --delete-before] bronpad/ doelpad/
 		-rltD : -a --no-o --no-g --no-p, want FAT/NTFS kent geen linux -o (owner), -g (group) of -p (permissions), zouden fouten geven
-		- sudo misschien niet nodig bij rsync, maar b.v. wel bij meld omdat die bij 'delete' naar .Trash wil moven
-	- voor FAT schijven :
+		- sudo misschien niet nodig bij rsync, maar b.v. wel voor Meld omdat die bij 'delete' naar .Trash wil moven
+	- voor FAT en FAT32 schijven (DOS en kleine USB) :
 		$ rsync -rltD -x
 		-rltD : -a --no-o --no-g --no-p, want FAT/NTFS kent geen linux -o (owner), -g (group) of -p (permissions), zouden fouten geven
-		
+
 === test of te verwachten resultaat nakijken ===
 	$ rsync -niv ...
 	-n, --dummy : geen wijzigingen aanbrengen
@@ -3747,6 +3871,128 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 	- OPGELET : symbolic links in Samba network shares en VirtualBox shared folders zijn standaard beperkt of uitgeschakeld
 		- zie sectie "symlinks volgen in Samba netwerk shares"
 		- zie "_VirtualBox.txt" sectie "Symbolic links op shared folders"
+
+== SHELL EN ENVIRONMENT VARIABELEN ==
+
+- shell variabelen gelden enkel in de shell of in een script dat door de shell wordt uitgevoerd. Een executable ziet alleen environment variabelen. De opdracht printenv toont de waarde van een environment variabele, de interne bash-opdracht "echo $naam" toont de waarde van een shell variabele.
+	- De bash-opdracht "export naam[=waarde] ..." markeert een of meer shell variabelen voor export naar het environment van elke executable die vanuit de huidige shell gestart wordt, en kent die variabelen evt. ineens een waarde toe.
+		- OPGELET: het blijven shell variabelen, maar met een vlagje "exporteer deze naar environment als ge een opdracht uitvoert", met de waarde van de shell variable op dat moment. B.v.
+			$ a=b
+			$ printenv a
+			>>><<<
+			$ export a
+			$ printenv a
+			>>>b<<<
+	- Een bash opdrachtlijn die een executable start, kan vooraan een of meer environment variabelen opsommen en een waarde geven, en die aan de opdracht doorgeven:
+		$ [naam=waarde ] ... opdracht ...
+		- OPGELET: die komen enkel in het environment van opdracht; in b.v. een opdrachtlijn als "n=w opdracht $n" is "n" nog een (al dan niet bestaande) shell variabele, NIET de environment variabele die de waarde w gaat krijgen binnnen "opdracht" zelf.
+
+=== laatste exit code ===
+
+	$ echo $?
+
+=== process id van script ===
+
+- De expansie van "$$" is de process id van het script in uitvoering (of shell bij sourcen van script vanuit shell) :
+	$ $$
+	>>> 2624 <<<
+		- In a () subshell, $$ expands to the process ID of the current shell, not the subshell.
+
+- De speciale variabele ! (gebruiken als "$!") geeft de process id van het meest recente process dat in de achtergrond werd geplaatst, door af te sluiten met een '&' (asynchronous command) dan wel door de bash opdracht "bg"
+
+=== lijst van bash set opties ===
+
+- met de opties van de built-in bash opdracht "set" stelt ge interne bash attributes in (!= de shell options van shopt), b.v.
+	$ set -C
+	-C, -o noclobber : geef fout als redirect ">" een bestaand bestand zou overschrijven
+	$ set +C
+	+C : zet die optie terug uit
+
+- de expansie van "$-" is een lijst met de ingestelde (short) option letters van set
+
+=== shellfunctie tonen ===
+	$ type mijnfunctie
+
+=== op naam ===
+	$ echo $NAAM
+
+=== op (deel van) naam ===
+	$ printenv | grep NAAMDEEL
+
+=== allemaal ===
+ 	$ set
+	- an internal bash command, so it shows all the "shell variables" (unexported environment variables) as well as the exported environment variables.
+	$ printenv
+	- an external command, so it only knows about (and prints) exported environment variables.
+	$ env
+	- an external command to run a program in a modified environment (bash can do this without env); also, when no argument given, displays variables like printenv does
+
+=== environment available to any GUI application ===
+
+- in Gnome Shell:
+	. press Alt-F2 (application finder)
+	. 'xterm -e bash --noprofile --norc'
+		to open a terminal with a shell that did not add any environment variables; it only has the environment variables added by the system files, that are available (by inheritance) to all programs in the system.
+	$ printenv
+	- in that terminal to list all your environment variables
+
+=== environment permanent instellen ===
+
+- zie https://help.ubuntu.com/community/EnvironmentVariables
+	- environment variable settings that affect the system as a whole (rather than just a particular user) is /etc/environment. An alternative is to create a file for the purpose in the /etc/profile.d directory.
+	- ~/.profile is run after ~/.pam_environment has been read
+	- ~/.pam_environment
+		(not a script, but list of assignment expressions, one per line. Some variables, like HOME, might not be set at the time ~/.pam_environment is parsed)
+	- ~/.profile
+		(script, gets executed automatically by the DisplayManager during the start-up process desktop session as well as by the login shell when one logs in from the textual console)
+	- OPM: als ik het goed begrijp, roept .profile als BASH wordt uitgevoerd ook .bashrc aan, dat zelf dan weer (en dat is zeker) ~/.bash_aliases uitvoert
+
+=== test of veranderlijke alleen witruimte is ===
+
+- gemakkelijkst door te testen op de echo ervan met standaard IFS " \t\n" :
+	$ if [ -z "$(echo $var)" ] ; then echo var is blanco; else echo -${var}- bevat tekens; fi
+	- "$(echo $var)" is "" als var alleen IFS-chars " \t\n" bevat
+
+=== variabele lijst met een scheidingsteken ===
+
+- maken: willen lijst niet beginnen of eindigen met een scheidingsteken, want dan hebt ge bij het opsplitsen voor- of achteraan een ""
+	- oplossing : ${parameter:+word} "Use Alternate Value. If parameter is null or unset, nothing is substituted, otherwise the expansion of word is substituted."
+	- voorbeeld met ',' als scheidingsteken :
+		$ lijst=$nieuwelement"${lijst:+,$lijst}"
+		OF
+		$ lijst="${lijst:+$lijst,}"$nieuwelement
+	- uitleg : als lijst nog leeg is, is de expansie "" en wordt lijst == nieuwelement. Als lijst al een waarde heeft, wordt de expansie door ",lijst" resp. "lijst,"
+
+- gebruiken : met expansie ${lijst//,/ } (NIET in "") wordt elk scheidingsteken ',' vervangen door een spatie
+	- enkel als de elementen geen ' ' bevatten, anders zie sectie "IFS tijdelijke waarde"
+	- voorbeeld loop : for elem in ${lijst//,/ };do echo $elem;done
+	- voorbeeld array : elems=(${lijst//,/ })
+
+=== prompts en xterm commandos ===
+
+- zie ook https://www.davidpashley.com/articles/bash-prompts/
+
+- bash kent 4 prompts :
+	- PS0 : wordt getoond nadat commando gelezen is en voor het wordt uitgevoerd
+	- PS1 : prompt wanneer de shell wacht op nieuw commando
+	- PS2 : prompt wanneer de shell wacht op vervolglijn van nieuw commando
+	- PS3 : prompt voor interne select-opdracht
+	- PS4 : prompt tijdens execution trace van script tonen
+
+- prompts kunnen terminal-escapecodes gebruiken (terminal Xubuntu Xenial : xterm, Bionic : $TERM = xterm-256color)
+	- 1-teken-escapes : zie man bash sectie "PROMPTING"
+	- \[ : Begin a sequence of non-printing characters, which could be used to embed a terminal control sequence into the prompt
+	- \] : End a sequence of non-printing characters
+		- markeer escapes als non-printing characters door ze tussen \[ en \] (in script \\[ en \\])  te zetten, zodat terminal line editor niet in de war geraakt voor positionering:
+			>>> \[...\] tells bash to ignore the non-printing control characters when calculating the width of the prompt. Otherwise line editing commands get confused while placing the cursor. <<<
+	- tekstkleur en -decoratie :
+		- \e[...m : begin of wijziging, met ... een ';'-gescheiden lijst van 2-cijferige codes
+		- zie ~/.dircolors voor de codes
+		- \e[m : einde
+	- set title patterns :
+		- \e]0;titel\a : icon and window
+		- \e]1;titel\a : icon
+		- \e]2;titel\a : window
 
 == SCRIPTS SCHRIJVEN EN DEBUGGEN ==
 
@@ -3948,9 +4194,10 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 		[ "$UID" -eq 0 ] || exec sudo "$0" "$@"
 	<<<
 	- zie ook sectie "redirect password naar sudo"
-	
+
 === loop over lijnen van tekstbestand ===
 	$ while read woord1 woord2 ... ; do echo $woord1 $woord2 ... ; done < tekst.txt
+	- OPGELET: er is maar 1 stdin, opdrachten na de 'do' die daaruit lezen, stelen die lijnen van de read-opdracht weg
 	- woord1 ... : variabelen waarin de woorden van een lijn uit tekst.txt gelezen worden; default $REPLY. The characters in IFS are used to split the line into words using the same rules the shell uses for expansion
 	- als lijn in tekst.txt meer woorden bevat dan opgegeven voor read, dan komt rest in laatste woord#
 	- andere read opties :
@@ -4094,7 +4341,7 @@ BLOCKCOM
 		{ [[ "-h" = "$1" || "--help" = "$1" ]] && { cat;exit; } || :; } <<-'_'
 			dit is helptekst
 		_
-		
+
 	- cat is eerste commando dat stdin leest, en leest hem helemaal leeg, zodat exit niets meer krijgt
 	- ':' is gewoon het kortste en snelste (bash built-in) commando dat niets doet; het maakt dus ook stdin niet leeg, maar daar is geen 1 simpel commando voor.
 
@@ -4141,7 +4388,7 @@ BLOCKCOM
 
 - exit op de opdrachtlijn van een interactieve shell, of in een script dat met de bash-opdracht "source" of "." wordt uitgevoerd, beëindigt die shell (en zijn terminal). Daar is de opdracht "return" beter voor.
 
-- goed voor allebei (recente bash) : "fc=-1; return "$fc" 2>/dev/null || exit "$fc" : in een uitvoerbaar script faalt de return, en wordt de exit uitgevoerd.	
+- goed voor allebei (recente bash) : "fc=-1; return "$fc" 2>/dev/null || exit "$fc" : in een uitvoerbaar script faalt de return, en wordt de exit uitgevoerd.
 
 === functies, argumenten, return value en spaties daarin ===
 
@@ -4149,7 +4396,7 @@ BLOCKCOM
 	- in de functie : "$1", "$2", ... of "$@"
 	- $0 is naam van script of shell
 	- om spaties te bewaren, argumenten zowel bij aanroep van als bij gebruik in functie tss. ""
-	
+
 - de return value van een functie (of sourced script) is de return code van de laatste opdracht, een getal van 0 tot 255 (cfr. de exit code van een binary)
 	- als tijdens het uitvoeren van de functie (of sourced script) een return-opdracht wordt tegengekomen, is dat de laatste opdracht; het (numerieke) argument van de return-opdracht (default 0) is ook haar return code, en dus die van de functie (of sourced script)
 	- bereikbaar als de expansie van "$?"
@@ -4176,7 +4423,7 @@ BLOCKCOM
 				declare -- a="extern"
 				bash: declare: b: not found
 				bash: declare: c: not found
-			<<<		
+			<<<
 	- stdout, b.v. met de opdracht "echo" en bash command substition, b.v.
 		$ resultaat=$(functie argument...)
 			- de command subsitution behoudt evt. spaties zonder dat er "" rondstaan, zodat elk argument tussen "" kan
@@ -4207,13 +4454,13 @@ BLOCKCOM
 	<<<
 	$ ./test.sh  A "B C D" "  Double  Spaced  "
 	>>>
-		script   3 elements : A B C D   Double  Spaced  
-		function 3 elements : A B C D   Double  Spaced  
+		script   3 elements : A B C D   Double  Spaced
+		function 3 elements : A B C D   Double  Spaced
 		>A<
 		>B C D<
 		>  Double  Spaced  <
 	<<<
-	
+
 === echo naar stderr ===
 
 - redirects mogen overal staan, b.v. in het begin maakt het heel leesbaar
@@ -4319,7 +4566,7 @@ BLOCKCOM
 
 All the the errors sent to stderr by the commands after the exec 2>file will go to the file, just as if you had the command in a script and ran myscript 2>file.
 
-exec can be used, if, for instance, you want to log the errors the commands in your script produce, just add exec 2>myscript.errors at the beginning of your script. 
+exec can be used, if, for instance, you want to log the errors the commands in your script produce, just add exec 2>myscript.errors at the beginning of your script.
 
 === redirect password naar sudo ====
 
@@ -4357,7 +4604,16 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 
 - IFS kan, zoals andere variabelen, iets als een tijdelijk waarde toegewezen krijgen, als prefix van een opdracht:
 	$ naam=waarde opdracht"
-	- die 'tijdelijke waarde' wordt aan de opdracht doorgegeven via het environment dat het krijgt; in C-termen is dit als char envp[], cfr. main(char argv[])
+	- die 'tijdelijke waarde' wordt aan de opdracht doorgegeven via het environment dat het krijgt; in C-termen is dit als char envp[], cfr. main(char argv[]). Voorbeeld:
+	>>>
+		$ test=1,2,3,4
+		$ IFS=, read -a entries <<<"$test"
+		$ echarr entries
+		entries[0]=1=
+		entries[1]=2=
+		entries[2]=3=
+		entries[3]=4=
+	<<<
 	- OPGELET woordsplitsing en expansies van variabelen gebeuren in de shell voor de opdracht wordt uitgevoerd, dus heeft die tijdelijke waarde van IFS daarop geen effect. Enkel in een speciale constructie, b.v. door een variabele tussen '' als argument van eval op te geven, zodat de expansie pas door de 'eval' gebeurt, is dat zichtbaar :
 		$ reeks=(1 2 3)
 		$ echo "${reeks[*]}"
@@ -4376,7 +4632,7 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 			<<<
 	- OPM : tijdelijke waarde van IFS is WEL nuttig voor b.v. woordsplitsing in een read
 	- OPM : brace expansion, o.a. {1..5}, gebruikt altijd een gewone spatie als separator, NIET $IFS
-	
+
 === array sorteren ===
 
 - zie (https://stackoverflow.com/questions/7442417/how-to-sort-an-array-in-bash)
@@ -4404,7 +4660,7 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 			- maakt er gebruik van dat sort toch in subshell gebeurt:
 				- toewijzing aan IFS blijft daar
 				- NIET IFS tijdelijke waarde geven door assignment vooraan opdracht: zie sectie "IFS tijdelijke waarde"
-				- array assignments mogen over meer dan 1 lijn gebeuren, t.e.m. afsluitende ')'	
+				- array assignments mogen over meer dan 1 lijn gebeuren, t.e.m. afsluitende ')'
 
 == PROGRAMMEREN ==
 
@@ -4483,7 +4739,277 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 	(gdb) run
 	(gdb) backtrace
 
-== ONDERHOUD ==
+== APT en DPKG ==
+
+=== apt of apt-get? ===
+
+- apt voor commandolijn : is gebruiksvriendelijk, maar 'man apt' toont niet alle mogelijke opties
+- apt-get voor scripts : heeft stabiele syntax, meer opties, en is ook vollediger gedocumenteerd
+
+- NOOT : "axi-cache search" is een betere vervanger voor "apt search" en "apt-cache search"
+
+>>> man apt(8):
+	The `apt` command is meant to be pleasant for end users and does not need to be backward compatible like apt-get(8). Take a look at this post for more information on the new tool: http://mvogt.wordpress.com/2014/04/04/apt-1-0/
+	A synopsis of the above link
+		The big news for this version is that we included a new “apt” binary that combines the most commonly used commands from apt-get and apt-cache. The commands are the same as their apt-get/apt-cache counterparts but with slightly different configuration options.
+
+	Currently the apt binary supports the following commands:
+		list: which is similar to dpkg list and can be used with flags like --installed or --upgradable.
+		search: works just like apt-cache search but sorted alphabetically.
+		show: works like apt-cache show but hide some details that people are less likely to care about (like the hashes). The full record is still available via apt-cache show of course.
+		update: just like the regular apt-get update with color output enabled.
+		install,remove: adds progress output during the dpkg run.
+		upgrade: the same as apt-get dist-upgrade -with-new-pkgs.
+		full-upgrade: a more meaningful name for dist-upgrade.
+		edit-sources: edit sources.list using $EDITOR.
+<<<
+
+=== apt[-get] update niet blind gebruiken ===
+
+- "apt[-get] update" installeert niets, werkt alleen de database bij van wat beschikbaar is in de repositories
+
+- dikwijls vindt ge commando's zoals
+	0 sudo apt update && apt-install ...
+ maar soms geeft update belangwekkende waarschuwingen (met of zonder foutcode?) die ge eerst wilt oplossen. Dikwijls moet ge daarvoor gewoon update een 2de keer uitvoeren. Dus :
+	# apt update
+	[# apt update]
+	# apt-install ...
+
+==== info van package ====
+
+- geinstalleerde en beschikbare versies, en hun repository
+	$ apt-cache policy packagenaam
+- info zoals in USC (Ubuntu Software Center)
+	$ apt-cache show packagenaam
+- dependencies (andere packages nodig voor packagenaam)
+	$ apt-cache depends packagenaam
+	[--installed]
+	[--recurse]
+- reverse dependencies (nodig voor welke andere packages)
+	$ apt-cache rdepends packagenaam
+	[--installed]
+	[--recurse]
+- beschikbare versies en (reverse) dependencies
+	$ apt-cache showpkg packagenaam
+
+=== details van een package ===
+
+- zie ook sectie "uit welke repository komt een package"
+
+	$ dpkg-query -s e2fsprogs
+		OF
+	$ dpkg -s e2fsprogs
+	-s, --status package-name... : Report status of specified package.
+	>>>
+		Package: e2fsprogs
+		Essential: yes
+		Status: install ok installed
+		...
+		Version: 1.42.13-1ubuntu1
+		...
+		 /etc/mke2fs.conf f3de4385c498ee9e01d1d703f0c3795d
+		Description: ext2/ext3/ext4 file system utilities
+		 The ext2, ext3 and ext4 file systems are ...
+	<<<
+
+=== versie van een package ===
+
+- moet niet geinstalleerd zijn, maar gewoon beschikbaar in de geconfigureerde resources (zie sectie "lijst van alle definieerde repositories (ppa)"
+
+- met wildcards als ge de naam maar ongeveer kent
+	$ dpkg-query -l e2fs*
+	OF
+	$ dpkg -l e2fs*
+	 -l, --list [package-name-pattern...] : List packages matching given pattern.
+	>>>
+		Desired=Unknown/Install/Remove/Purge/Hold
+		| Status=Not/Inst/Conf-files/Unpacked/halF-conf/Half-inst/trig-aWait/Trig-pend
+		|/ Err?=(none)/Reinst-required (Status,Err: uppercase=bad)
+		||/ Name                        Version            Architecture       Description
+		+++-===========================-==================-==================-===========================================================
+		un  e2fsck-static               <none>             <none>             (no description available)
+		ii  e2fslibs:amd64              1.42.13-1ubuntu1   amd64              ext2/ext3/ext4 file system libraries
+		ii  e2fsprogs                   1.42.13-1ubuntu1   amd64              ext2/ext3/ext4 file system utilities
+	<<<
+	- packages met "ii" in 1ste kolom zijn geinstalelerd
+
+- op exacte naam
+	$ apt-cache policy e2fsprogs
+	OF
+	$ apt policy e2fsprogs
+	e2fsprogs:
+	  Installed: 1.42.13-1ubuntu1
+	  Candidate: 1.42.13-1ubuntu1
+	  Version table:
+	 *** 1.42.13-1ubuntu1 500
+			500 http://archive.ubuntu.com/ubuntu xenial/main amd64 Packages
+			100 /var/lib/dpkg/status
+
+- zie ook sectie "details van een package"
+
+- systemrescuecd heeft die progs niet, zie gewoon :
+	- bij download
+	- http://www.system-rescue-cd.org/Detailed-packages-list
+
+=== list all installed packages ===
+	$ apt list --installed
+
+=== welk package installeerde dit bestand ===
+
+- voor executables kunnen we which het volledige pad laten bepalen van de versie die uitgevoerd zal worden (zoekt $PATH af)
+	$ dpkg-query -S $(which qvlc)
+	OF
+	$ dpkg -S $(which qvlc)
+	 -S, --search filename-search-pattern... : Search  for packages that own files corresponding to the given pattern
+	>>> vlc-plugin-qt:amd64: /usr/bin/qvlc <<<
+
+- maar pad is niet nodig :
+	$ dpkg -S libbz2.so
+	>>>
+		libbz2-1.0:amd64: /lib/x86_64-linux-gnu/libbz2.so.1.0.4
+		net.downloadhelper.coapp: /opt/net.downloadhelper.coapp/converter/build/linux/64/libbz2.so.1.0
+		libbz2-1.0:amd64: /lib/x86_64-linux-gnu/libbz2.so.1.0
+		libbz2-1.0:amd64: /lib/x86_64-linux-gnu/libbz2.so.1
+	<<<
+		- in dit vb. zijn /lib/x86_64-linux-gnu/libbz2.so.1.0 en /lib/x86_64-linux-gnu/libbz2.so.1 symlinks naar /lib/x86_64-linux-gnu/libbz2.so.1.0.4
+
+=== van welke andere packages hangt een package af ===
+
+	$ apt-cache depends vlc-plugin-qt:amd64
+	[--installed]
+	[--recurse]
+	>>>
+	vlc-plugin-qt
+	  Depends: libc6
+	  Depends: libgcc1
+	  Depends: libqt5core5a
+	  Depends: libqt5gui5
+	  Depends: libqt5svg5
+	  Depends: libqt5widgets5
+	  Depends: libqt5x11extras5
+	  Depends: libstdc++6
+	  Depends: libvlccore9
+	  Depends: libwayland-client0
+	  Depends: libx11-6
+	  Depends: <vlc-plugin-abi-3-0-0f>
+		libvlccore9
+	  Breaks: vlc
+	  Recommends: vlc-bin
+	  Replaces: vlc
+	<<<
+
+=== welke andere packages hangen van deze package af ===
+
+	$ apt-cache rdepends libqt5webkit5
+	[--installed]
+	[--recurse]
+	- lijst wordt samengesteld uit de package database; moeten niet geinstalleerd zijn, maar gewoon beschikbaar in de geconfigureerde resources (zie sectie "lijst van alle definieerde repositories (ppa)"
+
+=== apt cache opruimen ===
+
+- /var/cache/apt, hier komen .deb die apt-get download ()kan veel worden)
+	- NIET bruutweg deleten of leegmaken, bij nood zie sectie "apt cache herstellen"
+	- WEL
+		# apt-get clean
+		- laat enkel archives/, archives/partial/ en archives/lock staan
+
+- apt wordt geconfigureerd in /etc/apt/apt.conf.d
+	- ondervragen :
+		# apt-config dump
+		- b.v. enkel cache-instellingen:
+			# apt-config dump | grep "^Dir\( \|::Cache\)"
+
+- apt houdt lijst bij van wat repositories beschikbaar hebben in /var/lib/apt/lists
+	- best afblijven, ook al is het 232MB
+
+- apt houdt index van beschikbare gedownloade *.deb-installatiepakketten bij in /var/cache
+	- /var/cache/apt/pkgcache.bin en /var/cache/apt/srcpkgcache.bin : ±100MB
+		- lookup cache voor packages en source packages
+		- mag verwijderd worden, worden opnieuw gemaakt bij opstarten en bij 'apt update'
+		- definitief uitschakelen (apt-bewerkingen duren dan wat langer) :
+			$ echo -e 'Dir::Cache::pkgcache "";\nDir::Cache::srcpkgcache "";' | sudo tee /etc/apt/apt.conf.d/00_geen_lookupfiles_cache
+	- /var/cache/apt/archives/
+		- bevat .deb, een lock-file, en een directory "partial" voor downloads die bezig zijn
+		- kan zeker na een dist-upgrade 2GB groot zijn
+		- mag symlink naar andere locatie zijn, maar met volledige rechten voor root
+			- dus opgelet met netwerkschijven en VM shared folder
+			- anders fouten zoals "chown to _apt:root of directory /var/cache/apt/archives/partial failed"
+		- definitief uitschakelen :
+			$ echo -e 'Dir::Cache "";\nDir::Cache::archives "";' | sudo tee /etc/apt/apt.conf.d/00_geen_packages_cache
+			- worden opnieuw gedownload wanneer ze nodig zijn, b.v. mislukte installatie, of remove en toch terug installeren
+		- volledig leegmaken (als geen apt* bezig is) :
+			# apt-get clean
+		- alleen verouderde weggooien :
+			# apt-get autoclean
+	>>> https://www.unixtutorial.org/ubuntu-clean-apt-cache/
+		APT (Advanced Package Tool) keeps a cache of previously downloaded and installed packages even after they've been uninstalled. To save disk space the apt cache can be cleaned. This can be done in one of two ways. First will do it partially:
+			# apt-get autoclean
+		This command will remove only the outdated packages, like those superseded by a recent update, making them completely unnecessary. This may free up some disk space, but if you want to clean out the cache in its entirety you would run:
+			# apt-get clean
+		This command will remove all of the cached packages, saving the most space. This just means that if you were to ever need a package that was cached it will simply have to be downloaded again. Depending on your connection speed and data plan this may or may not be of concern. Other than that, it is safe to do.
+		Perhaps noteworthy is that the apt cache resides in /var/cache/apt/archives/. You can see them if you run the ls command on that path or view it in a file manager. Manually removing packages from this directory should be safe, but with the simpler and faster methods above there's no need.
+	<<<
+
+=== apt cache herstellen ===
+
+- gebeurt normaal door elke apt* opdracht die de cache benadert.
+	- expliciet herstellen:
+		# apt-cache gencaches
+	- desnoods met de hand herstellen:
+		# richt een goede cache in voor apt
+		sudo mkdir -p /var/cache/apt/archives
+		sudo mkdir -m 0700 /var/cache/apt/archives/partial
+		sudo chown _apt:root /var/cache/apt/archives/partial
+		# voor de zekerheid dit ook, maar ik denk niet dat die nodig is
+		sudo touch /var/cache/apt/archives/lock
+		sudo chmod 640 /var/cache/apt/archives/lock
+
+- OPM: _maakVMvanBackup_gestript.sh maakt config-bestand in /etc/apt/config.d om de cache
+	- elders te zetten, b.v. in /tmp/apt
+	OF
+	- niet te gebruiken, ook nadat de cache terug goed ingericht is
+		- het apt cache "lock"-bestand en alle deb's komen dan in de / (maar worden wel schoon opgekuist)
+		- die configs verwijderen:
+			# rm /etc/apt/apt.conf.d/00_geen_apt_cache
+	- apt cache-configuratie nakijken:
+		$ apt-config dump | grep -i cache
+
+=== .deb package installeren ===
+- aanbevolen :
+	# apt update
+	# apt install ./mijnpackage.deb
+	- OPM : steeds een absoluut of relatief pad voor mijnpackage.deb opgeven, anders gaat apt gewoon het internet op om die package te zoeken in de repositories
+	- apt install zorgt ook voor alle dependencies
+
+- brute kracht; niet aanbevolen, omdat "apt-get install -f" soms wat driest te werk gaat :
+	# dpkg -i mijnpackage.deb
+	- installeert rechttoe-rechtaan, zonder evt. nodige extra packages te installeren
+	# apt update
+	# apt-get install -f
+	-f : fix dependencies
+
+=== .deb package uitpakken/inpakken/bewerken ===
+
+- DEB files are ar archives, which always contains the three files: debian-binary, control.tar.gz, and data.tar.gz.
+
+- wijzigen manier 1
+	$ dpkg-deb -R original.deb /media/ramdisk/doelmap
+	-R, --raw-extract : Extracts the filesystem tree from a package archive into a specified directory, and the control information files into a DEBIAN subdirectory of the specified directory. The target directory (but not its parents) will be created if necessary. The input archive is not (currently) processed sequentially, so reading it from standard input (-) is not supported.
+	- edit the extracted files
+	- You should add a changelog entry (.../doelmap/usr/share/doc/<library>/changelog.Debian.gz) and change the version number in ("DEBIAN/control") if you modify anything in the package. The infrastructure to manipulate Debian packages assumes that if two packages have the same name and version, they're the same package. Add a suffix to the debian_revision part at the end of the version number; for sorting reasons the suffix should start with ~, e.g. 1.2.3-4.1 becomes 1.2.3-4.1~johnjumper1
+	$ dpkg-deb -b /media/ramdisk/doelmap fixed.deb
+	-b, --build directory [archive|directory] : Creates a debian archive from the filesystem tree stored in directory. directory must have a DEBIAN subdirectory, which contains the control information files such as the control file itself. This directory will not appear in the binary package's filesystem archive, but instead the files in it will be put in the binary package's control information area. If the second argument is a directory then dpkg-deb will write to the file package_version_arch.deb, or package_version.deb if no Architecture field is present in the package control file.
+
+- wijzigen manier 2
+	- Beware that unless your script is running as root, the files' permissions and ownership will be corrupted at the extraction stage. Rather than mess with permissions, you can keep the data archive intact and modify only the control archive. dpkg-deb doesn't provide a way to do that. Fortunately, deb packges are in a standard format: they're ar archives. So you can use ar to extract the control archive, modify its files, and use ar again to replace the control archive by a new version.
+	- You should add a changelog entry (? in DEBIAN/templates ?) and change the version number in ("DEBIAN/control") if you modify anything in the package. The infrastructure to manipulate Debian packages assumes that if two packages have the same name and version, they're the same package. Add a suffix to the debian_revision part at the end of the version number; for sorting reasons the suffix should start with ~, e.g. 1.2.3-4.1 becomes 1.2.3-4.1~johnjumper1
+	# mkdir tmp
+	# cd tmp
+	# ar p ../original.deb control.tar.gz | tar -xz
+	- edit the extracted files
+	# cp ../original.deb ../fixed.deb
+	# tar czf control.tar.gz *[!z]
+	# ar r ../fixed.deb control.tar.gz
 
 === repositories (ppa) ===
 
@@ -4572,19 +5098,6 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 	# apt-get update
 	# apt-get install gimp
 
-==== info van package ====
-
-- geinstalleerde en beschikbare versies, en hun repository
-	$ apt-cache policy packagenaam
-- info zoals in USC (Ubuntu Software Center)
-	$ apt-cache show packagenaam
-- dependencies (andere packages nodig voor packagenaam)
-	$ apt-cache depends packagenaam
-- reverse dependencies (nodig voor welke andere packages)
-	$ apt-cache rdepends packagenaam
-- beschikbare versies en (reverse) dependencies
-	$ apt-cache showpkg packagenaam
-	
 ==== lijst van alle definieerde repositories (ppa) ===
 	$ grep -vrhE "^[ \t]*(#.*| *)$" --include "*.list" /etc/apt/sources.list /etc/apt/sources.list.d/*  | sort -u
 	- zie sectie "cat zonder commentaar en lege lijnen"
@@ -4594,7 +5107,7 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 - selecteert (ruw script) packages die van elders dan http://[archive|security].[ubuntu|canonical].com/ geinstalleerd zijn/kunnen worden :
 	$ bash ~/bin/ppa-installed.sh
 
-==== Which PPA Repository A Package Belongs To ====
+==== uit welke repository komt een package ====
 	$ apt-cache policy package_name
 		- heeft bash completion (tab)
 		- zie https://web.archive.org/web/20121024134944/http://carlo17.home.xs4all.nl/howto/debian.html
@@ -4635,80 +5148,9 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 		- de 100 en 500 zijn prioriteiten : 500 installable, 100 installed
 		- /var/lib/dpkg/status
 
-=== apt of apt-get? ===
+== ONDERHOUD ==
 
-- apt voor commandolijn : is gebruiksvriendelijk, maar 'man apt' toont niet alle mogelijke opties
-- apt-get voor scripts : heeft stabiele syntax, meer opties, en is ook vollediger gedocumenteerd
-
-- NOOT : "axi-cache search" is een betere vervanger voor "apt search" en "apt-cache search"
-
->>> man apt(8):
-	The `apt` command is meant to be pleasant for end users and does not need to be backward compatible like apt-get(8). Take a look at this post for more information on the new tool: http://mvogt.wordpress.com/2014/04/04/apt-1-0/
-	A synopsis of the above link
-		The big news for this version is that we included a new “apt” binary that combines the most commonly used commands from apt-get and apt-cache. The commands are the same as their apt-get/apt-cache counterparts but with slightly different configuration options.
-
-	Currently the apt binary supports the following commands:
-		list: which is similar to dpkg list and can be used with flags like --installed or --upgradable.
-		search: works just like apt-cache search but sorted alphabetically.
-		show: works like apt-cache show but hide some details that people are less likely to care about (like the hashes). The full record is still available via apt-cache show of course.
-		update: just like the regular apt-get update with color output enabled.
-		install,remove: adds progress output during the dpkg run.
-		upgrade: the same as apt-get dist-upgrade -with-new-pkgs.
-		full-upgrade: a more meaningful name for dist-upgrade.
-		edit-sources: edit sources.list using $EDITOR.
-<<<
-
-=== apt[-get] update niet blind gebruiken ===
-
-- "apt[-get] update" installeert niets, werkt alleen de database bij van wat beschikbaar is in de repositories
-
-- dikwijls vindt ge commando's zoals
-	0 sudo apt update && apt-install ...
- maar soms geeft update belangwekkende waarschuwingen (met of zonder foutcode?) die ge eerst wilt oplossen. Dikwijls moet ge daarvoor gewoon update een 2de keer uitvoeren. Dus :
-	# apt update
-	[# apt update]
-	# apt-install ...
-
-=== apt cache opruimen ===
-
-- apt wordt geconfigureerd in /etc/apt/apt.conf.d
-	- ondervragen :
-		# apt-config dump
-		- b.v. enkel cache-instellingen:
-			# apt-config dump | grep "^Dir\( \|::Cache\)"
-		
-- apt houdt lijst bij van wat repositories beschikbaar hebben in /var/lib/apt/lists
-	- best afblijven, ook al is het 232MB
-
-- apt houdt index van beschikbare gedownloade *.deb-installatiepakketten bij in /var/cache
-	- /var/cache/apt/pkgcache.bin en /var/cache/apt/srcpkgcache.bin : ±100MB
-		- lookup cache voor packages en source packages
-		- mag verwijderd worden, worden opnieuw gemaakt bij opstarten en bij 'apt update'
-		- definitief uitschakelen (apt-bewerkingen duren dan wat langer) :
-			$ echo -e 'Dir::Cache::pkgcache "";\nDir::Cache::srcpkgcache "";' | sudo tee /etc/apt/apt.conf.d/00_geen_lookupfiles_cache
-	- /var/cache/apt/archives/
-		- bevat .deb, een lock-file, en een directory "partial" voor downloads die bezig zijn
-		- kan zeker na een dist-upgrade 2GB groot zijn
-		- mag symlink naar andere locatie zijn, maar met volledige rechten voor root
-			- dus opgelet met netwerkschijven en VM shared folder
-			- anders fouten zoals "chown to _apt:root of directory /var/cache/apt/archives/partial failed"
-		- definitief uitschakelen :
-			$ echo -e 'Dir::Cache "";\nDir::Cache::archives "";' | sudo tee /etc/apt/apt.conf.d/00_geen_packages_cache
-			- worden opnieuw gedownload wanneer ze nodig zijn, b.v. mislukte installatie, of remove en toch terug installeren
-		- volledig leegmaken (als geen apt* bezig is) :
-			# apt-get clean
-		- alleen verouderde weggooien :
-			# apt-get autoclean
-	>>> https://www.unixtutorial.org/ubuntu-clean-apt-cache/
-		APT (Advanced Package Tool) keeps a cache of previously downloaded and installed packages even after they've been uninstalled. To save disk space the apt cache can be cleaned. This can be done in one of two ways. First will do it partially:
-			# apt-get autoclean
-		This command will remove only the outdated packages, like those superseded by a recent update, making them completely unnecessary. This may free up some disk space, but if you want to clean out the cache in its entirety you would run:
-			# apt-get clean
-		This command will remove all of the cached packages, saving the most space. This just means that if you were to ever need a package that was cached it will simply have to be downloaded again. Depending on your connection speed and data plan this may or may not be of concern. Other than that, it is safe to do.
-		Perhaps noteworthy is that the apt cache resides in /var/cache/apt/archives/. You can see them if you run the ls command on that path or view it in a file manager. Manually removing packages from this directory should be safe, but with the simpler and faster methods above there's no need.
-	<<<
-
-==== upgraden (binnen zelfde release) ====
+=== upgraden (binnen zelfde release) ===
 	- BELANGRIJK : ofwel alle bootschijven aansluiten, ofwel reservekopie /boot/grub/grub.cfg, want die wordt bijgewerkt
 	- Alvorens bij te werken vanop de command line, eerst
 	# apt-get update
@@ -4721,7 +5163,7 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 - apt-get update en apt-get upgrade worden gestuurd door de keuzes in launcher 'Settings/Software & Updates' (Configure the sources for installable software and updates)
 	# software-properties-gtk
 
-==== point release upgrade, b.v. van 16.04 naar 16.04.1 ====
+=== point release upgrade, b.v. van 16.04 naar 16.04.1 ===
 
 - als dat niet al vanzelf gebeurd is
 
@@ -4748,7 +5190,7 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 			full-upgrade performs the function of upgrade but may also remove installed packages if that is required in order to resolve a package conflict.
 	<<<
 
-==== release upgrade, b.v. van 16.04.x naaar 18.04.x ====
+=== release upgrade, b.v. van 16.04.x naaar 18.04.x ===
 
 - "Dirty" upgrades, from one release to another, don't always go as planned :
 	- Back up your current system.
@@ -4774,7 +5216,6 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 			0 beter niet als ge al wat aan uw systeem gewijzigd hebt :
 			 [-y, --yes, --assume-yes] : Automatic yes to prompts
 	- waarschijnlijk best heropstarten
-
 	- schakel de nodige repositories van derden terug in (Software & Updates); update zou bij "OK" achter de schermen moeten gebeuren, kan geen kwaad dat te herhalen :
 		# apt-get update
 	- installeer nieuwe software
@@ -4806,7 +5247,7 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 	- For instance:
 		# apt-get build-dep ffmpeg
 			- 300MB
-		$ apt-get source ffmpeg		
+		$ apt-get source ffmpeg
 
 - You can download the complete source code ISOs from the Ubuntu download servers:
     http://cdimage.ubuntu.com/releases/<version>/release/source/ for currently-supported releases. For example, http://cdimage.ubuntu.com/releases/12.04/release/source/ for 12.04.
@@ -4825,49 +5266,15 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 	- Laat oude headers staan in /usr/src, >50MB per versie. Daarom van tijd tot tijd voor alle oude versies (vergelijken met /boot) met de hand opkuisen:
 		$ sudo apt-get purge linux-headers-4.4.0-34
 
-=== .deb package installeren ===
-- aanbevolen :
-	# apt update
-	# apt install ./mijnpackage.deb
-	- OPM : steeds een absoluut of relatief pad voor mijnpackage.deb opgeven, anders gaat apt gewoon het internet op om die package te zoeken in de repositories
-	- apt install zorgt ook voor alle dependencies
-
-- brute kracht; niet aanbevolen, omdat "apt-get install -f" soms wat driest te werk gaat :
-	# dpkg -i mijnpackage.deb
-	- installeert rechttoe-rechtaan, zonder evt. nodige extra packages te installeren
-	# apt update
-	# apt-get install -f
-	-f : fix dependencies
-
-=== .deb package uitpakken/inpakken/bewerken ===
-
-- DEB files are ar archives, which always contains the three files: debian-binary, control.tar.gz, and data.tar.gz.
-
-- wijzigen manier 1
-	$ dpkg-deb -R original.deb /media/ramdisk/doelmap
-	-R, --raw-extract : Extracts the filesystem tree from a package archive into a specified directory, and the control information files into a DEBIAN subdirectory of the specified directory. The target directory (but not its parents) will be created if necessary. The input archive is not (currently) processed sequentially, so reading it from standard input (-) is not supported.
-	- edit the extracted files
-	- You should add a changelog entry (.../doelmap/usr/share/doc/<library>/changelog.Debian.gz) and change the version number in ("DEBIAN/control") if you modify anything in the package. The infrastructure to manipulate Debian packages assumes that if two packages have the same name and version, they're the same package. Add a suffix to the debian_revision part at the end of the version number; for sorting reasons the suffix should start with ~, e.g. 1.2.3-4.1 becomes 1.2.3-4.1~johnjumper1
-	$ dpkg-deb -b /media/ramdisk/doelmap fixed.deb
-	-b, --build directory [archive|directory] : Creates a debian archive from the filesystem tree stored in directory. directory must have a DEBIAN subdirectory, which contains the control information files such as the control file itself. This directory will not appear in the binary package's filesystem archive, but instead the files in it will be put in the binary package's control information area. If the second argument is a directory then dpkg-deb will write to the file package_version_arch.deb, or package_version.deb if no Architecture field is present in the package control file.
-
-- wijzigen manier 2
-	- Beware that unless your script is running as root, the files' permissions and ownership will be corrupted at the extraction stage. Rather than mess with permissions, you can keep the data archive intact and modify only the control archive. dpkg-deb doesn't provide a way to do that. Fortunately, deb packges are in a standard format: they're ar archives. So you can use ar to extract the control archive, modify its files, and use ar again to replace the control archive by a new version.
-	- You should add a changelog entry (? in DEBIAN/templates ?) and change the version number in ("DEBIAN/control") if you modify anything in the package. The infrastructure to manipulate Debian packages assumes that if two packages have the same name and version, they're the same package. Add a suffix to the debian_revision part at the end of the version number; for sorting reasons the suffix should start with ~, e.g. 1.2.3-4.1 becomes 1.2.3-4.1~johnjumper1
-	# mkdir tmp
-	# cd tmp
-	# ar p ../original.deb control.tar.gz | tar -xz
-	- edit the extracted files
-	# cp ../original.deb ../fixed.deb
-	# tar czf control.tar.gz *[!z]
-	# ar r ../fixed.deb control.tar.gz
-
 === programma installeren naar eigen pad ===
 
 - als ge weet naar welke paden het progr. installeert, kunt ge die op voorhand vervangen door links naar de gewenste installatiedirectory
 	- b.v. FlighGear zet gigabytes databestanden in /usr/share/games/flightgear/
 
 - veel programmas zijn te krijgen in een portable formaat, b.v. appimage, snap, flatpack. Die kopiëert ge gewoon waar ge wilt, b.v. mijn SDATA/.stacks
+	- zie sectie "appimage"
+	- zie sectie "flatpak"
+	- zie sectie "snap"
 
 - met dpkg i.p.v. apt install
 	- goed testen in VM snapshot
@@ -4880,6 +5287,245 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 			- The man page for dpkg also has a --admindir= flag that, quote: "Change default administrative directory, which contains many files that give information about status of installed or uninstalled packages, etc. (Defaults to /var/lib/dpkg)" So in theory, if dpkg is complaining about package conflicts and dependencies, you can use the above to build a completely separate dependency tree, containing required libraries that would otherwise conflict with your system's main libraries and dependencies. (Do not use --admindir=YOURDIR without --installdir=YOURDIR. It'll mess things up)
 		- Also look at the --root=dir option in the dpkg manual page. It's probably safer than using --admindir=YOURDIR and --installdir=YOURDIR
 	<<<
+
+==== appimage ====
+
+- een AppImage is een klein stuk executable (het bestand "runtime") in de eerste 16 (ongebruikte) sectoren van een ISO-9660 image (deprecated) met zizofs compressie (bestand per bestand), of geconcateneerd voor een gewoon squashfs-bestand
+	- zizofs maken met "mkzftree"
+	- niet installeren: gewoon uitvoerbaar maken en uitvoeren
+	-  geen sandbox of andere beveiliging van de pc, dus alleen vertrouwde bronnen gebruiken om appimages te zoeken
+		- zie [Firejail sandbox voor AppImages]( https://firejail.wordpress.com/documentation-2/appimage-support/)
+	- in de root van het AppImage image staat de zogenaamde AppDir, b.v. aanmaken met [linuxdeployqt](https://github.com/probonopd/linuxdeployqt), d.w.z. alle nodige bestanden van de toepassing, en hun directorystructuur (/etc, /usr etc.), en verder o.a.
+		- een icon .DirIcon
+		- een .desktop voor de toepassing
+		- een verplicht uitvoerbaar bestand (script of binary) "AppRun", dat b.v.
+			- PATH en LD_LIBRARY prefixt met de ./usr/bin ./usr/games ... resp. ./usr/lib ... v.d. appimage
+				- in flexibele toep. staan geen harde paden naar /usr enz. gecompileerd, en zoeken het nodige relatief tot de directory vanwaar ze gestart zijn
+				- voor andere toep. gebruikt appimage 1 van 2 hacks om toep. zijn libs enz. te laten vinden:
+					- binary patch bij het maken van de appimage, waarbij in de binaries van de toepassing "/usr" vervangen wordt door de even lange string "././", het pad waar appimage's bin/ lib/ enz. staan
+					OF
+					- library die voor de toep. een unionfs simuleert, die doet alsof de ./usr etc. van de appimage over /usr enz. gemount zijn
+			- hoofdprogramma van de toepassing opstart, b.v. met "exec programma $@"
+				- hard gecodeerd, of b.v. geparsed uit het 1ste Exec= statement van die .desktop
+		- sommige gebruiken een generiek wrapper-script (van appimage maker), dat b.v. vraagt of ge een .desktop-bestand wilt om de toep. mee op te starten :
+			- als root in "/usr/local/share/applications"
+			- als gebruiker in "$HOME/.local/share/applications"
+			- die vraag wordt overgeslagen als env.-variabele DESKTOPINTEGRATION om het even welke waarde heeft
+			- die vraag wordt overgeslagen als een (mag leeg) bestand %appnaam%no_desktopintegration bestaat in een van : (b.v. ZimDesktopWiki_no_desktopintegration)
+				"~/.local/share/appimagekit/"
+				"/usr/share/appimagekit/"
+				"/etc/appimagekit/"
+	- mount zichzelf bij uitvoering op een zelf gemaakte /tmp/.mount???, en start daar ./AppRun met alle parameters van de opdrachtlijn. Daar zijn b.v. ook een .desktop en een icon te vinden, om b.v. zelf een menu-item mee te maken in de desktop-omgeving
+	- als AppRun een shellscript is i.p.v. een binary, is het gebruikelijk dat die met grep in de Exec=-lijn van ./???.desktop het uit te voeren programma + default-parameters opzoekt.
+
+- portable gebruik: if you invoke an AppImage built with a recent (2017 en later) version of AppImageKit and have one of the following special directories in place, then the configuration files will be stored alongside the AppImage. This can be useful for portable use cases, e.g., carrying an AppImage on a USB stick, along with its data.
+	- If there is a directory with the same name as the AppImage plus .config, then $XDG_CONFIG_HOME will automatically be set to it before executing the payload application
+		- naam van bestand, niet van de symlink die ernaar verwijst.
+	- If there is a directory with the same name as the AppImage plus .home, then $HOME will automatically be set to it before executing the payload application
+		- naam van bestand, niet van de symlink die ernaar verwijst.
+		- ook voor b.v. ~/.cache)
+	- om toch in b.v. desktop-bestanden een generieke naam te gebruiken, b.v. zim.appimage i.p.v. zim-9.0.99-gclib-7.d.-x86-64a.appimge :
+		- hernoem de gedownloade appimage
+		OF
+		- zet er een hard link naar (op dezelfde schijf) met de eenvoudige naam
+		OF
+		- zet er een symlink naar, en maak bovengenoemde directories met de volledige naam
+		OF
+		- zet er een symlink naar, en maak bovengenoemde directories met de eenvoudige naam, en symlinks daaarnaar met de volledige naam
+	- werkt NOG NIET voor
+		- Audacity-2.1.2.glibc2.15-x86_64
+		- avidemux_2.7.6
+		- FBReader-0.99.4.glibc2.14-x86_64
+		? FlightGear-2020.2.1-x86_64 : te testen
+	- WERKT voor
+		- AppImageKit/pkg2appimage-1793-x86_64
+		- Mapton-2.0.1-x86_64
+		- Stellarium-0.19.1-x86_64
+		- waterfox-classic-2020.09-90.1.Build90.5.glibc2.17-x86_64
+		- Zim_Desktop_Wiki-0.67.glibc2.15-x86_64
+		- Zoom-5.3.469451.0927.glibc2.17-x86_64
+	- NIET GETEST voor
+		- eigen LibreOffice 6.4, want ik wil juist wel mijn $HOME gebruiken
+
+===== appimage zelf mounten ===
+
+- door de appimage zelf (als ge hem vertrouwt)
+	$ xxx.appimage --appimage-mount
+	- blijft gemount wachten tot Ctrl-C, dan terug prompt
+OF
+- met mount : nuttig als ge de appimage eerst wilt nakijken voor ge hem uitvoert
+	- ISO image : de appimage runtime staat gewoon in de eerste 32k (0x8000) bytes, de System Area ("Unused by ISO 9660"); het appimage bestand kan gemount worden zoals elk ander cd-image, b.v.
+		# mount -o ro -t iso9660 xxx.appimage /cdrom
+		- evt. eerst testen of het een appimage met ISO image is: op offset 32768 (0x8000) staat dan 0x01 gevolgd door "CD001" :
+		- zie sectie "bytes op offset in binary file"
+			$ 2>/dev/null dd skip=32768 iflag=skip_bytes,count_bytes count=6  if=xxx.appImage | hexdump -e '1/1 "%02X" 5 "%c""\n"' | grep 01CD001
+			OF (minder efficient)
+			$ strings -t d *.AppImage | grep "32769 CD001" && echo Dit is een ISO-appimage || Dit is (wschlk) een squashfs-appimage
+	- squashfs-bestand als ge de offset daarvan in de appimage opzoekt
+		- vertrouwde appimage :
+			$ offset=$(xxx.appimage --appimage-offset)
+		OF
+		- veilig met linux-tools : 2de voorkomen van squashfs magic word 0x73717368 ("hsqs") staat op offset 0 van het squashfs-bestand (1ste staat in het runtime-prefix) in het appimage-bestand
+			- Zie sectie "offset van string in binary file"
+		# mount -o ro,offset=$offset -t squashfs xxx.appimage /mnt
+		- OPM: offset van 2de "hsqs" komt in alle squashfs-appimages die ik onderzocht overeen met de lengte van gekende appimage-runtime-versies, dus met die offset kunt ge de 2 scheiden en terug aaneen plakken:
+			$ 2>/dev/null dd iflag=count_bytes count=$offset  if=xxx.appimage of=xxx.runtime
+			$ 2>/dev/null dd skip=$offset iflag=skip_bytes if=xxx.appimage of=xxx.squashfs
+
+===== appimage uitpakken =====
+
+- zie sectie "appimage zelf mounten"
+OF
+- de appimage uitvoeren, en de inhoud kopiëren uit zijn /tmp/.mountxxxx/ mountpoint
+OF
+- met zijn eigen "runtime" (als ge de bron vertrouwt) :
+		$ pad-naar/xxx.AppImage --appimage-extract
+
+===== AppImage wijzigen ====
+
+- zie sectie "AppRun script of exe"
+
+- AppImage runtime maken de volgende variabelen beschikbaar voor AppRun script:
+	- ISO (Type 1, deprecated)
+		- APPIMAGE : (Absolute) path to AppImage file (with symlinks resolved)
+		- APPDIR : Path of mountpoint of the image contained in the AppImage
+		- OWD : Path to working directory at the time the AppImage is called
+	- Squashfs runtime (Type 2) bijkomend :
+		- ARGV0 : Name/path used to execute the script. This corresponds to the value you’d normally receive via the argv argument passed to your main method. Usually contains the filename or path to the AppImage, relative to the current working directory. ARGV0 provides information how the AppImage was called. When you call an AppImage through a symlink for instance, you can get the path to this symlink through ARGV0, while APPIMAGE would contain the absolute path to the file behind that symlink.
+			- Scenarios where ARGV0 is really useful involve so-called multi-binary AppImages, where the filename in ARGV0 defines which program is called inside the AppImage. This concept can be implemented in a custom AppRun script
+
+- ISO-appimage: het runtime-prefix van de/een originele ISO-appimage gewoon over de 1ste 32k bytes van de nieuwe zetten :
+	$ dd if=originele.appimage of=/media/ramdisk/nieuwe.appimage bs=32k count=1
+	$ dd if=gewijzigde.iso of=/media/ramdisk/nieuwe.appimage bs=32k seek=1 skip=1
+
+- squashfs-appimage
+	- ge kunt een nieuwe/gewijzigde squashfs-appimage zomaar achter zijn originele of een andere runtime te plakken, voor b.v. extra data, parameters in .desktop, of andere config-bestanden :
+		- het runtime-prefix van squashfs-appimages is langer dan die van ISO-9660-appimages, want langer dan in de vrije 1ste 32k van een ISO zou passen (?omdat ISO mounten in elke linux zit?)
+	- mksquashfs-opdracht van AppImageKit
+		- is al v.4.4, bevat opties -offset die mijn v.4.3 nog NIET heeft, en -mkfs-time die in mijn v.4.3 nog -fstime heet, b.v. :
+			>>>
+				mksquashfs commandline: /tmp/.mount_appima0gB5Fs/usr/bin/../lib/appimagekit/mksquashfs /media/ramdisk/LibreOffice/LibreOffice.AppDir LibreOffice-6.4.6.standard.help-x86_64.AppImage -offset 188456 -comp gzip -root-owned -noappend -mkfs-time 0
+			<<<
+			- mksquashfs v.4.3
+				-fstime <secs> :	Set fs time to seconds since epoch. Default to current time
+			- mksquashfs v.4.4
+				-mkfs-time <time> :	set mkfs time to <time> which is an unsigned int
+				-fstime <time> :	synonym for mkfs-time
+				-o, -offset <offset> :	Skip <offset> bytes at the beginning of <dest>. Optionally a suffix of K, M or G can be given
+			- met 188456 de lengte van de runtime binary, waar appimagekit het squashfs image ineens achter plakt.
+		-offset : niet nodig als ge eerst een gewone squashfs maakt en die dan met cat achter de runtime plakt
+
+	- zie sectie "appimage zelf mounten", mounten op b.v. /cdrom
+		$ offset= ..., voor gebruik verderop
+	- bestanden wijzigen of toevoegen in aparte directory, met zelfde subdir-structuur
+	- directory met gewijzigde/toegevoegde bestanden erover mounten met unionfs:
+		$ unionfs -o cow mijnmap:/cdrom /mnt
+	- nieuwe squashfs maken, met exclude van bestanden/directories die eruit mogen in de nieuwe versie
+		$ mksquashfs /mnt /media/ramdisk/nieuwe.squashfs -comp gzip -root-owned -noappend -fstime 0 -e exclude1 exclude2 ...
+			 -comp gzip : default, veruit de snelste decompressie
+			 -noappend : evt. bestaande appimage (van eerdere poging) overschrijven, NIET bijplakken (zou gewoon bestaande items in root-directory genummerd hernoemen)
+			 -root-owned : ken de reden niet, maar kan alvast geen kwaad, want image is toch read-only
+	- achter zijn originele runtime zetten en nieuwe squash erachter plakken :
+		- offset zoals gevonden voor mount
+		$ dd iflags=count_bytes count=$offset if=oude.appimage of=/media/ramdisk/nieuwe.appimage
+		$ dd oflags=seek_bytes seek=$offset if=/media/ramdisk/nieuwe.squashfs of=/media/ramdisk/nieuwe.appimage
+	OF
+	- achter b.v. de meest recente runtime zetten, b.v. van de appimagekit.appimage (zie .stacks/appimages/AppImageKit/*/) of gedownload van de website :
+		$ cat nieuweruntime /media/ramdisk/nieuwe.squashfs /media/ramdisk/nieuwe.appimage
+	- unmounten
+	OF
+	- met uitpakken: zie sectie "appimage uitpakken"
+		- bestanden wijzigen, deleten of toevoegen
+		- terug inpakken naar squashfs
+			$ mksquashfs werkdir/ /media/ramdisk/nieuwe.squasfs -comp gzip -root-owned -noappend -fstime 0
+		- verder zoals in procedure met mount van oude appimage
+
+===== zelf AppImage maken ====
+
+- zie sectie "AppRun script of exe"
+
+- met [AppImageKit](https://github.com/AppImage/AppImageKit/releases), dat zelf een appimage is, en dus geen installatie nodig heeft
+- gescript met [pkg2appimage](https://github.com/AppImage/pkg2appimage) :
+	- heeft verzameling ["recipes"](https://github.com/AppImage/pkg2appimage/tree/master/recipes) (yaml scripts) die op hun beurt door het pkg2appimage script verwerkt worden
+	- vb. (https://forum.flightgear.org/viewtopic.php?f=6&t=37527)
+		>>>
+		I used the pkg2appimage tool on ubuntu, it has a recipe for building an appimage of flightgear using the ppa.
+		All you have to do is on a Ubuntu machine clone the repo:
+			https://github.com/AppImage/pkg2appimage
+		and then run
+			$ bash -ex ./pkg2appimage recipes/FlightGear.yml
+		<<<
+
+===== AppRun script of exe ====
+
+- AppRun in de '/'  van een appimage kan een binary of een shellscript zijn, of een symlink naar de toepassing zelf.
+	- de huidige aprun.c (https://github.com/AppImage/AppImageKit/tree/master/src) is heel simpel, slechts 1 broncode-bestand, en bevat niets dat de in omloop zijnde aprun shellscripts niet ook kunnen en doen.
+	- BESLUIT: er is geen reden om niet met een script te werken, als ge zelf appimages maakt of wijzigt.
+
+- variabelen ter beschikking van een AppRun script: zie (https://docs.appimage.org/packaging-guide/environment-variables.html)
+	- voor type 2 (squashfs) :
+		>>>
+		APPIMAGE :	(Absolute) path to AppImage file (with symlinks resolved)
+		APPDIR :	Path of mountpoint of the SquashFS image contained in the AppImage
+		OWD :		Path to working directory at the time the AppImage is called
+		ARGV0 :		Name/path used to execute the script [kan naam v.e. symlink zijn].
+					This corresponds to the value you’d normally receive via the argv argument passed to your main method. Usually contains the filename or path to the AppImage, relative to the current working directory.
+		<<<
+
+==== flatpak ====
+
+- distributie-onafhankelijk app distributieformaat van Fedora (Red Hat)
+	- toepassingen worden verpakt met alle nodige bibliotheken
+		- niet opgesloten in een grote exe, zoals AppImage, die gemount wordt, maar in gewone directories op een afzonderlijke plaats
+	- draait in een zandbak, die naar believen (van gebruiker of toepassing) toegang kan krijgen tot de pc (directories, geluid, webcam, ...)
+
+- directory-structuur flatpaks :
+	- default flatpak-map is (met optie --system, default, voor alle users) : /var/lib/flatpak
+	- persoonlijke flatpak-map is (met optie --user, persoonlijk) : ~/.local/share/flatpak
+	- custom flatpak-map is (met optie --installation=customnaam) : "Path" in /etc/flatpak/installation.d/customnaam.conf
+	- per flatpak-map :
+		├── repo : gegevens over repositories, en een cache voor lopende installaties
+		├── runtime
+		│   └── [per runtime bibliotheek die voor meerdere toep. dient]
+		├── app
+		│   └── [per flatpak toepassing]
+		└── exports
+			└── share
+				├── applications
+				├── dbus-1
+				└── icons
+	- persoonlijke gegevens per flatpak (ongeacht flatpak-map)
+		~/.var/ : per user, zowel voor flatpaks geinstalleerd met --system als met --user
+		└── app
+			└── [ per toepassing, data directory which persists over app upgrades]
+
+- backup nemen van een flatpak : gewoon de directories uit [flatpakmap]/app,  [flatpakmap]/runtime en ~/.var/app kopiëren
+
+- eigen flatpak-map maken, b.v. op HDD of externe schijf :
+	- zie man flatpak-installation
+	# mkdir /etc/flatpak/installations.d/
+	- maak eigen installatie-plek voor flatpaks (is wel voor alle users) :
+	>>> /etc/flatpak/installations.d/stacks.conf
+		[Installation "stacks"]
+		Path=/media/sdata/.stacks/flatpaks
+		DisplayName=Harddisk flatpaks op SDATA
+		StorageType=harddisk
+	<<<
+		- kan meerdere namen bevatten, lijkt me simpeler om per naam 1 gelijkgenoemde x.conf te maken
+		- StorageType : network, mmc, sdcard, harddisk
+		- hiernaar wordt nu verwezen door voor elke flatpak-opdracht "--installation=stacks" op te geven :
+
+- flatpak toepassingen worden uit repositories aangeboden, die aangemeld moeten zijn bij uw flatpak-map (--user, --system of "/etc/flatpak/installation.d/*.conf"). De meest gebruikte is flathub.org :
+	$ flatpak [--installation=stacks] remote-add flathub https://flathub.org/repo/flathub.flatpakrepo
+		[--installation=stacks] : voor installaties in de flatpak-map ingesteld in "/etc/flatpak/installation.d/stacks.conf", komt daar in de repo-subdirectory
+		- repo wordt geregistreerd in [flatpak-map]/repo
+	$ flatpak [--installation=stacks] install flathub flightgear
+	$ flatpak run flightgear
+		--installation=stacks niet nodig als er maar 1 versie is
+
+==== snap ====
+
+- snap is veel meer dan AppImage en Flatpak geïntegreerd in het systeem, met de toepassing zelf in /snap, een collectie basislibraries eveneens daar in een snap, automatische updates, en ondersteunende directories verspreid over de linux directory tree. Snap maakt daardoor wel de distributie van een toepassing gemakkelijker (door maar voor 1 systeem te moeten compileren), maar zijn niet uit een slanke backup procedure te houden.
 
 === programma uitvoerbaar maken zonder installeren ===
 
@@ -5258,6 +5904,8 @@ maar dan verliezen ook alle directories die toelating, die daar iets anders bete
 
 === boot Ubuntu into the console [i.p.v. GUI] ===
 
+- zie ook sectie "in tty of console de display draaien"
+
 - via grub :
 	- Advanced Options ......
 	- Ubuntu .... (recovery mode)
@@ -5291,7 +5939,7 @@ maar dan verliezen ook alle directories die toelating, die daar iets anders bete
 			# systemctl set-default graphical.target
 			- boots to the usual lightdm (or gmd) prompt instead of a console.
 		- to start X11 once in a while (I actually work in X11, but log out nightly so that way memory is not as tight and X11 is reset at least daily). Instead of startx (zie b.v. system rescue cd), we now want to run X11 with systemd which will make sure that all the necessary parts get loaded as expected.
-			0 startx would start the X11 screen but not Unity; you have to do that manually (setsid unity)
+			0 startx would start the X11 screen but not Unity/XFCE; you have to do that manually (setsid unity) ?? xfce
 			# systemctl start graphical.target
 			- starts X11 and Unity (Xfce voor Xubuntu)
 			- won't give you the option of logging out of X11 as you could before with the log out menu. Instead, you have to switch back to multi-users with a similar command:
@@ -5301,15 +5949,7 @@ maar dan verliezen ook alle directories die toelating, die daar iets anders bete
 					# chvt 1 && systemctl isolate multi-user.target
 					- chvt N : change foreground virtual terminal; Ctrl+LeftAlt+FN (with N in the range 1-12) usually has a similar effect.
 	<<<
-
-- in console de display (tegenwoordig altijd framebuffer) draaien :
-	# echo 3 > /sys/class/graphics/fbcon/rotate
-	OF
-	# echo 3 > /sys/class/graphics/fbcon/rotate_all
-	- 0 : rotate   0°
-	- 1 : rotate  90° clockwise
-	- 2 : rotate 180° clockwise
-	- 3 : rotate 270° clockwise
+	- zie ook sectie "GUI starten in een tty"
 
 === Swap file instellen ===
 - zie (https://www.digitalocean.com/community/tutorials/how-to-add-swap-space-on-ubuntu-16-04)
@@ -5364,8 +6004,8 @@ maar dan verliezen ook alle directories die toelating, die daar iets anders bete
 		# sysctl vm.swappiness=60
 	- instellingen voor elk opstarten te wijzigen in /etc/sysctl.conf en /etc/sysctl.d/*.conf
 		# echo "vm.swappiness=60" >> /etc/sysctl.d/40_mijn_swappiness.conf
-	- zie [Documentation for /proc/sys/](https://www.kernel.org/doc/Documentation/sysctl/)		
-	
+	- zie [Documentation for /proc/sys/](https://www.kernel.org/doc/Documentation/sysctl/)
+
 == BACKUP ==
 
 === backup met squashfs ===
@@ -5439,14 +6079,36 @@ maar dan verliezen ook alle directories die toelating, die daar iets anders bete
 
 === backup met rsync ===
 
+- maakt gewoon kopie van heel het bestandssysteem, uitgez. machine-gebonden directories, o.a. die met speciale mount, die live gevuld worden door het actieve systeem, i.p.v. een schijfinhoud te tonen :
+	>>> mount
+		sysfs on /sys
+		proc on /proc
+		udev on /dev
+		tmpfs on /run
+	<<<
+
 - zie "~/Documents/_installatie/knowhow Backup/Full system backup with rsync - ArchWiki.mht" (origineel op  https://wiki.archlinux.org/index.php/full_system_backup_with_rsync)
 	- best vanaf recovery boot medium, maar
 		>>>
 		This method will work even while the system is running, but files changed during the transfer may or may not be transferred, which can cause undefined behavior of some programs using the transferred files.
 		<<<
-	- zie verder op link om te booten vanaf die backup
-	# rsync [-n] [--delete] [-l] -aAXxSiv --exclude={"/dev/*","/proc/*", "/sys/*", "/tmp/*", "/run/*", "/mnt/*", "/media/*", "/lost+found"} bron/ doel
+	# rsync [-n] [--delete] [-l] -aASXx -iv --exclude={"/sys/*", "/proc/*", "/dev/*", "/run/*", "/lost+found", "/tmp/*", "/mnt/*", "/cdrom/*", "/media/*"} bron/ doel
 	- uitleg paramaters zie sectie "RSYNC"
+		- OPGELET: bron/ MET '/' voor inhoud van die directorie, i.p.v. de directory bron zelf
+	- is tegelijk backup EN restore, als op de doeldirectory de hele directory tree van doelsysteem gemount wordt, incl. de EFI boot-partitie (typisch gemount op /boot/efi).
+		- wel in /boot/efi/EFI/ubuntu/grub.cfg en in /boot/grub/grub.cfg de file-system UUID van de partitie met de ubuntu-installatie vervangen door die van de doelschijf (de partitie waar /boot/grub/grub.cfg terecht komt) :
+		>>> /boot/efi/EFI/ubuntu/grub.cfg
+			search.fs_uuid 88e332dc-deb9-4c9c-9dfc-e0afe7ad45bd root
+		<<<
+		- deels geautomatiseerd:
+			# doelfs=IN TE VULLEN
+			# bootfs=$(grep 'search.fs_uuid' /boot/efi/EFI/ubuntu/grub.cfg | sed -E 's%.* ([-a-z0-9]{36,36}) .*%\1%')
+			# for b in "$doel"/boot/{grub,efi/EFI/ubuntu}/grub.cfg;do echo -e "$b\n${b//?/=}"; sed -Ei=rsync~ "s%$bootfs%$doelfs%g" "$b";done
+			- NIET VERGETEN: doel/etc/fstab aanpassen om zeker de doelpartitie te mounten op '/', en andere aanpassingen
+			- na het opstarten van de doelschijf grubconfiguratie vervolledigen, of beter nog vooraf na een chroot (maar die ken ik niet goed genoeg) :
+				# grub-mkconfig -o /media/ramdisk/grub.cfg
+					- nakijken, en in plaats van (!!! DOEL !!!)/boot/grub/grub.cfg zetten
+		- zie ook verder op archlinux-wiki om te booten vanaf die backup
 
 === backup met tar ===
 - tar maken
@@ -5484,7 +6146,7 @@ maar dan verliezen ook alle directories die toelating, die daar iets anders bete
 	-C doel : tar zelf zet tijdens zijn werking current directory op 'doel'
 	--exclude=PATTERN : moet zoals pad in archief zijn; b.v. typisch is een tar van heel het systeem zonder voorloop-/, dus om b.v. /usr niet uit te pakken : --exclude=usr, NIET --exclude=/usr
 	 --anchored : exclude-pattern begint van root van archief (d.w.z. "" of "/"; anders wordt gematched vanaf elk sub-pad
-	 
+
 === backup met fsarchiver ===
 
 - gebruik ik niet meer
@@ -5522,6 +6184,11 @@ maar dan verliezen ook alle directories die toelating, die daar iets anders bete
 
 - /usr is shareable, read-only data: should be shareable between various FHS-compliant hosts and must not be written to (behalve bij installaties). Any information that is host-specific or varies with time is stored elsewhere.
 
+- /usr/local : een soort replica van de /usr directory tree voor programmas die buiten de distributie om geïnstalleerd worden
+	- in XUbuntu staan /usr/local/sbin en /usr/local/bin in PATH voor /usr/sbin en /usr/bin
+		- EN ZELFS voor /sbin en /bin, is dat veilig???
+	- de afspraak is dat distributies met hun fikken afblijven van /usr/local
+
 - /tmp directory must be made available for programs that require temporary files.
 	- it is recommended that files and directories located in /tmp be deleted whenever the system is booted
 	- mag dus gerust tmpfs ramdisk zijn, zeker als er een swapfile of -partitie is: dat laat het systeem zelf bepalen of en wanneer dingen in /tmp naar hard disk verhuizen
@@ -5543,7 +6210,7 @@ maar dan verliezen ook alle directories die toelating, die daar iets anders bete
 	/var/lib/dpkg : idem op dpkg-niveau
 	/var/logs : kan serieus opgekuist en beperkt (minder lang bijhouden) worden indien gewenst, maar zolang er schijfruimte genoeg is; minder lang bijhouden heeft in ieder geval geen invloed op aantal schrijfbewerkingen op de schijf
 		- zie sectie "journalctl"
-	
+
 - /run/user/1000
 	- staat in env. variable $XDG_RUNTIME_DIR
 	- base directory relative to which user-specific non-essential runtime files and other file objects (such as sockets, named pipes, ...) should be stored. The directory MUST be owned by the user, and he MUST be the only one having read and write access to it. Its Unix access mode MUST be 0700

@@ -10,15 +10,16 @@ Linux Filesystem Hierarchy : http://www.tldp.org/LDP/Linux-Filesystem-Hierarchy/
 
 == andere docs ===
 === _Xubuntu truuks en commandos.adoc ===
-===  _Xubuntu composekey multikey combinaties.adoc  ===
-===  _ffmpeg truuks en commandos.adoc  ===
-===  _Tex-LaTex.adoc  ===
-===  _Wine-PlayOnLinux.adoc  ===
-===  _POLwineprefix 2.11 Win7x86PROGS.txt  ===
-===  _VirtualBox.adoc  ===
-===  _Xpra.adoc  ===
-===  _Dragon.adoc  ===
-===  _SW10 installatie.txt  ===
+=== _Xubuntu composekey multikey combinaties.adoc ===
+=== _bash readline keys.txt ===
+=== _ffmpeg truuks en commandos.adoc ===
+=== _Tex-LaTex.adoc ===
+=== _Wine-PlayOnLinux.adoc ===
+=== _POLwineprefix 2.11 Win7x86PROGS.txt ===
+=== _VirtualBox.adoc ===
+=== _Xpra.adoc ===
+=== _Dragon.adoc ===
+=== _SW10 installatie.txt ===
 
 == SCHIJVEN INDELEN EN FORMATTEREN ==
 
@@ -26,12 +27,12 @@ Linux Filesystem Hierarchy : http://www.tldp.org/LDP/Linux-Filesystem-Hierarchy/
 	- parted interactief :
 		- unit s : sector
 		- "mkpart parttype fstype start end" met start en lengte=end+1-start voor b.v. seagate schijf in veelvouden van 2048 sectoren, dus einde (n*2048 - 1), b.v.
-			mkpart primary ext4 2048s 20479999s : 
-		
+			mkpart primary ext4 2048s 20479999s :
+
 ....
 $ lsblk -o NAME,SIZE,label,partlabel,uuid,partuuid
 NAME          SIZE LABEL        PARTLABEL                    UUID                                 PARTUUID
-sda           2,7T                                                                          
+sda           2,7T
 ├─sda1        2,7T SDATA        seag_data                    17b4dd08-b8a7-4858-8214-d002aa7843d2 cd6d631d-9105-4b98-b263-19e7dfca9b79
 ├─sda2         16G SSWP         seag_swp                     2f156ce0-48b2-4101-90a0-f4d59b139a55 85da21f0-4073-4ca3-9f82-14aa6698aa3f
 ├─sda3         16M              Microsoft reserved partition                                      dbcede61-a30c-4b68-be66-78593d1fbee0
@@ -49,7 +50,7 @@ sdd           1,9T
 └─sdd1        1,9T WDDATA       ?????????
 sr0          1024M
 loop0       545,5M sysrcd-5.2.2                              2018-04-02-13-43-43-00
-nvme0n1     119,2G                                                       
+nvme0n1     119,2G
 ├─nvme0n1p1   200M M2EFI        m2efi                        38DE-9A48                            aff37567-68d4-47bb-81e9-cf7582f25f2b
 ├─nvme0n1p2     5G M2ROOT       m2root                       88e332dc-deb9-4c9c-9dfc-e0afe7ad45bd ef595185-8351-4635-aa50-279d0ce71230
 └─nvme0n1p3   114G M2UOH        m2uoh                        6eb6c219-e07a-4c6d-b71d-a9cd815bb45e 31b120d8-a0fa-4dfb-8ac3-da3d959fc93d
@@ -437,7 +438,7 @@ Bios instellingen: zie GEZIPTE.PRG/FLOP&FAQ/MSI H170 PC Mate/BIOS instellingen s
 - .bashrc (en .bashrc_aliases) terug laden (gebeurt ook bij openen elke nieuwe bash-shell/elk nieuw terminal venster):
 	. $HOME/.bashrc
 
-=== Speciale tekens intikken met toetsencombinaties:  ===
+=== Speciale tekens intikken met toetsencombinaties: ===
 	. startknop/settings/Keyboard/Layout/Compose key: "Right Win",  (ook Super of multi-key genoemd)
 	ZIE _Xubuntu ComposeKey multikey combinaties.txt
 
@@ -467,7 +468,7 @@ Bios instellingen: zie GEZIPTE.PRG/FLOP&FAQ/MSI H170 PC Mate/BIOS instellingen s
 
 === script $HOME/Documents/shellscripts/open-url.sh om windows .URL-bestanden te openen in default browser ===
 
-=== Partities maken met gparted, worden door gparted (en Thunar) bij verstek gemount in /media/dirk/???  ===
+=== Partities maken met gparted, worden door gparted (en Thunar) bij verstek gemount in /media/dirk/??? ===
 	. Machtiging voor partitie aan dirk geven, voorbeeld:
 		$ sudo chown root:dirk /media/dirk/tosh4l
 		$ sudo chmod 775 /media/dirk/tosh4l
@@ -482,7 +483,7 @@ Bios instellingen: zie GEZIPTE.PRG/FLOP&FAQ/MSI H170 PC Mate/BIOS instellingen s
 		browser.cache.memory.enable = true (default value)
 		browser.cache.memory.capacity = -1 (new integer entry)
 
-=== Bestandsnamen sorteren op char (b.v. _Z voor A) i.p.v. als taal:  ===
+=== Bestandsnamen sorteren op char (b.v. _Z voor A) i.p.v. als taal: ===
 
 - https://help.ubuntu.com/community/Locale
 	LC_COLLATE: How strings (file names---) are alphabetically sorted. Using the "C" or "POSIX" (synoniemen) locale here results in a strcmp()-like sort order, which may be preferable to language-specific locales.
@@ -498,7 +499,7 @@ Bios instellingen: zie GEZIPTE.PRG/FLOP&FAQ/MSI H170 PC Mate/BIOS instellingen s
 	$ sudo update-locale LC_COLLATE=C"
   en terug inloggen
 
-=== Automatisch opstarten van toepassingen  ===
+=== Automatisch opstarten van toepassingen ===
 
 - Settings/Session and startup/Application autostart):
 	- Skype: 'env PULSE_LATENCY_MSEC=60 skype %U'
@@ -513,28 +514,8 @@ Bios instellingen: zie GEZIPTE.PRG/FLOP&FAQ/MSI H170 PC Mate/BIOS instellingen s
 
 === Schermopstelling wijzigen ===
 
-- CLI: $ xrandr
-	. nu via aliassen in ~/.bash-aliases
-
-- GUI: Settings/Keyboard/Application Shortcuts
-	. Super+P "xfce4-display-settings" i.p.v. "xfce4-display-settings --minimal"
-
-=== Scherm roteren in tty-terminal ===
-
-- zie https://www.kernel.org/doc/Documentation/fb/fbcon.txt "Framebuffer Console"
-
-- in tty-terminals mijn Viewsonic scherm roteren naar portrait :
-	- tijdelijk : vie tee om een sudo in de redirect te kunnen doen
-		$ echo 3 | sudo tee /sys/class/graphics/fbcon/rotate
-	- blijvend : in /etc/default/grub of /etc/default/grub.d/mijndefaults.cfg
-		>>> GRUB_CMDLINE_LINUX="fbcon=rotate:3" <<<
-		>>>
-		GRUB_CMDLINE_LINUX
-			Entries on this line are added to the end of the 'linux' command line (GRUB legacy's "kernel" line) for both normal and recovery modes. It is used to pass options to the kernel.
-		GRUB_CMDLINE_LINUX_DEFAULT
-			This line imports any entries to the end of the 'linux' line (GRUB legacy's "kernel" line). The entries are appended to the end of the normal mode only.
-		<<<
-	- terug landscape : 0 i.p.v. 3
+0 GUI: Settings/Keyboard/Application Shortcuts
+	0 nu toegewezen aan ~/bin/beeldpc:  Super+P "xfce4-display-settings" i.p.v. "xfce4-display-settings --minimal"
 
 === Settings/Users and Groups/Dirk/Advanced settings/Privileges ===
 
@@ -870,7 +851,7 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 	# mkfontscale ~/.fonts/type1/ATM4/
 	# mkfontdir ~/.fonts/type1/ATM4/
 	- 1-malig, om mkafmmap te installeren :
-		# apt install enscript 
+		# apt install enscript
 	# mkafmmap ~/.fonts/type1/ATM4/*
 		- veel errors en abort
 
@@ -905,7 +886,7 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 	.win-gschijf staat nu deels op /opt, o.a. heel ./ATM4, maar meeste inhoud van CDKOPIE en PROGRAMS linkt nog gewoon naar /media/sdata
 ****
 
-	# cd /media/sdata/.win-gschijf	
+	# cd /media/sdata/.win-gschijf
 	# chown -R root:root .
 	# find . -type d -exec chmod o+rx \{\} \+
 	# find . -type f -exec chmod o+r \{\} \+
@@ -1048,7 +1029,7 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 - zie .../.backups/upgradePatch.sh
 
 - getest
-	- playonlinux/wine nagenoeg alles 
+	- playonlinux/wine nagenoeg alles
 	- TexStudio
 	- stamboom
 	- LibreOffice en LanguageTool
@@ -1085,13 +1066,13 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 		0 Panda Jim is recenter - ppa.launchpad.net/rebuntu16/avidemux+unofficial (Thanh Tung Nguyen)
 			0 avidemux2.6-qt
 				- nu 1:2.7.0-1~getdeb1 van ppa getdeb
-			- avidemux2.7 	2.7.0-1~ppa+bionic3 
+			- avidemux2.7 	2.7.0-1~ppa+bionic3
 		0 Ubuntu repo bionic 5.2.10 - download.virtualbox.org/virtualbox/debian
 			- virtualbox
-			- deze ppa voor xenial was ook 5.2.10 
+			- deze ppa voor xenial was ook 5.2.10
 		0 Ubuntu repo bionic 2.1.3 - inswitch.org
 			- WinSwitch Xpra
-			- deze ppa voor xenial was ook 2.1.3 
+			- deze ppa voor xenial was ook 2.1.3
 		- ppa.launchpad.net/spvkgn/zathura-mupdf
 			- Zathura
 	- verzamelrepositories
@@ -1120,6 +1101,7 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 			- niet gebruikt
 			- heeft (23-09-2018) nog geen Bionic
 
+- zie verder sectie "externe ppa's bionic"
 - zie verder sectie "BIONIC dist-upgrade 181029"
 
 === externe ppa's bionic ===
@@ -1133,7 +1115,7 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 		- zie sectie avidemux 2.7.1 bionic
 	0 ppa.launchpad.net/belin/stable (“BeLin developers” team) : Skype 4.3.0.37
 		- werkt NIET meer, ook niet met gehackt versienr. in de binary
-	- ppa.launchpad.net/mozillateam/ppa/ubuntu : Thunderbird 
+	- ppa.launchpad.net/mozillateam/ppa/ubuntu : Thunderbird
 		- naar v60.3.1 omwille van bug in v60.2.1 bionic, zie sectie "Thunderbird v60.2.1 max. berichtgrootte")
 		- “Mozilla Team” team - Firefox ESR and Thunderbird stable builds
 			>>>
@@ -1178,10 +1160,10 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 	- met nieuwe indeling van SSD  : geen partitie vrijhouden voor windows, usr+opt+home op 2de partitie met inline data
 # gparted
 	>>>
-	nvme0n1                                           0 119,2G  0 disk          SAMSUNG MZVPV128HDGM-00000             
-	├─nvme0n1p1 M2EFI   m2efi                         0   200M  0 part vfat                                            
-	├─nvme0n1p2 M2ROOT  m2root                        0     5G  0 part ext4                                            
-	└─nvme0n1p3 M2UOH   m2uoh                         0   114G  0 part ext4                                            
+	nvme0n1                                           0 119,2G  0 disk          SAMSUNG MZVPV128HDGM-00000
+	├─nvme0n1p1 M2EFI   m2efi                         0   200M  0 part vfat
+	├─nvme0n1p2 M2ROOT  m2root                        0     5G  0 part ext4
+	└─nvme0n1p3 M2UOH   m2uoh                         0   114G  0 part ext4
 	<<<
 
 # mkfs.ext4 -O ^huge_file -U 88e332dc-deb9-4c9c-9dfc-e0afe7ad45bd -L M2ROOT /dev/nvme0n1p2
@@ -1231,6 +1213,10 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 - /var/tmp naar HDD verplaatsen met een bind mount
 	- /var/tmp is semi-tijdelijk, in tegenstelling tot /tmp die bij elke boot mag leeggemaakt
 		- b.v. de AppImage audacity schrijft gigabytes (voor geluid van hele film) naar /var/tmp
+			>>> /home/dirk/.audacity-data/audacity.cfg
+				[Directories]
+				TempDir=/var/tmp/audacity-dirk
+			<<<
 	# mkdir /media/sdata/.vartmp
 	# chmod 1777 /media/sdata/.vartmp
 	- zoals /var/tmp zelf : schrijfbaar voor iedereen, en met sticky bit (alleen root en owner van bestand mogen deleten)
@@ -1280,8 +1266,8 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 
 - snaps gebruiken : zie "https://codeburst.io/how-to-install-and-use-snap-on-ubuntu-18-04-9fcb6e3b34f9"
 	$ snap list
-	# snap disable <package> 
-	# snap enable <package> 
+	# snap disable <package>
+	# snap enable <package>
 	# snap remove <package>
 
 === HP Printer system tray ===
@@ -1304,9 +1290,15 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 === lessedit ===
 
 - less opdracht v : huidig bestand openen met default programma :
-	>>> ~/.pam_environmnet
-		LESSEDIT="xdg-open %f 2>/dev/null"
+	>>> ~/.profile (lukt niet in ~/.pam_environment)
+		export LESSEDIT="xdg-open %f 2>/dev/null &"
 	<<<
+	- LET OP de afsluitende '&' : tenzijn de editor in de achtergrond gestart wordt, wordt hij gekilled wanneer less wordt afgesloten.
+
+== INSTELLINGEN NA BACKUP 201011 ==
+
+=== TEDOEN ===
+- ~/.Playonlinux : symlinks wine/ en wineprefix/ direct naar /opt/.Playonlinux
 
 === TEDOEN ===
 
@@ -1320,7 +1312,7 @@ OF
 	- nadeel : ik denk niet dat die zoals tmpfs terugvalt op gewone swap als hij vol geraakt
 OF
 - ?installeer of gebruik zswap, gecomprimeerde swap in RAM, met terugval op gewone swap
-	
+
 - zie https://askubuntu.com/questions/471912/zram-vs-zswap-vs-zcache-ultimate-guide-when-to-use-which-one
 	- zswap compressed swapspace in RAM met terugval op (niet-gecomprimeer) swapbestand of -schijf
 		- is al actief in Bionic :
@@ -1347,7 +1339,7 @@ OF
 			- zie https://askubuntu.com/questions/864644/customisation-of-zram-and-enable-zram-disable-swap-partition/864645#864645
 			- OPGELET: installeert zram ineens als swapdevice naar compressed ram
 				# apt install zram-config
-				
+
 		- gemakkelijker te gebruiken met zram-init, zie https://github.com/vaeth/zram-init
 		- https://www.kernel.org/doc/Documentation/admin-guide/blockdev/zram.rst
 		- gebruik :
@@ -1431,7 +1423,7 @@ OF
 ==== hibernate ====
 - probleem : ik heb nu 2 swaplocaties : swappartitie en swapfile; naar welke wordt er geswapt ?
 	- vind alleen info over hoe ge instelt van welke resume moet gebeuren
-	
+
 - zie ook sectie "BIONIC dist-upgrade 181029" subsectie "trage boot" oplossing
 
 - beste uitleg zie : https://www.kernel.org/doc/html/latest/power/swsusp.html
@@ -1565,7 +1557,7 @@ update 2509/2007 :
 
 - terug verwijderd (USC)
 
-=== Bitnami LEMP stack (Linux)-NginX-MySql-PHP  ===
+=== Bitnami LEMP stack (Linux)-NginX-MySql-PHP ===
 
 - docu: https://docs.bitnami.com/installer/infrastructure/nginx/
 - download van https://bitnami.com/stack/nginx/installer
@@ -2413,7 +2405,7 @@ Opgelet: "$mountpoint/tmp/.*" was niet exluded, dus na restore "$mountpoint/tmp"
 				- na controle heruitvoeren zonder "echo"
 				- de jarglob-constructie rekent erop dat globbing tot 1 en slechts 1 bestandsnaam leidt (1 versienr)
 					- OPM: globbing wordt niet uitgevoerd in de stap "jarglob=$jarglob*.jar", maar pas bij gebruik van $jarglob (unquoted) in opdracht
-		
+
 === TeXstudio : a fork of Texmaker with additional features; http://www.texstudio.org/ ===
 
 - zie ook sectie "/tmp in RAM"
@@ -2518,7 +2510,7 @@ Opgelet: "$mountpoint/tmp/.*" was niet exluded, dus na restore "$mountpoint/tmp"
 	- euktopst : maakt PSTricks macros
 	- euktotex
 
-=== SpotLite(v2) Ubuntu  ===
+=== SpotLite(v2) Ubuntu ===
 
 - ZIE procedure "1 Aanbevolen VEILIGERE installatie" in GEZIPTE.PRG/UBUNTU/SpotLite/INSTALLATIE.TXT
 
@@ -2580,7 +2572,7 @@ wxmaxima 15.08.2-1 (USC) GUI voor maxima, zonder optie Tex Live (vermits die bij
 - maxima docu op http://maxima.sourceforge.net/documentation.html en in ~/Public/DOCS/maxima.pdf
 - hulp en docu voor beide op http://andrejv.github.io/wxmaxima/help.html
 
-=== jdownloader.jar van jdownloader.org naar /opt/JDownloader.jar  ===
+=== jdownloader.jar van jdownloader.org naar /opt/JDownloader.jar ===
 	- o.a. voor grote downloads van mega.nz
 
 === dosbox ===
@@ -2828,7 +2820,7 @@ wxmaxima 15.08.2-1 (USC) GUI voor maxima, zonder optie Tex Live (vermits die bij
 
 - Gebruik: zie _Xpra.txt
 
-=== SpaceFM : andere filemanager (USC spacefm-gtk3 1.0.5-1)  ===
+=== SpaceFM : andere filemanager (USC spacefm-gtk3 1.0.5-1) ===
 
 - met udevil : alternatieve storage media interface voor SpaceFM
 	- USC SpaceFM Optional addons
@@ -2857,7 +2849,7 @@ wxmaxima 15.08.2-1 (USC) GUI voor maxima, zonder optie Tex Live (vermits die bij
 	- om te verbinden met ftp-server, gewoon de url in de het pad-veld tikken:
 		>>> ftp://gebruiker:paswoord@server/uploadfolder <<<
 
-=== tweak (USC) Efficient text-mode (terminal) hex editor  ===
+=== tweak (USC) Efficient text-mode (terminal) hex editor ===
 
 - these commands are run from a terminal :
 	tweak, tweak-wrapper
@@ -3086,12 +3078,8 @@ wxmaxima 15.08.2-1 (USC) GUI voor maxima, zonder optie Tex Live (vermits die bij
 
 === Stellarium 0.17.0.1 appimage (2018/01/16) ===
 
-- AppImages are basically ISO compressed files containing all dependencies within them which allows to use them on any Linux distro without need of any installation. More info https://en.wikipedia.org/wiki/AppImage
-
 - 64-bit linux AppImage gedownload van http://stellarium.org/en/ naar /media/sdata/.stacks/stellarium/
-	>>> https://appimage.org/
-	 "To run an AppImage, simply: Make it executable and run!"
-	<<<
+	- zie "_Xubuntu truuks en commandos.adoc" sectie "AppImage"
 
 - ~/.stellarium gekopieerd naar sdata/.stacks/stellarium/config, en vervangen door link naar die config
 
@@ -3303,7 +3291,9 @@ wxmaxima 15.08.2-1 (USC) GUI voor maxima, zonder optie Tex Live (vermits die bij
 	- "Bookmark Tab Here" is er terug
 	- "Nimbus Screen Capture" ipv "Screenshooter Fixed"
 	- "NoScript" v.10 van Giorgio Maone i.p.v. oude noscript
-	- UnMHT niet meer in Firefox, alternatief: Java zipwebserver met https://stackoverflow.com/a/36567112
+	- UnMHT niet meer in Firefox, alternatief:
+		- Java zipwebserver met https://stackoverflow.com/a/36567112
+		- WaterFox: als AppImage in .stacks/appimages
 	- rest nog uit te zoeken
 
 === LAPMIDDELS ===
@@ -3320,7 +3310,7 @@ wxmaxima 15.08.2-1 (USC) GUI voor maxima, zonder optie Tex Live (vermits die bij
 	- kopie van /usr/sharelocal/ naar  ~/.local/share/applications/mupdf.desktop, met -r 180 :
 		$ sed -e "s/^Exec=mupdf/Exec=mupdf -r 180/g" /usr/share/applications/mupdf.desktop > ~/.local/share/applications/mupdf.desktop
 
-- zathura : OK, maar nog geen zathura-pdf-mupdf 
+- zathura : OK, maar nog geen zathura-pdf-mupdf
 	- Terug geinstalleerd (USC), versie 0.3.8-1, met opties zathura-ps, zathura-djvu en zathura-cb (en default pdf-popller)
 		- alternatieve werkwijze :
 			# apt-get install --install-suggests zathura
@@ -3342,7 +3332,7 @@ wxmaxima 15.08.2-1 (USC) GUI voor maxima, zonder optie Tex Live (vermits die bij
 				>>>
 					# apt-get install zathura-pdf-mupdf
 					Reading package lists... Done
-					Building dependency tree       
+					Building dependency tree
 					Reading state information... Done
 					Some packages could not be installed. This may mean that you have
 					requested an impossible situation or if you are using the unstable
@@ -3400,7 +3390,7 @@ wxmaxima 15.08.2-1 (USC) GUI voor maxima, zonder optie Tex Live (vermits die bij
         QT_SCALE_FACTOR [numeric] defines a global scale factor for the whole application, including point sized fonts.
         QT_SCREEN_SCALE_FACTORS [list] specifies scale factors for each screen. This will not change the size of point sized fonts. This environment variable is mainly useful for debugging, or to work around monitors with wrong EDID information(Extended Display Identification Data). The format can be either a semicolon-separated list of scale factors in the same order as QGuiApplication::screens(), or a semicolon-separated list of name=value pairs, where name is the same as QScreen::name().
 	<<<
-	
+
 0 lapmiddel 1 : standaard interface skinned, met skin ~/.config/vlc/avs_0_95_beta.vlt (nog te verbeteren: lichter en meer knoppen)
 	- klassieke qt-interface starten
 		$ qvlc
@@ -3492,7 +3482,7 @@ TEST OP HDD
 $ vboxmanage createmedium disk --filename /media/tarch/WERK/test.vdi --size 15000
 $ sudo modprobe nbd
 $ for i in {0..15} ; do lsblk /dev/nbd$i; echo $i $?;done
-$ sudo qemu-nbd -c /dev/nbd0 /media/tarch/WERK/test.vdi 
+$ sudo qemu-nbd -c /dev/nbd0 /media/tarch/WERK/test.vdi
 $ sudo parted --script --align optimal /dev/nbd0 mklabel gpt mkpart PLTSTUSR ext4 0% 100% unit B print
 $ lsblk
 $ sudo mkfs.ext4 -L FLTSTUSR /dev/nbd0p1
@@ -3501,11 +3491,11 @@ $ sudo mkfs.ext4 -L FLTSTUSR /dev/nbd0p1
 		Discarding device blocks: failed - Input/output error
 		Creating filesystem with 3839488 4k blocks and 960992 inodes
 		Filesystem UUID: ac9b8373-6e58-4a0a-b43d-572348e31cec
-		Superblock backups stored on blocks: 
+		Superblock backups stored on blocks:
 			32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632, 2654208
 
-		Allocating group tables: done                            
-		Writing inode tables: done                            
+		Allocating group tables: done
+		Writing inode tables: done
 		Creating journal (16384 blocks): done
 		Writing superblocks and filesystem accounting information:
 	<<<
@@ -3544,7 +3534,7 @@ $ sudo unsquashfs -f -d "/mnt/usr" /media/sdata/.backups/181029_15u28m_USR_*.squ
 		OFWEL
 			- <alt><ctrl>F1 - F6 : open tty1 of t.e.m. tty6
 			- login
-			- doe daar nog het nodige		
+			- doe daar nog het nodige
 
 - OPLOSSING 1 : Xvfb i.p.v. Xorg
 	- eigen "Virtual display command" in ~/.xpra/xpra.conf gebruiken, gekopiëerd uit /etc/xpra/conf.d/55_server_x11.conf :
@@ -3553,7 +3543,7 @@ $ sudo unsquashfs -f -d "/mnt/usr" /media/sdata/.backups/181029_15u28m_USR_*.squ
 			-auth $XAUTHORITY \
 			-screen 0 5760x2560x24+32
 		<<<
-	- Hiermee wordt als vanouds in xpra, de opdracht xvfb (X virtual frame buffers) van X11 gebruikt om scherm van xpra op te bouwen, i.p.v. de opdracht Xorg 
+	- Hiermee wordt als vanouds in xpra, de opdracht xvfb (X virtual frame buffers) van X11 gebruikt om scherm van xpra op te bouwen, i.p.v. de opdracht Xorg
 
 - PROBLEEM 2 : proxy : xpra start nu vanaf boot na installatie, bij opstarten pc een "xpra proxy" proxyserver, met toevallig mijn connection string "--bind-tcp=0.0.0.0:14500"
 	- zie /lib/systemd/system/xpra.service (met datum < mijn installatiedatum, dus dit komt uit de .deb)
@@ -3569,9 +3559,9 @@ $ sudo unsquashfs -f -d "/mnt/usr" /media/sdata/.backups/181029_15u28m_USR_*.squ
 		- "xpra start ..." zonder connection string neemt gewoon die van de proxyserver over, dus gewoon zo starten
 		- kan wel, maar zonde van die proxy, b.v. start server op andere tcp-poort :
 			$ xpra start --bind-tcp=0.0.0.0:14501
-		
+
 - PROBLEEM 3 : "/usr/lib/xorg/Xorg.wrap: Only console users are allowed to run the X server"
-		>>> 
+		>>>
 			...
 			Xvfb command has terminated! xpra cannot continue
 			 if the display is already running, try a different one,
@@ -3587,22 +3577,22 @@ $ sudo unsquashfs -f -d "/mnt/usr" /media/sdata/.backups/181029_15u28m_USR_*.squ
 					xvfb = /usr/lib/xorg/Xorg ...
 				<<<
 			- niet nodig /etc-bestanden te wijzigen, ~/xpra/xpra.conf is genoeg, of via .profile of een alias voor xpra altijd /usr/lib/xorg in pad zetten
-				
+
 0 OPLOSSING 3 : volledig pad naar Xorg verschaffen
 	- niet nodig met OPLOSSING 1 : Xvfb i.p.v. Xorg
 	- niet nodig met versies van xpras.org vanaf 2.3.2, daar staat volledig pad al in "/etc/xpra/conf.d/55_server_x11.conf"
 	0 alias toegevoegd aan ~/.bash_aliases  :
 		>>> alias xpra='PATH=/usr/lib/xorg:"$PATH" xpra' <<<
 
-PROBLEEM 4 : weet niet meer hoe ik deze fout kreeg : 
-	>>> 
+PROBLEEM 4 : weet niet meer hoe ik deze fout kreeg :
+	>>>
 	xpra server failure
 	disconnected before the session could be established
 	server requested disconnect: session not found error (no sessions found)
 	...
 	Warning: cannot use the system proxy for 'start' subcommand
 	<<<
-	- iets dergelijks te vinden in 
+	- iets dergelijks te vinden in
 	>>> https://shifter-users.devloop.org.narkive.com/9cj4jC5F/winswitch-unable-to-authenticate-to-xpra-proxy
 	"no sessions found" is quite likely to be caused by this bug:
 	http://xpra.org/trac/ticket/1264
@@ -3648,7 +3638,7 @@ oplossing:
 		- ook voor alternatieven --class-path en -classpath, maar die gebruik ik niet
 		- dit zijn ze :
 			$ grep -e "-cp" ~/.local/share/applications/*.desktop ~/Documents/shellscripts/* /home/dirk/.config/xfce4/panel/launcher*/*.desktop
-		>>>	
+		>>>
 			/home/dirk/.local/share/applications/stafke_Kadaster_NL.desktop
 			/home/dirk/.local/share/applications/stafke_NGI_BE.desktop
 			/home/dirk/Documents/shellscripts/stafkeCfgs.sh
@@ -3657,11 +3647,11 @@ oplossing:
 			/home/dirk/.config/xfce4/panel/launcher-20/14846068232.desktop
 			/home/dirk/.config/xfce4/panel/launcher-20/14846068303.desktop
 		<<<
-		
+
 ==== VirtualBox 5.2.10 bionic ====
 
 - is verwijderd bij dist-upgrade, maar zit voor Bionic gewoon bij Ubuntu, repo van VBox zelf niet meer nodig (zitten wel al op 5.2.20).
-	0 blijft hangen : USC 
+	0 blijft hangen : USC
 	# apt-get install virtualbox-qt
 
 - iso Guest Additions downloaden van http://download.virtualbox.org/virtualbox/5.2.10/ naar GEZIPTE.PRG/Ubuntu, link naardaar als /usr/share/virtualbox/VBoxGuestAdditions.iso :
@@ -3690,7 +3680,7 @@ oplossing:
 			$ cd /media/sdata/.virtualbox
 			$ for i in **/*.vbox ;do sed -i~snpsht2~ -Ee 's@(location="/opt/.virtualbox/Windows werkset)/([^/]+)/(Snapshots)/@\1 \3/\2/@g' "$i";done
 			$ for i in Windows\ werkset/* ;do sed -i~snps3~ -Ee 's@(location=")(Snapshots)/@\1/opt/.virtualbox/Windows werkset \2/'"${i##*/}/@g" "$i"/"${i##*/}".vbox;done
-			
+
 
 	- directories van VM-groepen verplaatsen naar /opt/.virtualbox, of van daar linken naar HDD (tarch of sdata) :
 		- voor de veiligheid eerst copy, verwijderen kan later nog
@@ -3814,7 +3804,7 @@ oplossing:
 			- installeert 135MB aan include files etc. voor de libraries waar kchmviewer van afhangt, o.a. KDE en QT
 		$ mkdir -p ~/src;cd ~/src
 		$ apt-get source kchmviewer
-			- downloadt en unzipt broncode van kchmviewer uit repositories voor Ubuntu-sources, dus zoals die voor mijn versie van Ubuntu zijn aangepast; het compileren zelf bepaalt of kchmviewer voor KDE of alleen voor Qt wordt gecompileerd, volgens de readme van https://github.com/gyunaev/kchmviewer 
+			- downloadt en unzipt broncode van kchmviewer uit repositories voor Ubuntu-sources, dus zoals die voor mijn versie van Ubuntu zijn aangepast; het compileren zelf bepaalt of kchmviewer voor KDE of alleen voor Qt wordt gecompileerd, volgens de readme van https://github.com/gyunaev/kchmviewer
 		$ cd kchmviewer*
 			- als er meerdere versies zijn, natuurlijk de gewenste kiezen
 		$ qmake
@@ -3845,7 +3835,7 @@ oplossing:
 			** You can still connect to the server by name but you have to know it's name and you must connect to to it explicitly by that name .. as in ... smb://hostname or use Connect to Server in Nautilus.
 			** Any server that uses the more modern multicast DNS service announcement provided by Avahi in Linux and also available in macOS are unaffected. These servers will display correctly in "Other Locations" in Nautilus.
 			** And a CIFS mount is unaffected by all this since it runs with it's own defaults.
-			** There is also one other odd peculiarity about all this and that's smbtree. The smbtree command which is a samba client command has no problem finding these servers and listing their shares. It appears that smbtree is using the client min / max protocol correctly starting with SMB1 first then moving up to SMB3. It appears to me that this is either a gvfsd-smb-browse problem or a libsmbclient problem. 
+			** There is also one other odd peculiarity about all this and that's smbtree. The smbtree command which is a samba client command has no problem finding these servers and listing their shares. It appears that smbtree is using the client min / max protocol correctly starting with SMB1 first then moving up to SMB3. It appears to me that this is either a gvfsd-smb-browse problem or a libsmbclient problem.
 		<<<
 		0 zie ook https://www.dedoimedo.com/computers/ubuntu-beaver-samba-shares.html
 			>>> /etc/samba/smb.conf
@@ -3854,7 +3844,7 @@ oplossing:
 
 - Oplossing (voorlopig) :
 	- niet verbinden met dirk (FRT/dirk) maar met dummy naam zonder paswoord (mijn network shares zijn allemaal voor iedereen)
-	
+
 === UPDATES van externe ppa ===
 
 ==== avidemux 2.7.1 bionic ====
@@ -3906,7 +3896,7 @@ oplossing:
 		- remove 0.84-1~getdeb1
 	# dpkg -i /media/sdata/GEZIPTE.PRG/UBUNTU/XnViewMP0.92/XnViewMP-linux-x64.deb
 		- geen package xnviewmp-data meer, niemand weet wat dat was
-	# apt autoremove 
+	# apt autoremove
 		- libjasper1
 
 ==== Gimp 2.10 ====
@@ -3979,7 +3969,7 @@ oplossing:
 	# maaktrash
 		- is eigen script in /root/bin
 	# cd /opt
-	# maaktrash 
+	# maaktrash
 
 ==== G-schijf voor Wine en VBox sharedfolder voor windows VMs naar SSD ====
 
@@ -3998,7 +3988,7 @@ oplossing:
 - in alle opdrachtlijnen, scripts en .desktops snelkoppelingen /media/sdata/.win-gschijf vervangen door /opt/.win-gschijf
 	- dit zijn ze :
 		$ grep -le "/media/sdata/.win-gschijf" ~/.local/share/applications/*.desktop ~/Documents/shellscripts/* ~/.config/xfce4/panel/launcher*/*.desktop
-		>>>	
+		>>>
 			/home/dirk/.local/share/applications/CDisplayCBZReader.desktop
 			/home/dirk/.local/share/applications/MrSidViewer.desktop
 			/home/dirk/.local/share/applications/R4.desktop
@@ -4012,8 +4002,8 @@ oplossing:
 		<<<
 		$ sed -i -e "s|/media/sdata/.win-gschijf|/opt/.win-gschijf|g"  ~/.local/share/applications/*.desktop ~/Documents/shellscripts/* ~/.config/xfce4/panel/launcher*/*.desktop
 			- OPPASSEN : "-i -e", niet "-ie", want dan is 'e' de backupsuffix
-			- OPGELET : stopt als 1 v.d. globbing-expansies een directory is. grep meldt dit maar gaat verder, sed niet. 
- 
+			- OPGELET : stopt als 1 v.d. globbing-expansies een directory is. grep meldt dit maar gaat verder, sed niet.
+
 - zie ook sectie "VirtualBox 5.2.10 bionic"
 - zie ook sectie "playonlinux naar SSD"
 
@@ -4034,7 +4024,7 @@ oplossing:
 
 - in wineprefix (Win7x86PROGS e.a.) "drive_g", die linkt naar /media/sdata/.win-gschijf, vervangen door link naar /opt/.win-gschijf
 	- in /opt/.playonlinuxDirk/Win7x86PROGS/drive_c/windows/Fonts alle links naar fonts verwijderen (zie _Wine_PlayOnLinux.adoc sectie "Fonts in Wine prefix")
-	
+
 == PROGS NA BIONIC ==
 
 === gphotofs (FUSE driver o.a. Canon IXUS 300) === 2019/02/15
@@ -4070,7 +4060,7 @@ oplossing:
 - Oude skype (mijn 4.3.0.37 met versie in hex edit gewijzigd naar 8.3.0.37) werkt niet meer, ook niet met nog hogere gesimuleerde versie (b.v. 8.5.0.37)
 	- PPA Belin terug aktief maken om skype-bin te verwijderen :
 		>>> /etc/apt/sources.list.d/belin-ubuntu-stable-bionic.list
-			verwijder de '#' aan begin van lijn 
+			verwijder de '#' aan begin van lijn
 		<<<
 	# apt update
 	# apt remove skype-bin
@@ -4079,7 +4069,7 @@ oplossing:
 	- verwijder /home/dirk/.Skype en /home/dirk/.config/Skype
 	- verwijder Skype uit "Session and startup", "Application Autostart"
 
-- nieuwste officiele skype installeren (package heet nu skypeforlinux)	
+- nieuwste officiele skype installeren (package heet nu skypeforlinux)
 	- /var/cache/apt/ tijdelijk vervangen door link naar ramdisk
 	# apt install seahorse
 		-  in menu Accessories als "Password and keys", GUI om keyrings te beheren (certificaten, paswoorden, ...)
@@ -4186,7 +4176,7 @@ oplossing:
 		# for map in .playonlinuxDirk .win-gschijf .virtualbox;do rsync -aASXx /cdrom/.opt2bind/$map /opt/;done
 			- OPGELET : in deze vorm geen eind-/ in rsync bronnen
 		# umount /cdrom
-		
+
 == PROGS NA BACKUP 2019-09-17  ==
 
 0 update Firefox 69.0 : LAAT ORPHANED INODES ACHTER
@@ -4195,7 +4185,7 @@ oplossing:
 	- met update 5 overblijvende plugins
 	- met update (manueel in google zoeken) language packs Engels en Nederlands (geen mogelijkheid Engels_CA en _SA e.d. te verwijderen)
 
-===  RESTORE VAN BACKUP 2019-09-17  ===
+===  RESTORE VAN BACKUP 2019-09-17 ===
 - selectieve restore van backup naar systeemschijf, na inode problemen t.g.v. Firefox 69, om ondertussen gewijzigde documenten en instellingen te behouden
 
 - OPM : HIER STAAT OVERAL RSYNC -n (NO ACTION). DIE OPTIE WEGLATEN IN PRODUCTIE
@@ -4237,7 +4227,7 @@ oplossing:
 - heeft Java nodig, maar geen Ubuntu package of installer (is immers een gewoon Java programma)
 	- nakijken of simplyhtml en simplyhtml-doc ondertussen nog altijd enkel door elkaar en door freeplane gebruikt worden:
 		 $ apt-cache rdepends simplyhtml*
-	- indien OK, freeplane en simplyhtml verwijderen, anders alleen freeplane	 
+	- indien OK, freeplane en simplyhtml verwijderen, anders alleen freeplane
 		# apt remove freeplane* simplyhtml*
 		# apt autoremove
 			- 84MB extra java dinges
@@ -4280,7 +4270,7 @@ oplossing:
 - native helper voor deze Firefox add-on, om gestreamde videos in video container te zetten en naar schijf te schrijven. Open-sourced, simpel en veilig bevonden, en maar 3,5 MB
 
 - download .deb van https://www.downloadhelper.net/install-coapp?browser=firefox
-# apt install ./net.downloadhelper.coapp-1.3.0-1_amd64.deb 
+# apt install ./net.downloadhelper.coapp-1.3.0-1_amd64.deb
 
 === hexdiff ===
 
@@ -4333,7 +4323,7 @@ oplossing:
 			adb-support               -                     :adb-support               -
 			...
 			<<<
-		- de home-plug van een package is een directory in ~, zoals in dit geval "		/home/dirk/snap/john-the-ripper/297/.john", die door john gemaakt wordt bij 1ste gebruik			
+		- de home-plug van een package is een directory in ~, zoals in dit geval "		/home/dirk/snap/john-the-ripper/297/.john", die door john gemaakt wordt bij 1ste gebruik
 			- WERKT NIET: symlink in die home-plug directory naar een bestand ergens daarbuiten
 			- WERKT WEL : bind-mount op of onder die home-plug directory
 			- OPGELET : geef als parameters voor opdrachten van snap-package het volledige host-pad op
@@ -4347,7 +4337,7 @@ oplossing:
 				- john : symlink naar john-the-ripper
 			- meer opties :
 				$ john --list=hidden-options
-				>>> o.a. 
+				>>> o.a.
 				--help                     print usage summary, just like running the command without any parameters
 				--config=FILE              use FILE instead of john.conf or john.ini
 				--mem-file-size=SIZE       size threshold for wordlist preload (default 2048 MB)
@@ -4414,7 +4404,7 @@ oplossing:
 		- dus core/9289 is wel gemount, maar staat niet in de lijst
 
 - deze snap verwijderen
-	$ sudo snap remove john-the-ripper 
+	$ sudo snap remove john-the-ripper
 	>>>
 	john-the-ripper removed
 	<<<
@@ -4430,7 +4420,7 @@ oplossing:
 	>>>
 	error: cannot disable "core": snap "core" cannot be disabled
 	<<<
-	$ sudo umount /snap/core/9436 
+	$ sudo umount /snap/core/9436
 	>>>
 	umount: /snap/core/9436: target is busy.
 	<<<
@@ -4440,7 +4430,7 @@ oplossing:
 	Warning: Stopping snapd.service, but it can still be activated by:
 	  snapd.socket
 	<<<
-	$ sudo umount /snap/core/9436 /snap/core/9289 
+	$ sudo umount /snap/core/9436 /snap/core/9289
 	$ sudo systemctl start snapd
 	$ sudo snap remove core
 	>>>
@@ -4473,7 +4463,7 @@ oplossing:
 		- bekijk /mnt/snap/manifest.yaml
 - snapshots van deze snap verwijderen :
 	- zie in /var/lib/snapd/snapshots
-	
+
 - ook core verwijderen (als er geen andere snaps meer zijn):
 	- eerst snapd service uitschakelen
 		# systemctl stop snapd
@@ -4543,18 +4533,142 @@ oplossing:
 	--folder=FOLDER : placed download file in FOLDER.
 	--filename=FILE : set download filename to FILE.
 	[--category-index=N] :add download to Nth category. (default -1)
-	
+
 - help :
 	$ uget-gtk --help
 	$ man uget-gtk (GUI Help gaat naar website, die is nog leeg)
 
+=== youtube-dl (USC) ===
+
+- python script om te downloaden van youtube e.a. sites die .mpd dash scripts gebruiken, zoals o.a. VRT Nu
+
+- Gebruik : 1 aflevering
+	- In Firefox web developer tools/netwerk filteren op .mpd
+	- de video in Firefox openen/beginnen afspelen
+	- rechtsklikken op de netwerk-GET van de .mpd, kies "Copy.../Copy URL"
+		$ youtube-dl -f bestvideo+bestaudio -o Aflevering1.mp4 "$URL"
+	- OPM : evt. ander beschikbaar formaat kiezen uit lijst van
+		$ youtube-dl -F "$URL"
+
+- Gebruik : batch
+	- zet elke .mpd-URL op een eigen lijn in batch.lst
+	$ youtube-dl -a batch.lst -f bestvideo+bestaudio -o S01E'%(autonumber)02d'
+
+=== xclip (USC) ===
+
+- command line interface met clipboard:
+	xclip is a command line utility that is designed to run on any system with an X11 implementation. It provides an interface to X selections ("the clipboard") from the command line. It can read data from standard in or a file and place it in an X selection for pasting into other X applications. xclip can also print an X selection to standard out, which can then be redirected to a file or another program.
+
+- xclip, xclip-copyfile, xclip-cutfile, xclip-pastefile
+
+=== Audacious (USC) ===
+
+- lichte muziekspeler  (8,9MB op schijf, kan gewoon bestandsnamen tonen en evt. sorteren, probeert niet slim te zijn)
+	- in menu Multimedia
+
+=== gmusicbrowser verwijderd (USC) ===
+- veel te moeilijk te gebruiken onding
+
+=== Flash plugin verwijderd ===
+- wordt vanaf einde 2020 toch niet meer ondersteund, al 3 jaar geen flash inhoud meer gezien
+	# apt-get purge flashplugin-installer
+
+== PROGS NA BACKUP 201011 ==
+
+=== upgrade firefox : v81.0, en alle addons ===
+	# apt-get update
+	# apt-get install firefox
+	>>> Installed: 81.0+build2-0ubuntu0.18.04.1 <<<
+	- addons werken soms niet, zelfs na update ervan. FFox week later nog eens bijgewerkt :
+	# apt-get update
+	# apt-get install firefox
+	>>> 81.0.2+build1-0ubuntu0.18.04.1 <<<
+
+=== xdotool ===
+
+- muis en toetsenbord simuleren en ondervangen
+	- documenteert zelf dat het meestal niet lukt om toetsen te sturen naar een ander programma, de rest lijkt te werken (muisklikken, venstergrootte, -plaats en Z-orde bepalen) MAAR NIET NAUWKEURIG zoms 10-20 pixels fout. Ook heeft b.v. 1 Geany-instance wel 10 windows open, waarvan een aantal buiten het scherm; xdotool vertelt niet hetwelk het eigenlijke toepassingsvenster is.
+
+=== LibreOffice als AppImage ===
+
+- EERST appimage maken met script (of downloaden), om zeker te zijn dat dat lukt en werkt
+	- zie "/media/sdata/.stacks/appimages/LibreOffice/LibreOffice-6.4.7.nl_en-GB_fr_de.help-x86_64 make.log"
+- LibreOffice van XUbuntu verwijderen:
+	- zie "/media/sdata/.stacks/appimages/LibreOffice/standaard XUbuntu installatie/apt-get remove.log"
+	# apt-get remove -purge libreoffice* ure uno-libs3
+- appimage in /opt/appimages zetten, met versieloze symlink "LibreOffice.AppImage" ernaar, op dezelfde plaats
+- OFWEL installeren voor 1 gebruiker, in diens ~/bin en ~/.local
+- OFWEL installeren voor alle gebruikers, in /usr/local/bin, /usr/local/lib en /usr/local/share
+	- /usr/local/lib n.v.t. voor LibreOffice (in andere distris mogelijk wel /usr/lib/menu)
+	- symlink naar de executable AppImage onder de naam "libreoffice" op het pad:
+		# ln -s /opt/appimages/LibreOffice.AppImage /usr/local/bin/libreoffice6.4
+			- omdat de .desktops etc. van de appimage allemaal de versie 6.4 in de naam zetten, om te kunnen samenleven met een reguliere LibreOffice-installatie
+		# ln -s /usr/local/bin/libreoffice6.4 /usr/local/bin/libreoffice
+			- omdat ik geen reguliere LibreOffice-installatie meer wil, en sommige andere progs. misschien wel de gewone "libreoffice"-naam zoeken.
+		- AppImage-specs garanderen dat parameters (opties en bestandsnamen) aan AppImage of symlink ernaar, doorgegeven worden naar de toepassing IN de AppImage
+	- appimage mounten : zie "_Xubuntu truuks en commandos.adoc" sectie "appimage zelf mounten"
+	- config voor alle users uit mountpunt/usr/share kopieren naar /usr/local/share
+		- OPM: eerst verbeteren:
+			- %appdir%/usr/share/applications zijn foute symlinks naar /opt/libreoffice6.4/share/xdg/writer.desktop enz., moet zijn naar %appdir%/opt/libreoffice6.4/libreoffice6.4/share/xdg/writer.desktop
+			- daarom hele %appdir%/usr/share om SDATA gezet, en de symlinks naar de .desktops daar ineens vervangen door de .desktops zelf, met de naam van de symlink
+		# cp -ri /media/sdata//.stacks/appimages/LibreOffice/appimage\ allusers\ config\ files/usr/share /usr/local/
+	- Update the MIME database for your changes to take effect:
+		# update-mime-database /usr/share/mime
+		# update-mime-database /usr/local/share/mime
+	- Update the application database:
+		# update-desktop-database /usr/share/applications
+		# update-desktop-database /usr/local/share/applications
+
+=== TEDOEN ===
+- upgrade VirtualBox (probeer eerst 3D weg uit bestaande VMs)
+- test lftp
+- Gimp als AppImage : https://github.com/aferrero2707/gimp-appimage/releases/tag/continuous
+	- extra plugins : https://github.com/aferrero2707/gimp-plugins-collection/releases/tag/continuous
+- FlightGear AppImage
+
 == TEDOEN ==
 
-- HPLIP 3.19.12 : NIET SUC, heeft maar (Bionic, 8jan20) 3.17.10, terwijl HPLIP maar geupdate is voor Bionic in 3.18.4
+- HPLIP 3.19.12 : NIET USC, heeft maar (Bionic, 8jan20) 3.17.10, terwijl HPLIP maar geupdate is voor Bionic in 3.18.4
 	- al gedownload, best eens uitvoeren als printer opstaat
 		- GEZIPTE.PRG/UBUNTU/HP Linux Imaging and Printing/hplip-3.19.12.run
 		- autostart doen werken, zie sectie "HP Printer system tray"
-	
+=== git ===
+- zie (https://docs.github.com/en/free-pro-team@latest/github/getting-started-with-github)
+
+- CLI is niet zo groot als ik dacht
+	$ sudo apt-get install git git-gui
+	- elk git "command" zijn gedocumenteerd als "man git-$command", zelfs "man git-gui", maar worden uitgevoerd als "git command", d.w.z. er zijn geen symlinks naar git als b.v. "git-gui"
+	>>>
+	Reading package lists... Done
+	Building dependency tree
+	Reading state information... Done
+	The following additional packages will be installed:
+	  git-man liberror-perl
+	Suggested packages:
+	  git-daemon-run | git-daemon-sysvinit git-doc git-el git-email git-gui gitk gitweb git-cvs git-mediawiki git-svn
+	The following NEW packages will be installed
+	  git git-man liberror-perl git-gui gitk
+	0 to upgrade, 3 to newly install, 0 to remove and 631 not to upgrade.
+	Need to get 4.741 kB of archives.
+	After this operation, 39,0 MB of additional disk space will be used.
+	<<<
+
+=== gitfs ===
+- git repo mounten op eigen bestandssysteem, met locale cache
+	- i.p.v. hele git-software te installeren
+- zie (https://www.presslabs.com/docs/code/gitfs/how-it-works/)
+
+=== lftp (USC) ===
+
+- CLI ftp-client
+	- 1.671 kB of additional disk space
+	>>>
+	Lftp is a file retrieving tool that supports FTP, HTTP, FISH, SFTP, HTTPS, FTPS and BitTorrent protocols under both IPv4 and IPv6. Lftp has an amazing set of features, while preserving its interface as simple and easy as possible.
+	The main two advantages over other ftp clients are reliability and ability to perform tasks in background. It will reconnect and reget the file being transferred if the connection broke. You can start a transfer in background and continue browsing on the ftp site. It does this all in one process. When you have started background jobs and feel you are done, you can just exit lftp and it automatically moves to nohup mode and completes the transfers. It has also such nice features as reput and mirror. It can also download a file as soon as possible by using several connections at the same time.
+	Lftp can also be scriptable, it can be used to mirror sites, it lets you copy files among remote servers (even between FTP and HTTP). It has an extensive online help. It supports bookmarks, and connecting to several ftp/http sites at the same time.
+	This package also includes lftpget - A simple non-interactive tool for downloading files.
+	<<<
+
 === x-tile ===
 
 - vensters schikken per workspace
@@ -4562,14 +4676,13 @@ oplossing:
 	- https://launchpad.net/~giuspen/+archive/ubuntu/ppa
 
 === diverse ===
-- Wissen /home/dirk/.gimp-2.8 : nu ~/.config/GIMP/2.10
-	
+
 - tegelijk met 2 mijn pc gebruiken :
 	- https://askubuntu.com/questions/443418/start-another-gui-on-different-tty
 	- https://help.ubuntu.com/community/MultiseatX
 	- https://www.linuxquestions.org/questions/linux-software-2/starting-new-x-sessions-on-multiple-tty%27s-113957/
 	- Working with TTY sessions : https://mostlylinux.wordpress.com/troubleshooting/ttysessions/
-	
+
 - /var/cache/apt/archives/ vervangen door link naar HDD
 - uninstall Unison
 - voor upgrade, repos van derden verwijderen, uninstall gimp
@@ -4608,10 +4721,7 @@ USC is v 0.4.14, ontwikkelaar heeft Xenial en Bionic 0.4.18
 
 === flatpak ===
 
-- distributie-onafhankelijk app distributieformaat van Fedora (Red Hat)
-	- toepassingen worden verpakt met alle nodige bibliotheken
-		- niet opgesloten in een grote exe, zoals AppImage, die gemount wordt, maar in gewone directories op een afzonderlijke plaats
-	- draait in een zandbak, die naar believen (van gebruiker of toepassing) toegang kan krijgen tot de pc (directories, geluid, webcam, ...)
+- zie "_Xubuntu truuks en commandos.adoc" sectie "flatpak"
 
 - uit USC of officiële PPA van de makers zelf
 	# add-apt-repository ppa:alexlarsson/flatpak
@@ -4621,61 +4731,41 @@ USC is v 0.4.14, ontwikkelaar heeft Xenial en Bionic 0.4.18
 		- alternatief van Ubuntu's Software Center, is in Xubuntu voor-geinstalleerd
 	0 apt install gnome-software-plugin-flatpak
 		- integreert flatpak-installatie in gnome-software (maar enkel voor installatie, geinitiëerd door in een webbrowser een .flatpakref-bestand te openen), maar CLI is genoeg voor mij
-
-- directory-structuur flatpaks :
-	- default flatpak-map is (met optie --system, default, voor alle users) : /var/lib/flatpak
-	- persoonlijke flatpak-map is (met optie --user, persoonlijk) : ~/.local/share/flatpak
-	- custom flatpak-map is (met optie --installation=customnaam) : "Path" in /etc/flatpak/installation.d/customnaam.conf
-	- per flatpak-map :
-		├── repo : gegevens over repositories, en een cache voor lopende installaties
-		├── runtime
-		│   └── [per runtime bibliotheek die voor meerdere toep. dient]
-		├── app
-		│   └── [per flatpak toepassing]
-		└── exports
-			└── share
-				├── applications
-				├── dbus-1
-				└── icons
-	- persoonlijke gegevens per flatpak (ongeacht flatpak-map)
-		~/.var/ : per user, zowel voor flatpaks geinstalleerd met --system als met --user
-		└── app
-			└── [ per toepassing, data directory which persists over app upgrades] 
-
-- backup nemen van een flatpak : gewoon de directories uit [flatpakmap]/app,  [flatpakmap]/runtime en ~/.var/app kopiëren
- 
-- eigen flatpak-map maken, b.v. op HDD of externe schijf :
-	- zie man flatpak-installation 
-	# mkdir /etc/flatpak/installations.d/
-	- maak eigen installatie-plek voor flatpaks (is wel voor alle users) :
-	>>> /etc/flatpak/installations.d/stacks.conf
-		[Installation "stacks"]
-		Path=/media/sdata/.stacks/flatpaks
-		DisplayName=Harddisk flatpaks op SDATA
-		StorageType=harddisk
-	<<<
-		- kan meerdere namen bevatten, lijkt me simpeler om per naam 1 gelijkgenoemde x.conf te maken
-		- StorageType : network, mmc, sdcard, harddisk
-		- hiernaar wordt nu verwezen door voor elke flatpak-opdracht "--installation=stacks" op te geven :
-
-- flatpak toepassingen worden uit repositories aangeboden, die aangemeld moeten zijn bij uw flatpak-map (--user, --system of "/etc/flatpak/installation.d/*.conf"). De meest gebruikte is flathub.org :
-	$ flatpak [--installation=stacks] remote-add flathub https://flathub.org/repo/flathub.flatpakrepo
-		[--installation=stacks] : voor installaties in de flatpak-map ingesteld in "/etc/flatpak/installation.d/stacks.conf", komt daar in de repo-subdirectory
-		- repo wordt geregistreerd in [flatpak-map]/repo
-	$ flatpak [--installation=stacks] install flathub flightgear
-	$ flatpak run flightgear
-		--installation=stacks niet nodig als er maar 1 versie is
-
-TEDOEN - zet '/var/lib/flatpak/exports/share' en '/home/dirk/.local/share/flatpak/exports/share' (en voor mijn custom flatpak-map '/media/sdata/.stacks/flatpaks/exports/share') in the search path set by the XDG_DATA_DIRS environment variable, so applications installed by Flatpak appear on your desktop even before the session is restarted.
-
+	- set '/var/lib/flatpak/exports/share' and '/home/dirk/.local/share/flatpak/exports/share' (en evt. eigen flatpak-mappen) in the search path set by the XDG_DATA_DIRS environment variable, so applications installed by Flatpak appear on your desktop even before the session is restarted
 
 === FlightGear ===
 
+- paden:
+	- /usr/games en /usr/share/games : progamma en data
+	~/.fgfs : The   main  directory  where  FlightGear  configuration  files  and  data  (downloaded aircraft/scenery) are stored.
+	~/.fgfsrc.hostname, ~/.fgfsrc : Configuration files containing command-line options for fgfs.
+
+- naargelang de bron starten met parameter "fgfs --launcher" OF fgrun OF "fgfs --gui", en evt. pad naar data:
+	>>> (http://manpages.ubuntu.com/manpages/bionic/man1/fgfs.1.html)
+       --fg-root=path : Set the FlightGear data root directory ($FG_ROOT) to path. If this  option  is  not set,  fgfs  uses  the path specified in the FG_ROOT environment variable or, absent that, the FlightGear data directory chosen at the time the program was compiled.
+       --fg-scenery=path : Set the FlightGear scenery directories ($FG_SCENERY) to path. If this option is  not  set,  fgfs  uses the  path  specified  in  the  FG_SCENERY environment variable or, absent that, the Scenery subdirectory inside $FG_ROOT. You can specify multiple directories by separating them  with  colons  (:),  as in /first/path:/second/path; in that  case,  fgfs will  follow  the order  the  paths are written in to search for scenery files, stopping as soon as a match is found.
+       --fg-aircraft=path : Load  additional  aircraft  from  path  besides  the  Aircraft  subdirectory inside $FG_ROOT. Alternatively, you can use --aircraft-dir to target a  specific  aircraft in a given directory.
+       --download-dir=path : Store aircraft and scenery downloaded via the simulator in path. The TerraSync directory may be specifically set with the --terrasync-dir option.
+	<<<
+	>>> (http://wiki.flightgear.org/index.php?title=$FG_ROOT)
+	The environment variable $FG_ROOT is referring to the path of the main data directory of FlightGear, which contains the so called base package, also known as FGData. The base package consists of the default aircraft and scenery, GUI files, sounds, 3D models etc.
+	When running FlightGear from a command line, you can set $FG_ROOT via --fg-root=path/to/root. In FGRun, it is set on the paths page, previous to the aircraft selection page.
+	As of FlightGear 2.4, it is advised to install additional scenery and aircraft in $FG_SCENERY and $FG_AIRCRAFT directories outside $FG_ROOT. This allow for maintaining the additional stuff when installing a new version of FlightGear.
+	<<<
+
+- er zijn eindelijk AppImages gemaakt:
+	- zie /media/sdata/.stacks
+	- zie "_Xubuntu truuks en commandos.adoc" sectie "AppImage"
+		- de pkg2appimage github heeft een recipes/flightgear.yml :
+			>>> It's built from Xenial rather than Trusty as the Trusty build has no QT launcher <<<
+			- trusty kwam nog voor Xenial, bionic zal ook wel die QT launche hebben
+	- starten als FG_ROOT=data-pad FG_HOME=config-en-userdata-pad pad-naar/xxx.AppImage --launcher
+		- nog niet getest
+
 - laatste versie wordt ook officieel als FlatPak verdeeld :
 	https://flathub.org/apps/details/org.flightgear.FlightGear
-		>>>
 		$ flatpak --installation=stacks install flightgear
-
+		>>>
 		Looking for matches…
 		Found similar ref(s) for ‘flightgear’ in remote ‘flathub’ (system (stacks)).
 		Use this remote? [Y/n]: y
@@ -4683,22 +4773,17 @@ TEDOEN - zet '/var/lib/flatpak/exports/share' en '/home/dirk/.local/share/flatpa
 		Use this ref? [Y/n]: y
 		Required runtime for org.flightgear.FlightGear/x86_64/stable (runtime/org.kde.Platform/x86_64/5.12) found in remote flathub
 		Do you want to install it? [Y/n]: y
-
 		org.flightgear.FlightGear permissions:
 			ipc           network               fallback-x11          pulseaudio      wayland      x11
 			devices       file access [1]       dbus access [2]
-
 			[1] xdg-config/kdeglobals:ro, xdg-run/dconf, ~/.config/dconf:ro
 			[2] com.canonical.AppMenu.Registrar, com.canonical.AppMenu.Registrar.*
-
-
-				ID                                               Arch              Branch            Remote             Download
-		 1. [✓] org.kde.Platform                                 x86_64            5.12              flathub              414,5 MB / 429,8 MB
-		 2. [V] org.freedesktop.Platform.html5-codecs            x86_64            18.08             flathub              < 3,3 MB
-		 3. [V] org.gtk.Gtk3theme.Greybird                       x86_64            3.22              flathub             < 71,7 kB
-		 4. [V] org.kde.Platform.Locale                          x86_64            5.12              flathub            < 334,1 MB (partial)
-		 5. [V] org.flightgear.FlightGear                        x86_64            stable            flathub              < 1,9 GB
-
+				ID                                    Arch   Branch Remote  Download
+		 1. [✓] org.kde.Platform                      x86_64 5.12   flathub   414,5 MB / 429,8 MB
+		 2. [V] org.freedesktop.Platform.html5-codecs x86_64 18.08  flathub   < 3,3 MB
+		 3. [V] org.gtk.Gtk3theme.Greybird            x86_64 3.22   flathub  < 71,7 kB
+		 4. [V] org.kde.Platform.Locale               x86_64 5.12   flathub < 334,1 MB (partial)
+		 5. [V] org.flightgear.FlightGear             x86_64 stable flathub   < 1,9 GB
 		<<<
 
 - met ppa voor laatste versie voor Xenial : http://wiki.flightgear.org/Howto:Install_Flightgear_from_a_PPA
@@ -4709,8 +4794,8 @@ TEDOEN - zet '/var/lib/flatpak/exports/share' en '/home/dirk/.local/share/flatpa
 		$ apt-cache policy flightgear
 
 - buiten libraries elders, niet te onderscheppen, installeert flight gear enkele MB in /usr/games, maar vooral enkele GB in (bij mij nog niet bestaande) /usr/share/games, subdir .../flightgear/ ; met een symlink vooraf op HDD zetten i.p.v. SSD :
-	# mkdir /media/sdata/.stacks/usr_share_games
-	# ln -s /media/sdata/.stacks/usr_share_games /usr/share/games
+	# mkdir /media/sdata/.stacks/usr_share_games/flightgear /usr/share/games
+	# ln -s /media/sdata/.stacks/usr_share_games/flightgear /usr/share/games/flightgear
 
 - FlightGear installeren (kan ook via USC)
 	- tijdelijk /var/cache/apt/archive vervangen door symlink naar ramdisk (downloadt enkele GB)
@@ -4725,19 +4810,19 @@ TEDOEN - zet '/var/lib/flatpak/exports/share' en '/home/dirk/.local/share/flatpa
 	- ofwel in de GUI een hangar toevoegen met een catalog.xml
 		0 default, maar niet meer op die URL, crasht hele flightgear : http://mirrors.ibiblio.org/flightgear/ftp/2018.3.2/catalog.xml
 		- http://mirrors.ibiblio.org/flightgear/ftp/Aircraft/catalog.xml
-		- mirrors : 
+		- mirrors :
 			>>> https://www.flightgear.org/download/mirror/
 			USA, NC 	http://mirrors.ibiblio.org/pub/mirrors/flightgear/ftp/ 			source mirror
 			USA, CA 	ftp://ftp.kingmont.com/flightsims/flightgear/ 					source mirror
-			Germany 	ftp://ftp.de.flightgear.org/pub/fgfs/ 	 
-			Russia 		http://mirror.yandex.ru/mirrors/ftp.flightgear.org/flightgear/ 	 
-			Russia 		http://mirrors-ru.go-parts.com/flightgear/ 	 
+			Germany 	ftp://ftp.de.flightgear.org/pub/fgfs/
+			Russia 		http://mirror.yandex.ru/mirrors/ftp.flightgear.org/flightgear/
+			Russia 		http://mirrors-ru.go-parts.com/flightgear/
 			France 		http://ftp.igh.cnrs.fr/pub/flightgear/ftp/
-						http://ftp.icm.edu.pl/packages/flightgear/ 	 
-			USA 		http://mirrors-usa.go-parts.com/flightgear/ 	 
-			UK 			http://mirrors-uk.go-parts.com/flightgear/ 	 
+						http://ftp.icm.edu.pl/packages/flightgear/
+			USA 		http://mirrors-usa.go-parts.com/flightgear/
+			UK 			http://mirrors-uk.go-parts.com/flightgear/
 			Netherlands http://ftp.snt.utwente.nl/pub/software/flightgear/ftp/
-						ftp://ftp.snt.utwente.nl/pub/software/flightgear/ftp/ 	 
+						ftp://ftp.snt.utwente.nl/pub/software/flightgear/ftp/
 			<<<
 
 === veelknop-muis
@@ -4791,8 +4876,9 @@ TEDOEN - zet '/var/lib/flatpak/exports/share' en '/home/dirk/.local/share/flatpa
 - zie https://github.com/guardianproject/libsqlfs
 - zie http://www.nongnu.org/libsqlfs/
 
-=== Cmdfs : a FUSE virtual filesystem  ===
- applies an arbitary filter command to selected files in a source directory tree to create the destination files	- o.a. om een muziek-map met flac-bestanden te mounten als een virtuele map met mp3-bestanden
+=== Cmdfs : a FUSE virtual filesystem ===
+- applies an arbitary filter command to selected files in a source directory tree to create the destination files
+ 	- o.a. om een muziek-map met flac-bestanden te mounten als een virtuele map met mp3-bestanden
 	- zie http://cmdfs.sourceforge.net/ en https://github.com/mikeswain/cmdfs
 	- zie http://www.linux-magazine.com/Online/Features/Cmdfs
 	- zie ook https://khenriks.github.io/mp3fs : a read-only FUSE filesystem which transcodes FLAC to MP3 on the fly
@@ -4801,11 +4887,13 @@ TEDOEN - zet '/var/lib/flatpak/exports/share' en '/home/dirk/.local/share/flatpa
 
 === ? Gnumeric i.p.v. LibreOffice Calc ===
 
-=== GNU Octave (free MatLab clone voor numeric computing, tegenhanger van Maxima/Mathematica/Maple voor symbolic computing) ===
+=== GNU Octave ===
+- free MatLab clone voor numeric computing, tegenhanger van Maxima/Mathematica/Maple voor symbolic computing
 
 === Dramatica Pro V4 (boekschrijfhulp) CD TTC Taal en Culturen ===
 
-=== QDirStat : graphical application to show where your disk space has gone and to help you to clean it up ===
+=== QDirStat ===
+- graphical application to show where your disk space has gone and to help you to clean it up
 	- https://github.com/shundhammer/qdirstat , verwijst zelf naar
 	- ppa op https://launchpad.net/%7Enathan-renniewaldock/+archive/ubuntu/qdirstat
 
@@ -4814,12 +4902,14 @@ TEDOEN - zet '/var/lib/flatpak/exports/share' en '/home/dirk/.local/share/flatpa
 === Video4Linux ===
  https://en.wikipedia.org/wiki/Video4LinuxV4L for short, is a collection of device drivers and an API for supporting realtime video capture on Linux systems.[1] It supports many USB webcams, TV tuners, and related devices, standardizing their output, so programmers can easily add video support to their applications. MythTV, tvtime and TVHeadend are typical applications that use the V4L framework.
 
-=== coolreader: echte epub-lezer (en o.a. .chm) zonder bibliotheekbeheerder, beschikbaar voor Ubuntu via derden ===
+=== coolreader ===
+- echte epub-lezer (en o.a. .chm) zonder bibliotheekbeheerder, beschikbaar voor Ubuntu via derden
 
-=== MuseScore muzieknotatie (o.a. midi in en uit, pdf uit) en playback : https://musescore.org/en ===
+=== MuseScore ===
+- muzieknotatie (o.a. midi in en uit, pdf uit) en playback : https://musescore.org/en
 	- 113MB, geen soundfont nodig want er zit er al een bij: FluidR3Mono_GM.sf3 (beter geschikt dan de courante  FluidR3_GM: "FluidR3 Mono is also stereo. The samples, however, have been mixed down to mono where appropriate so they can be placed properly within the stereo soundstage.")
 
-=== Remmina: remote desktop client === 
+=== Remmina: remote desktop client ===
 om te proberen Nuance Dragon in Windows te draaien, maar in Linux te gebruiken
 	- 1,9 MB, officiele laatste versie te vinden via http://www.remmina.org/wp/
 	- xpra werkt, maar is 250MB in Windows
@@ -4945,7 +5035,7 @@ https://github.com/angelozerr/typescript.java/wiki/Getting-Started
 			<<<
 	# apt-get install php7.2
 		- na php7.2-fpm installeert dit GEEN apache2 meer, nog maar 80kB extra
-	
+
 === QT Creator IDE ===
 
 - IDE voor C++-toepassingen die Qt gebruiken
@@ -4958,4 +5048,4 @@ https://github.com/angelozerr/typescript.java/wiki/Getting-Started
 
 - heeft OpenGL nodig :
 	# apt-get install libgl1-mesa-dev
-	
+

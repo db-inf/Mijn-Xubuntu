@@ -1,0 +1,242 @@
+Installatie PlayOnLinux (POL) Wineprefix "Win7x86PROGS"
+=======================================================
+. ZIE OOK _Wine-PlayOnLinux.adoc
+
+. wineprefix voor programma's die zonder installatieprogramma uitgevoerd kunnen worden, of gekopiëerd van een bestaande installatie. Dit zijn typisch de programma's die ik vroeger in "G:\PROGRAMS" zette, evt. met instructies in .\INSTALLATIE
+
+. Wine version x86 2.11
+
+. install a program
+	install a non-listed program
+		install a program in a new virtual drive, naam "Win7x86PROGS"
+			x use another version of Wine 
+			x configure Wine (zie volgend punt)
+			x install some libraries
+				. venster voor keuze Wine-versie:
+						. 2.11
+						. 32-bits window installation
+						. Cancel Mono installer (voor .NET toepassingen, heb ik nooit gebruikt voor mijn XP-machine)
+					. nu Ubuntu-terminal openen in nieuwe wineprefix (~/PlayOnLinux's virtual drives/%WINEPREFIX%) en F- en G-drive maken:
+						$ ln -s /media/ramdisk drive_f
+						$ ln -s /opt/.win-gschijf drive_g
+							- WAS /media/sdata/.win-gschijf
+				. venster voor Wine configuration:
+					- [Applications] 
+						Windows Version "Windows 7" 
+					- [Graphics]
+						x Allow Window manager to decorate ...
+						x Allow Window manager to control ...
+						Screen resolution 120dpi
+					- [Desktop integration]
+						- link "My Videos" to /home/dirk/Film
+					- [Drives]
+						- zoveel mogelijk zoals mijn reeks virtuele machines "WXP..."
+							- C: : Windows (en users en program files, in tegenstelling tot VM, daar gaan we niet aan morrelen)
+							- D: : /mnt 
+							- E: : /tmp/.winetemp, met map TEMP (zie sectie "Windows TEMP en TMP")
+							- F: : /cdrom op 
+							- G: : /opt/.win-gschijf, met PROGRAMS, CDKOPIE en ATM4
+							(- home op I:)
+							- J: : /media/ramdisk 
+					- [About] owner Dirk, Organ. BOCOU
+				. venster om libraries te installeren (lijst keuzehokjes voor POL_...) : o.a. alle standaard runtime libraries
+						- kan ook achteraf: configure/install components
+						- dit zijn POL-scripts, in detail te bekijken op https://www.playonlinux.com, supported software: 'functions', daar staan o.a. de download-bronnen bij. Die scripts komen ook in /home/dirk/.PlayOnLinux/tmp/
+						x POL_function_fontssmoothrgb
+						x POL_install_vcrun2008 (o.a. ook mfc90.dll en mfc90u.dll)
+							- voor WinMerge
+						x POL_install_fontssmoothrgb
+						x POL_install_gdiplus
+						x POL_install_mfc40
+						x POL_install_mfc42
+						x POL_install_msvc100
+						x POL_install_msvc80
+						x POL_install_msvc90
+						x POL_install_riched20 (hele SP2 wordt gedownload om dit ene stukje eruit te halen)
+						x POL_install_riched30 (is kortgesloten, installeert gewoon terug riched20)
+						x POL_install_vbrun6
+						x POL_install_vcrun2005
+						x POL_install_vcrun2008
+						x POL_install_vcrun2010
+						x POL_install_vcrun2012
+						x POL_install_vcrun2013
+						x POL_install_vcrun6 (installeert ook terug mfc42)
+						0 POL_install_xvid (voor virtualdub, installeert ook vcrun6 met mfc42, en vcrun2008 (sp1))
+							- is 2011-versie 1.3.2, liever manueel de 2015 installeren
+
+						. LATER MISSCHIEN (via Configure/Win7x86PROGS, tab 'Install components'
+							0 IS ER NIET MEER: POL_install_mdac20 (MS ADO Connection Class)
+								- voor o.a. databank BS Kempen, maar die heeft nog meer nodig; bovendien is dat nu mdac28 (MS Data Access Components), misscchien niet eens hetzelfde
+				. als te installeren programma gewoon LocalZoom kiezen (~/Documents/c/msvc/LOCLZOOM/), installeert niks, maar na afsluiten daarvan krijgt POL tenminste zeker geen foutcode, wat wel gebeurt als ge géén te installeren programma kiest.
+				. "I don't want to make another shortcut", [Next]
+
+. Windows TEMP en TMP
+	- op E:\TEMP, zoals mijn reeks virtuele machines "WXP..."
+	>>> ~/.profile 
+		mkdir -p /tmp/.winetemp/TEMP
+	<<<
+	$ ln -sTf /opt/.playonlinuxDirk/Win7x86PROGS/drive_e /tmp/.winetemp
+	>>> system.reg
+		[System\\CurrentControlSet\\Control\\Session Manager\\Environment]
+		"TEMP"=str(2):"E:\\TEMP"
+		"TMP"=str(2):"E:\\TEMP"
+	<<<
+	>>> user.reg
+		[Environment]
+		"TEMP"="E:\\TEMP"
+		"TMP"="E:\\TEMP"
+	<<<
+
+0 NIET NODIG, zie "_Wine-PlayOnLinux.adoc" sectie "Fonts in Wine prefix"
+	link naar lettertypes voor diverse opzoekprogrammas :
+		$ cd ~/PlayOnLinux's virtual drives/%WINEPREFIX%/drive_c/windows/Fonts
+		$ shopt -s nullglob
+		- voorkomt dat *.ttf, bij gebrek aan lowercase fontbestanden, globt naar "*.ttf"
+		$ ln -s /opt/.win-gschijf/ATM4/TTFONTS/OPZOEKEN/*.TTF /opt/.win-gschijf/ATM4/TTFONTS/OPZOEKEN/*.ttf .
+			- WAS /media/sdata/.win-gschijf
+
+. link naar ebooks:
+	$ ln -s /home/dirk/OpenEbooks "~/PlayOnLinux's virtual drives/%WINEPREFIX%/drive_c/users/dirk/My Books"
+
+. Fraunhofer MP3 professional (zie "/media/sdata/GEZIPTE.PRG/OFFICIELE DOWNLOADS/MS Windows 10 Pro x86-x64 NL  v1607 (build 14393.10 'RS1')/Patch to enable Fraunhofer IIS MP3 PRO codec")
+	- l3codecp.acm van een Windows 7 32-bits ("l3codecp.acm van Window 7 x86.zip") kopieren naar ~/PlayOnLinux's virtual drives/%WINEPREFIX%/drive_c/windows/system32
+	- met POL registry editor: "Registry/Import Registry File..."
+	OF
+	  in POL Wine command prompt: "regedit WineFraunhoferMp3pro.reg"
+		>>> WineFraunhoferMp3pro.reg (!! opletten: ASCII en CR-LF)
+			Windows Registry Editor Version 5.00
+
+			[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\AudioCompressionManager\DriverCache\msacm.l3acm]
+			"aFormatTagCache"=hex:01,00,00,00,10,00,00,00,55,00,00,00,1e,00,00,00
+			"cFilterTags"=dword:00000000
+			"cFormatTags"=dword:00000002
+			"fdwSupport"=dword:00000000
+
+			[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\drivers.desc]
+			"l3codecp.acm"="Fraunhofer IIS MPEG Layer-3 Codec (professional)"
+
+			[HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Drivers32]
+			"msacm.l3acm"="l3codecp.acm"
+		<<<
+	
+. AC3 filter
+	- install a program
+		install a non-listed program
+			Edit or update an existing application
+				v Show virtual drives, selecteer Win7x86PROGS
+					0 use another version of Wine 
+					0 configure Wine (zie volgend punt)
+					0 install some libraries
+					v 32-bit windows
+					[Browse] (voor de ene, later voor de andere)
+						GEZIPTE.PRG/OFFICIELE DOWNLOADS/_Video freeware/VirtualDub/ac3filter INSTALLER.exe
+							- POL-wizard sluit zeer traag af, gewoon wachten tot hij vraag voor 'Please choose a file for POL to make a shortcut'
+							- Kies "Browse" (onder ""I don't want to make another shortcut"), [Next]
+
+. Xvid, HuffYuv en x264 video for windows codec (t.b.v. VirtualDub)
+	- Huffyuv uitpakken naar /media/ramdisk/huffyuv (is F:\huffyuv voor wineprefix) van /media/sdata/GEZIPTE.PRG/OFFICIELE DOWNLOADS/_Video freeware/huffyuv_220.zip
+			>>>
+			I was able to install the huffyuv codec in wine that is usually installed via .inf execution. (Assuming you are in the directory where the inf file, in this case huffyuv.inf, is sitting.)
+			<<<
+	- Configure, Win7x86PROGS, tab Wine, Command prompt, navigeren naar uitgepakte huffyuv :
+		- F:\huffyuv\> rundll32 setupapi.dll,InstallHinfSection DefaultInstall 128 ./huffyuv.inf
+	- X264:
+		-  via POL installeren gaat niet: "GEZIPTE.PRG/OFFICIELE DOWNLOADS/_Video freeware/VirtualDub/x264vfw_full_43_2694bm_43159_fix.exe"
+		- exe kopieren van /media/sdata/GEZIPTE.PRG/OFFICIELE DOWNLOADS/_Video freeware/VirtualDub/x264vfw_full_43_2694bm_43159_fix.exe naar /media/ramdisk en uitvoeren vanop f: (naam plakken in commandd prompt via edit/paste):
+		- F:\> x264vfw_full_43_2694bm_43159_fix.exe
+	- XVid: Installeren als POL-component geeft oude  2011-versie 1.3.2
+		- exe kopieren van /media/sdata/GEZIPTE.PRG/OFFICIELE DOWNLOADS/_Video freeware/Xvid-1.3.4-20150621.exe naar /media/ramdisk en uitvoeren vanop f: (naam plakken in commandd prompt via edit/paste):
+		- F:\> Xvid-1.3.4-20150621.exe
+
+. Bestaande POL shortcuts verhuisd door in shortcut-scripts in /home/dirk/.PlayOnLinux/shortcuts/ gewoon oude prefix-naam te vervangen door nieuwe :
+	0 in principe ook *.desktop in /home/dirk/.local/share/applications/ , die daarnaar verwijzen voor o.a. icons, maar die heb ik ondertussen allemaal vervangen door icons in /home/dirk/.PlayOnLinux/icones/full_size
+	- XP Wordpad (wordpad.exe in drive_c/Program Files/Windows NT/Accessories, gekopieerd van een echte WinXP installatie)
+	- IconExplorer
+	- Local Zoom
+	- WinMerge (heeft mfc90u.dll nodig) 
+	- American Heritage (met .\INSTALLATIE)
+		- ahd3.ini uit INSTALLATIE.ZIP naar ~/PlayOnLinux's virtual drives/XP32Programs/drive_c/windows/
+		0 snelkoppelingen maken naar fonts:
+			- al gebeurd, zijn nu verzameld in "/opt/.win-gschijf/ATM4/TTFONTS/OPZOEKEN"
+			0 $ cd ~/PlayOnLinux's virtual drives/%WINEPREFIX%/drive_c/windows/Fonts
+			0 $ find /media/sdata/.win-gschijf/PROGRAMS/HERITAGE/ -iname "*.ttf" -exec ln -s {} \;
+	- Van Dale grote woordenboeken 2.1 en EGWN14 (met .\INSTALLATIE):
+		- POL/Configure/Configure Wine/Command prompt:
+			C:\> regedit "G:/PROGRAMS/VanDale2.1/_INSTALLATIE/Win x86/HKLM_Van_Dale_Lexicografie_WINE_driveG.reg"
+		0 snelkoppelingen maken naar fonts: 
+			- al gebeurd, zijn nu verzameld in "/opt/.win-gschijf/ATM4/TTFONTS/OPZOEKEN"
+			0 $ cd ~/PlayOnLinux's virtual drives/%WINEPREFIX%/drive_c/windows/Fonts
+			0 $ find /media/sdata/.win-gschijf/PROGRAMS/VanDale2.1/_INSTALLATIE/Fonts/ -iname "*.ttf" -exec ln -s {} \;
+			- (niet echt nodig) alle woordenboeken openen, en in "instellingen/weergave" draaiend logo uitzetten
+
+. Nieuwe shortcuts:
+	- Van Dale Synoniemenwoordenboek 1995, uit de reeks Van Dale 1.0 (1997) (drive_g/PROGRAMS/VANDALE/VDSY16)
+	-  Encyclopedie Hachette 2002 met bat-file:
+		- ZIE _Wine-PlayOnLinux.adoc, "PlayOnLinux - Encyclopédie Hachette 2002"
+	- SubRip 1.56.1 : SubRip.exe in drive_g/PROGRAMS/SubRip-1.56.1/
+		- voor uitvoeren display dpi instellen op 96dpi (zie drive_g/PROGRAMS/SubRip-1.56.1/LEESMIJ.TXT)
+	- R4 : R4.exe in drive_g/PROGRAMS/R4/
+	- VirtualDub : VirtualDub.exe in drive_g/PROGRAMS/VIRTDUB/
+	- CDisplayCBZReader : cdisplayex.exe in drive_g/PROGRAMS/CDisplayCBZReader/
+	- AviDemux : avidemux2.exe in drive_g/PROGRAMS/AVIDEMUX/
+	- Helpviewer : hh.exe, winhlp32.exe e.a. in drive_c/windows(/system32) gelinkt naar kopies in .win-gschijf/PROGRAMS/XPHelp van echte WinXP SP3 installatie
+	
+- Generieke shortcut "execute in Win7x86PROGS" 
+	- start met CMD /C "opdracht" om het even welke .bat, .exe of .com in deze wineprefix
+	- CMD.exe begint altijd in eigen map: C:\Windows\system32
+		- evt. onderzoeken of het shortcut-script zonder "cd .../system32" ook werkt, en dat niet door POL wordt aangepast bij configuratie (onhebbelijkheidje van POL)
+		- krijgt gelukkig volledig pad van de opdracht (current working directory of expliciet pad)
+		- linux-pad wordt goed vertaald door wine
+		- een bat maken voor programmas die een bepaalde (de eigen) drive en directory current moeten hebben :
+			cd /d pad
+	- volgende lijnen in een POL-shortcut (na de gebruikelijke andere lijnen)
+		>>>
+		cd "/home/dirk/.PlayOnLinux/wineprefix/Win7x86PROGS/drive_c/windows/system32"
+		POL_Wine cmd.exe /C "$@"
+		<<<
+	- In Thunar: configure custom action
+		- Command : /usr/share/playonlinux/playonlinux --run "execute in Win7x86PROGS" %f
+		- Appearance conditions : 
+			- File Pattern : *.exe;*.com;*.bat
+			v Text Files
+			v Other Files
+	- .desktops om hiermee o.a. drive_g/PROGRAMS/WINTOOLS/sol.exe en winmine.exe te spelen
+
+- Encyclopedia Britannica 2007 : met generieke POL shortcut "execute in Win7x86PROGS"
+	- zie ook drive_g/PROGRAMS/Britannica2007/INSTALLATIE
+	- pad current maken in drive_g/PROGRAMS/Britannica2007/StartMetJava.bat :
+		cd /d g:\PROGRAMS\Britannica2007
+	- met menulibre .desktop gemaakt :
+	- in drive_g/PROGRAMS/Britannica2007/resource/log4j.properties
+			log4j.appender.fileAppender.file=e:/temp/EB2007error.log
+		vervangen door
+			log4j.appender.fileAppender.file=E:/TEMP/EB2007error.log
+		- gelijkhouden met driveletter in VM Windows XP	
+	- NIET met eigen jre of die van JDK15 (1.5.0_07) : repaints (en hele BrainStorm) werken niet naar behoren
+	- NIET met jre (1.6.0-b105) van BROCKHAUS2010/Planetarium
+	- NIET met jre 1.8.0-b172 (officiele dl van Oracle)
+	- WERKT met jre (1.5.22) van Britannica2015
+	- Quicktime (voor video) niet meer geinstalleerd; die van Brockhaus (zie hieronder) voldoet blijkbaar niet
+	
+- Encyclopedia Britannica 2015 : met de generieke POL shortcut "execute in Win7x86PROGS"
+	- zie ook drive_g/PROGRAMS/Britannica2015/INSTALLATIE
+	- pad current maken in drive_g/PROGRAMS/Britannica2015/StartMetJava.bat :
+		cd /d g:\PROGRAMS\Britannica2015
+	- soms blijven tijdelijke font-bestanden achter in %TEMP%, verwijderen in StartMetJava.bat
+	- met menulibre .desktop gemaakt :
+	- in drive_g/PROGRAMS/Britannica2015/resource/log4j.properties
+			log4j.appender.fileAppender.file=error.log
+		vervangen door
+			log4j.appender.fileAppender.file=E:/TEMP/EB2015error.log
+		- gelijkhouden met driveletter in VM Windows XP
+	- WERKT met eigen jre (1.5.22)
+	- WERKT met jre (1.6.0-b105) van BROCKHAUS2010/Planetarium
+	- WERKT met jre 1.8.0-b172 (officiele dl van Oracle)
+			
+- Brockhaus Multimedial 2010 : zie drive_g/PROGRAMS/BROCKHAUS2010/INSTALLATIE
+
+- JGSoft RegexBuddy 3.2.1 : gewoon met setup.exe geïnstalleerd ('portable' installatie kopiëren lukt niet)
+
+- Foxit Advanced PDF Editor 3.04 (zie .win-gschijf/PROGRAMS/FoxitPDFEditor3.04/INSTALLATIE)
+
+- 7Zip
