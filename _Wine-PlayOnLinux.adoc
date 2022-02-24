@@ -1,6 +1,8 @@
 = Wine en PlayOnLinux (POL) kennis
 :description: wetenswaardigheden over gebruik en installatie van Wine-prefixen
 
+- https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/[AsciiDoc syntax]
+
 . OPM : %WINEPREFIX% is GEEN environment variable - overal in deze tekst moet %WINEPREFIX% met de hand vervangen worden door de naam van de wineprefix, een map in "~/.PlayOnLinux/wineprefix"
 
 == andere docs ===
@@ -20,8 +22,8 @@
 
 . XUbuntu komt met een (oude: 1.6.1 64-bits) Wine-versie, maar PlayOnLinux (POL) maakt het gemakkelijk om meerdere versies te installeren, zowel 32- als 64-bits, naargelang de behoeften van elk te installeren programma, en heeft voor een aantal programma's zelfs voorgeteste install-scripts met bijhorende wine-versies (zie https://www.playonlinux.com/en/supported_apps.html). Meerdere versies (o.a. x86 naast x64) gebruiken zonder POL: https://wiki.winehq.org/FAQ#Can_I_install_more_than_one_Wine_version_on_my_system.3F
 
-== Terminologie 
-	- wineprefix is gewoon een map, standaard in /home/%gebruiker%/.wine/ , met het hele wine-windows-systeem: c_drive met ./windows/, ./programfiles/ en ./users/ en evt. andere drives (is dus zowat equivalent van een VM in VirtualBox) 
+== Terminologie
+	- wineprefix is gewoon een map, standaard in /home/%gebruiker%/.wine/ , met het hele wine-windows-systeem: c_drive met ./windows/, ./programfiles/ en ./users/ en evt. andere drives (is dus zowat equivalent van een VM in VirtualBox)
 	- wine bottle: zelfde als wineprefix
 	- virtual drive: POL-term voor wineprefix, opgeslagen in /home/dirk/.PlayOnLinux/wineprefix/
 
@@ -56,14 +58,14 @@ Opletten om niet telkens per ongeluk wine op te starten en een default prefix aa
 	********************************************
 	** wine file association hijack vermijden **
 	*********************************************
-"PlayOnLinux deliberately disables winemenubuilder.exe, so that the program can control more easily the wine version assigned to each shortcut." Maar de systeem-versie van wine moeten we aanpassen. 
+"PlayOnLinux deliberately disables winemenubuilder.exe, so that the program can control more easily the wine version assigned to each shortcut." Maar de systeem-versie van wine moeten we aanpassen.
 >>>	Zie: http://askubuntu.com/questions/323437/how-to-prevent-wine-from-adding-file-associations/400430#400430
 	Disabling winemenubuilder.exe altogether will prevent wine from hijacking your file associations, but it will also prevent it from creating menu entries for newly installed software, which may be an undesired behavior. The better solution is this:
 	1. Remove existing wine hijacks (from wine FAQ):
 		rm -f ~/.local/share/mime/packages/x-wine*
 		rm -f ~/.local/share/applications/wine-extension*
 		rm -f ~/.local/share/icons/hicolor/*/*/application-x-wine-extension*
-		rm -f ~/.local/share/mime/application/x-wine-extension* 
+		rm -f ~/.local/share/mime/application/x-wine-extension*
 	EIGEN TOEVOEGING: haal dde mime-type associaties ook uit het tekstbestand
 		/home/dirk/.local/share/applications/mimeinfo.cache
 	2. Edit /usr/share/wine/wine.inf (as root), find the [Services] section:
@@ -98,7 +100,7 @@ in %WINEPREFIX%/user.reg: (wine-syntax)
 	"TEMP"="C:\\users\\dirk\\Temp"
 	"TMP"="C:\\users\\dirk\\Temp"
 
-== linux-verborgen bestanden niet tonen in Windows 
+== linux-verborgen bestanden niet tonen in Windows
 
 - in registry sleutel ShowDotFiles wijzigen
 	>>> ~/PlayOnLinux's virtual drives/%WINEPREFIX%/user.reg
@@ -211,8 +213,8 @@ For 'real' devices, CrossOver should automatically get the serial number and lab
 		- Opent venster 'PlayOnLinux configuration'
 		- in tab 'General' vak 'Arguments' de extra argumenten opgeven voor het programma dat in de regel "POL_Wine" van het shortcut-script wordt gestart
 		- OPM gek genoeg is hier het programma zelf niet te zien dat in die regel "POL_Wine" wordt opgestart; het zij zo.
-	
-=== Startmenu-items zijn .desktop-bestanden in /home/.local/share/applications. Zij kunnen gewoon verwijzen naar een POL shortcut om die op te starten met 
+
+=== Startmenu-items zijn .desktop-bestanden in /home/.local/share/applications. Zij kunnen gewoon verwijzen naar een POL shortcut om die op te starten met
 	Exec=/usr/share/playonlinux/playonlinux --run "shortcutnaam" %F
 	- shortcutnaam: naakte naam zoals in /home/dirk/.PlayOnLinux/shortcuts/
 	- %F : plaatshouder voor lijst bestandsnamen (zie https://standards.freedesktop.org/desktop-entry-spec/latest/ar01s06.html)
@@ -242,12 +244,12 @@ For 'real' devices, CrossOver should automatically get the serial number and lab
 	$ cd ~/PlayOnLinux's virtual drives/%WINEPREFIX%/drive_c/windows
 	$ mv winhelp.exe winhelp.exe.WINE
 	$ mv winhlp32.exe winhlp32.exe.WINE
-	$ ln -s /media/sdata/.win-gschijf/PROGRAMS/XPHelp/winhelp.exe 
+	$ ln -s /media/sdata/.win-gschijf/PROGRAMS/XPHelp/winhelp.exe
 	$ ln -s /media/sdata/.win-gschijf/PROGRAMS/XPHelp/winhlp32.exe
 	$ cd system32
-	$ mv winhlp32.exe winhlp32.exe.WINE							
+	$ mv winhlp32.exe winhlp32.exe.WINE
 	$ ln -s /media/sdata/.win-gschijf/PROGRAMS/XPHelp/system32/winhlp32.exe
-	0 hetzelfde voor .chm compiled html: 
+	0 hetzelfde voor .chm compiled html:
 		- windows/hh.exe
 		- windows/system32/hhctrl.ocx
 		- windows/system32/hhsetup.exe (heeft geen placeholder in Wine)
@@ -256,7 +258,7 @@ For 'real' devices, CrossOver should automatically get the serial number and lab
 === Dragon Naturally Speaking 11 (/media/sdata/GEZIPTE.PRG/_GETEST Win7/Dragon Naturally Speaking 11 Premium NL/DNS11PRE.ISO)
 
 . ZIE OOK http://binaryimpulse.com/2013/01/installing-dragon-naturally-speaking-12-on-ubuntu-12-04-using-playonlinux/
-. 1ste keer gaf setup in '%wineprefix%/playonlinux.log' volgende fout (misschien omdat ik e.e.a. gedeïnstalleerd heb): 
+. 1ste keer gaf setup in '%wineprefix%/playonlinux.log' volgende fout (misschien omdat ik e.e.a. gedeïnstalleerd heb):
 	err:winediag:SECUR32_initNTLMSP ntlm_auth was not found or is outdated. Make sure that ntlm_auth >= 3.0.25 is in your path. Usually, you can find it in the winbind package of your distribution.
   dus: check versie in terminal:
 	$ ntlm_auth -V
@@ -274,7 +276,7 @@ For 'real' devices, CrossOver should automatically get the serial number and lab
 	Revising Day/Time of Scheduled Tasks (Optional)
 	This section describes how to modify the schedule for Dragon tasks to later take place on each dictation client computer by passing particular options in a command line installation. This section is a continuation of 'Installation using the Dragon command line'. When you finish this section, you might want to proceed to 'Configuring Local or On-Demand Install of Vocabularies/Text-to-Speech (Optional)'.
 	Note: You take the following actions on the client computer to install Dragon on client PCs, not on the computer where you installed the initial installation and configured default option settings for end-users.
-	You can include an additional option on the command line to run one or more of the following tasks on a particular schedule: 
+	You can include an additional option on the command line to run one or more of the following tasks on a particular schedule:
 		* Acoustic model optimization (ACO) — This task optimizes the acoustic files used to recognize words that the end-user trains and speaks. You can set a particular date and time for this optimization to occur. When a speaker is new to Dragon, you might want to run the optimization more often, after the speaker has worked with Dragon for a while.
 		* Language model optimization (LMO) — This task optimizes the language model (vocabulary files) used to help recognize words that the end-user speaks. The model incorporates data from the end-user’s speech into the language model he or she is using, ultimately customizing the model for that User Profile.
 		* Data Collection (DC) — This task automatically collects data that helps improve Dragon’s ability to recognize speech. You can choose to allow this data to be sent back to Nuance over the Internet on a particular schedule or choose not to send the data. This process does not collect your personal information. Data collection is available in non-US English versions of Dragon NaturallySpeaking.
@@ -315,23 +317,23 @@ Zou kunnen zijn, in Wine, door de Dragon Sidebar (een contextgevoelig venster me
 .  .  .  .  .  .  .  .  .
 . moet kunnen via named pipe of via network socket
 
-. sockets in C# of VB: 
+. sockets in C# of VB:
 	. Socket Code Examples https://msdn.microsoft.com/en-us/library/w89fhyex.aspx
   Java text controls worden niet ondersteund door NatSpeak (vanaf 13 zelfs helemaal niet meer), dus hangen we vast aan Windows-programmeeromgeving; maar voor linux kant zou Java met zijn socket classes wel kunnen voldoen.
 
 . emulation of Windows NT Named Pipes
 	 http://lkcl.net/namedpipes/namedpipes-emulation.txt
-  zie ook scriptje alhier: 
+  zie ook scriptje alhier:
 	winetalk
 
 . Netcat is a general purpose program that transfers data across a TCP/IP connection. It comes in both Windows and Linux ('nc') versions (https://en.wikipedia.org/wiki/Netcat)
 
 Ofwel de Dragon Client SDK gebruiken om een windows-proggie te schrijven dat de dictaten doorpijpt naar linux, ofwel de dictaten met de gewone NatSpeak toepassing ontvangt in een eigen windows-proggie met textbox, dat dan het doorpijpen doet. Beide mogelijkheden met een evenknie in linux om input te ontvangen en misschien in de keyboard stream te zetten.
 
-NatSpeak heeft (alvast vanaf versie 12), de mogelijkheid van Full Text Control (FTC) in o.a. een object van RichTextBox class in Windows Presentation Foundation (WPF) van .NET, die gebruikt kunnen worden in b.v. C#, VB, F# en C++ 
+NatSpeak heeft (alvast vanaf versie 12), de mogelijkheid van Full Text Control (FTC) in o.a. een object van RichTextBox class in Windows Presentation Foundation (WPF) van .NET, die gebruikt kunnen worden in b.v. C#, VB, F# en C++
 	zie http://stackoverflow.com/questions/28372271/activating-dragon-naturally-speaking-full-text-control-feature-in-a-wpf-applicat :
 >>>
-	 I'm trying to use Dragon Naturally Speaking with my WPF application. They have a feature called "Full-Text Control" that allows you to correct, replace text etc... with voice commands. If I use WinForms [de voorloper van WPF], everything works fine. Dragon comes with a toolbar that hovers at the top of the screen. Inside that bar, there's a Checkmark icon that turns green when the current focused RichTextBox supports "Full-Text Control". This feature isn't working with WPF and I'm using a RichTextBox like I'm supposed to. In one of their PDF files I found a parameter you can pass to the msi. This means that you have to install the application using a command line using a command window run as Admin. 
+	 I'm trying to use Dragon Naturally Speaking with my WPF application. They have a feature called "Full-Text Control" that allows you to correct, replace text etc... with voice commands. If I use WinForms [de voorloper van WPF], everything works fine. Dragon comes with a toolbar that hovers at the top of the screen. Inside that bar, there's a Checkmark icon that turns green when the current focused RichTextBox supports "Full-Text Control". This feature isn't working with WPF and I'm using a RichTextBox like I'm supposed to. In one of their PDF files I found a parameter you can pass to the msi. This means that you have to install the application using a command line using a command window run as Admin.
 		MSIEXEC /i "C:\Nuance Software\DNS12\Dragon NaturallySpeaking 12.msi" TEXT_SERVICE_SUPPORT=1
 <<<
 
@@ -363,7 +365,7 @@ b.v. wineprefix op ramdisk
 	. Wine 1.9.22 (x86) geinstalleerd
 . In POL\Configure\New een virtual drive creeren voor Windows-32 met die Wine 1.9.22 "woordenboeken, tekst en spraak"
 	. OPM: Wine vraagt of hij extra packages mag installeren, doen, anders vraagt hij het iedere keer weer:
-		. Mono package voor .NET 
+		. Mono package voor .NET
 		. Gecko package voor embedded HTML woordenboeken
 	. In Configure/woordenboeken_tekst_en_Spraak:
 		. Wine/Configure wine/Graphics: Screen resolution 120dpi
@@ -469,6 +471,6 @@ Zie ook afhankelijkheden in G:/PROGRAMS/BSKempen_databank/BSKdb depends.txt
 		- werkt zonder Quicktime, geeft wel
 		>>>
 			java.lang.NoClassDefFoundError: quicktime/QTSession
-				at 
+				at
 				at ehm.app.MainApp$BackStart.run(MainApp.java:1165)
 		<<<

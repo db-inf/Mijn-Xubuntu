@@ -1,9 +1,11 @@
 = Truuks en commando's in Xubuntu
 :description:  handige commando's die te moeilijk en met tevelen zijn om te onhtouden
 
+- https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/[AsciiDoc syntax]
+
 - DE site voor kernel modules en hardware drivers: https://www.kernel.org/doc/Documentation/
 
-- OPGELET : bash doet geen globbing tussen '' of "", geen $variable-expansie tussen ''
+- OPGELET : bash doet geen globbing (path expansion) tussen '' of "" of bij name=value* (wel bij reeks=(value*), geen $variable-expansie tussen ''
 
 == TODO bash regex ==
 - als rechterlid van [[ string =~ regex ]], dat NIET tss. "" staat (is anders literal, geen regex)
@@ -127,6 +129,9 @@
 	. alt + averechtse muisklik : grab en verplaats dichtst bijzijnde vensterrand of -hoek = resize)
 
 === launcher sneltoetsen (settings/keyboard) ===
+- sommige toest-combinaties worden niet gedetecteerd door betreffende dialoog van Settings/Keyboard (xfce4-keyboard-settings), maar zijn wel als "/commands/custom/" +tekst-string in te stellen in "Settings/Settings/ Editor/xfce4-keyboard-shortcuts"
+	- enkel in nieuwe entry, van bestaande entries kunt ge enkel het commando wijzigen, niet de toetscombo
+	- bijhorende opdracht ingeven als "Type" String
 
 - mijn "Super"-toets : linkse "Windows"-toets
 	. Super+k		Toon launcher sneltoetsen (settings/keyboard)
@@ -134,8 +139,9 @@
 	. alt+ctrl+t	terminal emulator
 	. alt+ctrl+F1-6	console 1-6
 	. alt+ctrl+F7	X grafische terminal
-	. Print			schermafdruk met dialoog voor bestemming
-	. Ctrl+Print	afdruk actief venster naar XnViewMP
+	. Print			schermafdruk met dialoog voor bestemming (default ingesteld als -s /media/ramdisk)
+	. Alt+Print		afdruk actief venster naar XnViewMP
+		- Alt+Print enkel als nieuwe toetscombo "/commands/custom/<Alt>Print" in te stellen via "Settings/Settings/ Editor/xfce4-keyboard-shortcuts")
 	. Super+d		desktop (toggle on/off)
 	. Super+t		terminal emulator
 	. Super+shft+t	transparante terminal emulator
@@ -166,8 +172,13 @@
 	. Super+x		'excel' (libreoffice calc)
 	. Super+g		Goldendict woordenboek
 	. Super+z		nzbget met webinterface
+	. Super+n		toggle notifications on/off (o.a. Skype en e-mail popups + piep)
+	. Super+/		xman man-page lezer (/ == ?)
 	. Super+v		volume controle
 	. Super+shft+v	volume controle tab 'playback'
+	. Super+,		"amixer -q set Master 8%-" (, == <), alsa-volume lager
+	. Super+.		"amixer -q set Master 8%+" (. == >), alsa-volume hogger
+
 
 === bash shell sneltoetsen ===
 
@@ -220,14 +231,29 @@
 === mimetype van bestanden ===
 
 - zie ook sectie "mimetype default applications"
+- zie ook "/etc/mime.types" voor mimetypes bekend bij de distri
 
 - opvragen, b.v.:
 	$ xdg-mime query filetype "mijnbestand.txt"
 	>>> text/plain <<<
 
-- mimetypes gedefiniëerd door xml-bestanden in ~/.local/share/mime/ :
-	- voor alle gebruikers in /usr/[local/]share/mime/
-	- WIJZIG ENKEL IN .../mime/packages
+- mimetypes gedefiniëerd door xml-bestanden (zie verder) in subdirs van (in volgorde van dalende voorrand)
+		~/.local/share/mime/ 	: voor 1 gebruiker
+		/usr/local/share/mime/	: voor alle gebruikers, eigen beheer
+		/usr/share/mime/ 		: voor alle gebruikers, beheerd door distri
+	- minstens sinds Ubuntu 12.04
+	- mime-xml's vertalen naar afgeleide config-bestanden in de rest van de directory tree :
+		$ [sudo] update-mime-database ???/share/mime
+		- o.a. ???/share/applications/mimeinfo.cache
+	- WIJZIG ENKEL IN ???/share/mime/packages
+
+- Er is ook, maar niet duidelijk wie dat nog gebruikt, /etc/mime.types : mimetype en evt. extensies die daarmee verbonden zijn
+	- eigen mime types in "~/.mime.types" hebben voorrang
+
+- xml-bestanden definiëren mimetypes a.d.h.v.
+	- globbing patterns voor bestandsnamen, en omschrijvingen
+	- herkenning bestanden aan magic bytes in bestand, vb. :
+		~~ <magic priority="80">	<match value='Content-Type: text/x-zim-wiki' type="string" offset="0"/> </magic> ~~
 	- in blok <mime-info>...</mime-info>
 		- herkenning bestanden aan extensie :
 			~~ <glob pattern="*.extensie"/> ~~
@@ -250,21 +276,8 @@
 	- NIET VERGETEN: Update the MIME database for your changes to take effect:
 		$ update-mime-database ~/.local/share/mime
 
-- Er is ook, maar niet duidelijk wie dat nog gebruikt, /etc/mime.types : mimetype en evt. extensies die daarmee verbonden zijn
-	- eigen mime types in "~/.mime.types" hebben voorrang
-
 - zie [https://docs.oracle.com/cd/E19253-01/819-0918/mimetypes-0/index.html]
 - zie [https://help.gnome.org/admin/system-admin-guide/stable/mime-types-custom-user.html.en]
-
-- /usr/share/mime : xml-bestanden in subdirs definiëren mimetypes, globbing patterns voor bestandsnamen, en omschrijvingen
-		- herkenning bestanden aan magic bytes in bestand, vb. :
-			~~ <magic priority="80">	<match value='Content-Type: text/x-zim-wiki' type="string" offset="0"/> </magic> ~~
-		- van daar vertalen naar xml's in de rest van de directory tree :
-			# update-mime-database /usr/share/mime
-	- eigen mime types definiëren in "~/.local/share/mime/packages", die hebben voorrang
-		- van daar vertalen naar xml's in de rest van de directory tree :
-			$ update-mime-database ~/.local/share/mime
-	- minstens sinds Ubuntu 12.04
 
 ==== mimetype default applications ====
 
@@ -277,8 +290,13 @@
 	OF
 	$ xdg-mime query default $(xdg-mime query filetype "mijnbestand.odt")
 	>>> libreoffice6.4-writer.desktop <<<
+	- debuggen, b.v. jpeg :
+		$ env XDG_UTILS_DEBUG_LEVEL=10 xdg-mime query default image/jpeg
 
-- default toepassing vastleggen met desktop-bestand in ~/.local/share/applications/:
+- default toepassing vastleggen met desktop-bestand in (in volgorde van dalende voorrand)
+		~/.local/share/applications/ 	: voor 1 gebruiker
+		/usr/local/share/applications/ 	: voor alle gebruikers, eigen beheer
+		/usr/share/applications/		: voor alle gebruikers, beheerd door distri
 	- b.v. met diverse vaste parameters, en 1 bestandsnaam (plaatshouder %f, voor alle bestandsnamen %F) als laatste
 	>>> mijntoepassing.desktop
 		[Desktop Entry]
@@ -287,14 +305,20 @@
 		Name=mijntoepassing
 		Exec=mijntoepassing parameters %f
 	<<<
+
 - Update the application database:
-	$ update-desktop-database ~/.local/share/applications
+	$ [sudo] update-desktop-database ???/share/applications
+
 - bestand kan nu geopend worden met
 	$ xdg-open mijnbestand
+		- programma's zoals Firefox gebruiken xdg-open
 	OF
 	$ gio open mijnbestand
 	OF
 	$ gvfs-open mijnbestand
+	OF
+	$ mimeopen mijnbestand
+		- vraagt nog werk, opent b.v. jpg in browser, txt in xterm met vim (zonder die te kunnen starten), ...
 	- als het een tekstbestand is dat met less bekeken wordt, en $LESSEDIT is ingesteld als xdg-open, kan het bestand met zijn standaardtoepassing geopend worden vanuit less met 'v' : zie "_Xubuntu.adoc" sectie "lessedit"
 
 - Startmenu/Settings/Mimetype editor
@@ -320,7 +344,7 @@
 - gelijkaardige programma's, maar bepalen hun geassocieerd programma op een andere manier:
 	$ xdg-open (bestand | url | map)
 	$ gvfs-open (bestand | url | map)
-	$ gnome-open (bestand | url | map)
+	0 gnome-open (bestand | url | map)
 	$ mimeopen bestand
 		[-a, --ask] : kies (in terminal) a.d.h.v. mimetype van bestand welke van het lijstje toepassingen het bestand moet openen
 		[-d, --default] : kies (in terminal) a.d.h.v. mimetype van bestand welke van het lijstje toepassingen in het vervolg als default bestand en andere met zelfde mimetype moet openen
@@ -436,22 +460,46 @@ OFWEL
 
 - zie ook _Xubuntu.adoc sectie "ATM4 font collectie"
 
-- persoonlijk : kopiëer naar (directories onder) ~/.local/share/fonts (deprecated: ~/.fonts)
+- fontbestanden op de schijf zetten:
+	- persoonlijk : kopiëer naar (directories onder) ~/.local/share/fonts (deprecated: ~/.fonts)
+	- voor iedereen : kopieer naar /usr/local/share/fonts
+	- systeemfonts : staan in /usr/share/fonts, gegroepeerd in directories
 
-- voor iedereen : kopieer naar /usr/local/share/fonts
-
-- systeemfonts staan in /usr/share/fonts, gegroepeerd in directories
+- gebruik van fonts configureren:
+	- zie "man fonts.conf"
+	- zie [https://wiki.archlinux.org/title/font_configuration#Fontconfig_configuration]
+	- "Fontconfig gathers all its configurations in a central file (/etc/fonts/fonts.conf).", maar de configuratie-instructies gebeuren hier:
+		- persoonlijk : ~/.config/fontconfig/fonts.conf en ~/.config/fontconfig/conf.d/ (of $XDG_CONFIG_HOME/fontconfig/... als die envvar is ingesteld)
+			- worden geladen door
+			>>> /etc/fonts/conf.d/50-user.conf
+					<include ignore_missing="yes" prefix="xdg">fontconfig/conf.d</include>
+					<include ignore_missing="yes" prefix="xdg">fontconfig/fonts.conf</include>
+					<!-- the following elements will be removed in the future -->
+					<include ignore_missing="yes" deprecated="yes">~/.fonts.conf.d</include>
+					<include ignore_missing="yes" deprecated="yes">~/.fonts.conf</include>
+			<<<
+		- voor iedereen :
+			- /etc/fonts/fonts.conf en /etc/fonts/conf.d/ (worden door systeem overschreven)
+			- /etc/font/local.conf (specifiek voor deze installatie)
+				- wordt geladen door
+				>>> /etc/fonts/conf.d/51-local.conf
+					<include ignore_missing="yes">local.conf</include>
+				<<<
+		- "There are presets installed in the directory /usr/share/fontconfig/conf.avail [EN OOK /etc/fonts/conf.avail/]. They can be enabled by creating symbolic links to them, both per-user and globally, as described in /etc/fonts/conf.d/README"
+			- die symlinks kunnen in ~/.config/fontconfig/conf.d/ of in /etc/fonts/conf.d/
+		- OPM: er is ook een /etc/fonts/conf.avail/ met veel meer in dan /usr/share/fontconfig/conf.avail/
 
 - activeren zonder heropstart :
 	$ sudo fc-cache -f -v
 	- zonder sudo kan, voor eigen gebruiker alleen, maar dan wordt /var/cache/fontconfig niet opgekuist
 
-- lijst van alle geinstalleerde fonts
+- lijst van alle geinstalleerde fonts en hun padnamen
 	$ fc-list | grep DejaVu
 	>>>
 		...
 		/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf: DejaVu Sans:style=Bold Oblique
 	<<<
+
 - font bekijken op lettertypenaam (zoals getoond door fc-list)
 	$ xfd -fa "DejaVu Sans:style=Oblique"
 		- of elk van de andere stijlnamen die fc-list toont
@@ -463,6 +511,18 @@ OFWEL
 		- is progr. van ImageMagick
 	OF met eigen proggie, b.v. font gedownload naar /media/ramdisk
 	$ java  -Dsun.java2d.debugfonts=true -Dsun.java2d.fontpath=append:/media/ramdisk -jar ~/Documents/java/UTIL/Font2DTest.jar
+
+- font alias bekijken voor een font (alleen bestandsnaam, geen pad), b.v.
+	$ fc-match fixed
+	>>> DejaVuSans.ttf: "DejaVu Sans" "Book" <<<
+	$ fc-match monospaced
+	>>> MONSPACN.TTF: "Monospaced" "Regular" <<<
+	$ fc-match monospace
+	>>> DejaVuSansMono.ttf: "DejaVu Sans Mono" "Book" <<<
+	$ fc-match serif
+	>>> DejaVuSerif.ttf: "DejaVu Serif" "Book" <<<
+	$ fc-match sans
+	>>> DejaVuSans.ttf: "DejaVu Sans" "Book" <<<
 
 === muisknoppen configureren ===
 
@@ -490,10 +550,65 @@ OFWEL
 - knoppen wisselel, b.v. :
 	 $ xinput set-button-map 12 3 2 1 4 5 6 7 8 9
 
-=== viewframe van staatsarchief maximaliseren ===
+=== viewframe van rijksarchief maximaliseren ===
 - viewer van search.arch.be is browser popup; om die te maximaliseren in zijn browservenster, in de url van de viewer voor het gedigitaliseerde document :
+	- een blader-knop van de viewer naar het url-veld of de tab van de browser slepen
+	OF (met de hand)
 	- layout/lightbox/ tussenvoegen voor eadid/
 	- achteraan de url de parameters ?layout=lightbox&tmpl=component toevoegen
+
+=== x-progs configureren ===
+
+- opties toevoegen aan ~/.Xresources (of dat bestand maken)
+	- zie (https://www.oreilly.com/library/view/x-window-system/9780937175149/Chapter09.html)
+	- voorbeelden in /etc/X11/app-defaults, /usr/share/X11/app-defaults, /usr/X11/lib/app-defaults, of ...
+	- er staat al een ~/.Xdefaults, wschlk. beheerd door systeem, dus afblijven
+	- configuratie-opties syntax : naam.Class.resource: waarde
+		- naam is voor de programma's zelf de programmanaam, andere namen zijn ook mogelijk
+		- resource-namen te vinden in resp. man-pages vam die progs
+		- "naam." en of ".Class." kunnen vervangen worden door wildcard '*'
+		- "naam" of "Class" kunnen vervangen worden door wildcard '?'
+	- om die opties effectief te maken, d.w.z. in de X-server laden, zonder terug inoggen:
+		$ xrdb -load ~/.Xdefaults && xrdb -merge ~/.Xresources
+	- lettertypes: (moeilijk, niet mee knoeien)
+		- prefix "x:" voor X11-fonts, te kiezen met b.v. xfontsel, vb:
+			"xxx*font: -bitstream-bitstream charter-----normal--17-120-*-*-*-*-ascii-*"
+		- default, of met optioneel prefix "xft:" voor ttf fonts, vb:
+			"xxx*font: Anka/Coder Narrow
+			- voor xterm en xman moet er een regular en een bold versie van zijn
+		- xterm luistert naar resource "Xft.dpi: 96" (96 default; hoger = grotere letters)
+			- xman niet
+		- xterm kent zowel "x:"- als "xft:"-type fontresources ("xft:" is default en optioneel)
+			- xman alleen gekende "x:"-fontresources
+
+=== xterm gebruiken ===
+
+- zie ook sectie "x-progs configureren"
+
+- Cutting and pasting with Xterm
+	- afh. van .XResource "xterm*selectToClipboard: " true of false wordt geselecteerde tekst in XA_CLIPBOARD of in XA_PRIMARY gezet; vanuit XA_PRIMARY kunt ge pasten met middelklik (of links+rechtsklik), vanuit XA_CLIPBOARD met Ctrl-V
+		- xfce4-clipboard beheert enkel (geschiedenis van) XA_CLIPBOARD
+		- van XA_PRIMARY naar XA_CLIPBOARD kan :
+			$ xclip -o | xclip -selection clipboard
+	- "Cutting text with xterm is pretty much the same as with gnome terminal. The difference being that any text you select, automatically gets placed into the [FOUT clipboard] PRIMARY."
+		- Drag the mouse cursor along the text you wish to copy whilst holding down the LEFT mouse button.
+		- double-clicking on a word will select that word (or if you’ve included my tweaks it’ll select a whole URL)
+		- triple-clicking on a line will select that line
+	- Pasting text is also pretty straightforward; just click the MIDDLE mouse button into an xterm window and the text in the clipboard will be pasted in.
+
+- Scrolling using the mouse
+	- met scrollwiel
+	OF
+	- klikken in scrollbalk:
+		LEFT clicking on the scrollbar scrolls DOWN a bit
+		MIDDLE clicking and HOLDING on the scrollbar drags the scroll window up and down
+		RIGHT clicking scrolls UP a bit
+
+=== reeks logs volgen ===
+- volg met tail -F een reeks logs in kleine terminals, in meerdere rijen onder elkaar, 4 naast elkaar, geschikt :
+	$ starty = 960; for log in *.log;do xfce4-terminal -T "${log:: -4}" --geometry=40x23+$((${log: -5:1}%4*300))+$(($starty+${log: -5:1}/4*480)) -x tail -F "$log" ;done
+	- geometry afmeting in chars huidige font, positie in pixels
+	- {log: -5:1} : in dit vb. zijn de logbestanden genummerd als *9.log, d.w.z. 1 cijfer op pos. 5 van het einde
 
 == MOUNT  ==
 ZIE OO: Filesystem Hierarchy Standard www.pathname.com/fhs/pub/fhs-2.3.html
@@ -599,7 +714,7 @@ Dat bestand kunnen we mounten of kopiëren ==>
 
 === mount fat of ander oud bestandssysteem ===
 
-- Dergelijke oude bestandssystemen hebben geen gebruikers-beveiliging, alleen algemene read en write toestemming. Daarom kan met b.v. mount en in fstab opgegeven worden welke gebruiker/groep toegang heeft tot de hele mount, b.v. uid=1000,gid=1000 (zie sectie lijst-opdrachten)
+- Dergelijke oude bestandssystemen hebben geen linux-stijl gebruikers-beveiliging; krijgen van mount de user en group van huidig process (bij mount dus root), en voor allen read, write en execute toestemming (chmod 777). Dat is onveilig, en kan ook lastig zijn bij kopiëren van bestanden naar een linux bestandssysteem (nemen die toegangsrechten mee). Daarom kan met b.v. mount en in fstab opgegeven worden welke gebruiker/groep eigenaar zijn van alle files en directories, en welke chmod-flags moeten worden uitgezet, b.v. uid=1000,gid=1000,fmask=113,dmask=002
 
 === ramdisk maken ===
 
@@ -713,11 +828,12 @@ Dat bestand kunnen we mounten of kopiëren ==>
 				OFWEL via loopdevice, verbonden MET -P optie, en dan verder gewooon als voor device
 					# losetup --show -Pf bestand
 						>>> /dev/loop0 <<<
+						--show  : toon de naam van loop-device waaraan "bestand" verbonden is
 						-P, --partscan : Force the kernel to scan the partition table on a newly created loop device. Hiermee komt er ook /dev/loop#p# voor elke partitie in bestand :
 							$ ls /dev/loop0*
 							>>> /dev/loop0  /dev/loop0p1 <<<
-						-f, --find bestand : Find the first unused loop device. If a file argument is present, use the found device as loop device. Otherwise, just print its [first unused] name.
-						--show  : toon de naam van loop-device waaraan "bestand" verbonden is
+						-f, --find : Find the first unused loop device. If a file argument is present, use the found device as loop device. Otherwise, just print its [first unused] name.
+						[-o 2GiB] : offset in 1024^n (KiB, MiB, ...) of in 1000^n (KB, MB,...)
 					- controle :
 						$ lsblk
 						- met losetup zonder optie -P komen partities niet in lsblk
@@ -732,57 +848,77 @@ Dat bestand kunnen we mounten of kopiëren ==>
 		- OFWEL direct in het bestand
 			- voor eigen gebruik, zonder partitietabel is het gemakkelijker te mounten
 			- niet nodig om bestand aan /dev/loop# te binden met losetup: direct naar bestand gaat ook (geen vergissingen met /dev/loop nr.; mkfs naar device vraagt sudo, naar eigen bestand niet)
-			$ mkfs.ext4 [opties] bestand
-				- bereidt ext4 bestandssysteem voor
-				- defaults: zie 'cat /etc/mke2fs.conf'
-				- andere geïnstalleerde bestandsystemen : zie
-					$ cat /proc/filesystems
-					- ext2 om zonder verdere opties
-						- journaling-overhead van ext3 en ext4 te vermijden
-						-  kleinere (128byte) inodes te gebruiken
-					- ext3 : geen bijzondere voordelen t.o.v. ext4 (zie http://www.golinuxhub.com/2014/03/what-is-difference-between-ext3-and.html)
-					- ext4 is efficienter met grote bestanden :
-						- Multiblock Allocator
-						- 'extent' is range blocks dat aan bestand toegewezen is, i.p.v. zoals ext3 elk toegewezen block apart in een index bij te houden
-				- maakt zonder opties niet-sparse bestand sparse
-					[-E nodiscard] : Do not attempt to discard blocks at mkfs time (default is discard)
-			- voorbeeld :
-				$ mkfs.ext4 -I 128 -N 1048576 -m 0 -L label -O ^huge_file bestand
-				>>>
-					mke2fs 1.42.13 (17-May-2015)
-					Discarding device blocks: done
-					Creating filesystem with 2097151 4k blocks and 1048576 inodes
-					Filesystem UUID: a0a5c864-9000-4a89-9446-9636e46e6392
-					Superblock backups stored on blocks:
-						32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632
-					Allocating group tables: done
-					Writing inode tables: done
-					Creating journal (1024 blocks): done
-					Writing superblocks and filesystem accounting information: done
-				<<<
-				[-E optie,optie,...] : extended opties, komma-gescheiden, zoals
-					[-E ...,root_owner[=uid:gid]] : Specify the numeric user and group ID of the root directory. If no UID:GID is specified, use the user and  group ID of the user running mke2fs
-						- best nakijken bij gebruik, desnoods mounten en na geslaagde mount chown op mountpoint doen, dat werkt zeker (enkel bij geslaagde, anders werkt chown op mountpoint zelf)
-					[-E ...,nodiscard] : om virtueel schijfbestand NIET SPARSE te maken, discard is default
-					[-E ...,offset=4294967296] : offset van 4GB vanaf start van device of bestand
-						- OPGELET : in tegenstelling tot mount en losetup, aanvaardt mkfs.ext4 geen k,m,g of K,G,M suffix voor offset)
-						- mke2fs maakt het bestandssysteem %filesize% groot vanaf offset
-						>>> man mkfs.ext4
-							If fs-size is omitted, mke2fs will create the file system based on the device size.
-						<<<
-							maar neemt hele huidige grootte van "bestand" in rekening; mkfs doet dan bestand met offset groeien, waardoor deze bug onschadelijk is
-						- dienstig voor virtual machine administratie, of om b.v ruimte voor andere partitie of partitietabel o.i.d. te laten.
-				[-I 128] : kleinst toegelaten inode-size (moet 2^n zijn), default 256
-				-N 1048576 : aantal inodes (is ruwweg max. aantal bestanden en directories op filesysteem)
-				[-m 0\ : percentage aantal blocken die gereserveerd moeten worden voor root en systeemutilities (zie ook "tune2fs -r 999" voor exact aantal gereserveerde blocks)
-				[-L label] : volume label voor file system
-				-O ^huge_file : geen (de '^') bestanden > 2TB
-				[-O ^has_journal] geen journal
-				[-J size=4] : journaalgroottte in MB (min. blocksize * 1024, typisch 32k blokken)
-					- OPGELET : klein journal maakt filesystem zeer traag (zelfs met "mount -o data=writeback") met b.v. cryfs, dat veel metadata maakt omdat het data verspreidt over veel directories en bestanden
-			- achteraf label geven :
-				# tune2fs -L mijnlabel bestand
-				- werkt niet met offset; misschien (read-only?) mounten en i.p.v. op bestand uitvoeren op juiste /dev/loop#
+			- ext4
+				$ mkfs.ext4 [opties] bestand
+					- bereidt ext4 bestandssysteem voor
+					- defaults: zie 'cat /etc/mke2fs.conf'
+					- andere geïnstalleerde bestandsystemen : zie
+						$ cat /proc/filesystems
+						- ext2 om zonder verdere opties
+							- journaling-overhead van ext3 en ext4 te vermijden
+							-  kleinere (128byte) inodes te gebruiken
+						- ext3 : geen bijzondere voordelen t.o.v. ext4 (zie http://www.golinuxhub.com/2014/03/what-is-difference-between-ext3-and.html)
+						- ext4 is efficienter met grote bestanden :
+							- Multiblock Allocator
+							- 'extent' is range blocks dat aan bestand toegewezen is, i.p.v. zoals ext3 elk toegewezen block apart in een index bij te houden
+					- maakt zonder opties niet-sparse bestand sparse
+						[-E nodiscard] : Do not attempt to discard blocks at mkfs time (default is discard)
+				- voorbeeld :
+					$ mkfs.ext4 -I 128 -N 1048576 -m 0 -L label -O ^huge_file bestand
+					>>>
+						mke2fs 1.42.13 (17-May-2015)
+						Discarding device blocks: done
+						Creating filesystem with 2097151 4k blocks and 1048576 inodes
+						Filesystem UUID: a0a5c864-9000-4a89-9446-9636e46e6392
+						Superblock backups stored on blocks:
+							32768, 98304, 163840, 229376, 294912, 819200, 884736, 1605632
+						Allocating group tables: done
+						Writing inode tables: done
+						Creating journal (1024 blocks): done
+						Writing superblocks and filesystem accounting information: done
+					<<<
+					[-E optie,optie,...] : extended opties, komma-gescheiden, zoals
+						[-E ...,root_owner[=uid:gid]] : Specify the numeric user and group ID of the root directory. If no UID:GID is specified, use the user and  group ID of the user running mke2fs
+							- best nakijken bij gebruik, desnoods mounten en na geslaagde mount chown op mountpoint doen, dat werkt zeker (enkel bij geslaagde, anders werkt chown op mountpoint zelf)
+						[-E ...,nodiscard] : om virtueel schijfbestand NIET SPARSE te maken, discard is default
+						[-E ...,offset=4294967296] : offset van 4GB vanaf start van device of bestand
+							- OPGELET : in tegenstelling tot mount en losetup, aanvaardt mkfs.ext4 geen k,m,g of K,G,M suffix voor offset)
+							- mke2fs maakt het bestandssysteem %filesize% groot vanaf offset
+							>>> man mkfs.ext4
+								If fs-size is omitted, mke2fs will create the file system based on the device size.
+							<<<
+								maar neemt hele huidige grootte van "bestand" in rekening; mkfs doet dan bestand met offset groeien, waardoor deze bug onschadelijk is
+							- dienstig voor virtual machine administratie, of om b.v ruimte voor andere partitie of partitietabel o.i.d. te laten.
+					[-I 128] : kleinst toegelaten inode-size (moet 2^n zijn), default 256
+					-N 1048576 : aantal inodes (is ruwweg max. aantal bestanden en directories op filesysteem)
+					[-m 0\ : percentage aantal blocken die gereserveerd moeten worden voor root en systeemutilities (zie ook "tune2fs -r 999" voor exact aantal gereserveerde blocks)
+					[-L label] : volume label voor file system
+					-O ^huge_file : geen (de '^') bestanden > 2TB
+					[-O ^has_journal] geen journal
+					[-J size=4] : journaalgroottte in MB (min. blocksize * 1024, typisch 32k blokken)
+						- OPGELET : klein journal maakt filesystem zeer traag (zelfs met "mount -o data=writeback") met b.v. cryfs, dat veel metadata maakt omdat het data verspreidt over veel directories en bestanden
+				- achteraf label geven :
+					# tune2fs -L mijnlabel bestand
+					- werkt niet met offset; misschien (read-only?) mounten en i.p.v. op bestand uitvoeren op juiste /dev/loop#
+			- ntfs:
+				- mkfs.ntfs == mkntfs
+				- kent geen offset, dus voor virtuele schijf met losetup en offset aan /dev/loopX binden
+				- kan voor bestandssysteem in regulier bestand geen sectorgrootte, sectors per trac en aantal heads afleiden van de hardware, moeten dus expliciet opgegeven worden, b.v.
+					# mkfs.ntfs -vFfITc 4096 -s 4096 -H 1 -S 1 -p 0 -L mijnlabel /dev/loop#
+					OF
+					$ mkfs.ntfs -vFfITc 4096 -s 4096 -H 1 -S 1 -p 0 -L mijnlabel imagebestand
+					-v : verbose
+					-F : force (nodig omdat bestand zelf geen block device is)
+					-f : fast, initialiseert sectors niet met zeroes
+					-I, --no-indexing : Disable content indexing on the volume
+					[-T, --zero-time] : Fake the time to be 00:00:00 UTC, Jan 1, 1970 instead of the current system time.
+					-c 4096 : clustersize (zal wel best == hardware cluster size zijn)
+					-s 4096 : sector size ("")
+					-H 1 : 1 head
+					-S 1 : 1 sector per track
+					-p 0 : partition start in sector 0 (nodig omdat we geen partitietabel hebben)
+						- OPM: is me nog niet gelukt om -p > 0 te doen werken als offset in imagebestand met b.v. meer dan 1 partitie. In dat geval misschien gewoon elke partitie met -p 0 aanmaken, en dan aaneen plakken; zie ook sectie "bestanden sparse concateneren". Mount met offset werkt in ieder geval goed
+					-L label
 
 - mounten
 	- NA MOUNTEN 1ste keer :
@@ -808,6 +944,7 @@ Dat bestand kunnen we mounten of kopiëren ==>
 		- doet impliciete "losetup -d /dev/loop#"
 
 - sparse bestand kopiëren
+	- zie ook sectie "bestanden sparse concateneren"
 	- werkt zowel voor sparse bronbestand, als voor niet-sparse bronbestand met 0-blocks
 	OFWEL
 	$ rsync -S bronbestand sparsebestand
@@ -820,6 +957,7 @@ Dat bestand kunnen we mounten of kopiëren ==>
 		- zou snelste zijn op locale machine
 		- enkel bestand per bestand
 		- OPGELET: met expliciete blocksize bekijkt "dd" het sparse-zijn per die blocksize, niet per block van het bestandssysteem
+		- HEEFT KUREN bij append
 	OFWEL
 	$ cp --sparse=always bronbestand sparsebestand
 		- OPGELET: zou niet altijd de juiste blocksize gebruiken voor het doel-bestandssysteem, en bekijkt dan zoals "dd" het sparse-zijn per die blocksize, niet per block van het bestandssysteem
@@ -892,16 +1030,15 @@ Dat bestand kunnen we mounten of kopiëren ==>
 		# umount /mnt
 	- sparse maken of blocks met enkel 0 dealloceren (op NIET GEMOUNT fs)
 		OFWEL inline
-		$ fallocate -vd bestand
-			-d, --dig-holes : Detect and dig holes. Makes sparse in-place. Minimum size of hole depends on fs block size.
-			[-v, --verbose] : Enable verbose mode
-			- al tegengekomen dat fallocate rapporteert dat gaten gemaakt zijn, zonder dat disk usage verandert.
-			- Supported for  XFS, ext4, Btrfs and tmpfs
-		OFWEL dupliceren naar nieuw, sparse, bestand
-		$ cp --sparse=always bestand bestandNEW
-			- op kopie
-			--sparse=always : create a sparse DEST file whenever the SOURCE file contains a long enough sequence of zero bytes
-			[-sparse=auto] : (is default, maar auto-detectie kan sparse missen) sparse SOURCE files are detected by a crude heuristic and the corresponding DEST file is then made sparse as well
+			$ fallocate -vd bestand
+				-d, --dig-holes : Detect and dig holes. Makes sparse in-place. Minimum size of hole depends on fs block size.
+				[-v, --verbose] : Enable verbose mode
+				- al tegengekomen dat fallocate rapporteert dat gaten gemaakt zijn, zonder dat disk usage verandert.
+				- Supported for  XFS, ext4, Btrfs and tmpfs
+		OFWEL dupliceren naar nieuw, sparse, bestand (zie "sparse bestand kopiëren" hierboven)
+			$ rsync -S bestand bestandNEW
+			OF
+			$ cp --sparse=always bestand bestandNEW
 
 - tussen het bestand en de /dev/loop? (of tussen de /dev/loop? en de mount??) kunnen nog filters gezet worden, b.v. compressie
 
@@ -963,6 +1100,45 @@ voll.	$ sudo mount -o loop,ro /dev/sr0 /cdrom
 			- mag herhaald, b.v. -m "*.bak" m "/mnt/overbodig*"
 		[-no-bak] : Exclude  backup files files on the ISO9660 filesystem; that is, filenames that contain the characters `~' or `#' or end in .bak. These are typically backup files for Unix text editors.
 		[-dvd-video] : Generate a DVD-Video compliant UDF filesystem. This is done by sorting the order of the content of the appropriate files and by adding padding between the files if needed. Note that the sorting only works if the DVD-Video filenames include uppercase characters only. Note that in order to get a DVD-Video compliant filesystem image, you need to prepare a DVD-Video compliant directory tree. This requires a directory VIDEO_TS (all caps) in the root directory of the resulting DVD, and usually another directory AUDIO_TS. VIDEO_TS needs to include all needed files (filenames must be all caps) for a compliant DVD-Video filesystem.
+	- minimale ISO, maar met alle tekststrings zelfgekozen, en sparse :
+		$ cp --sparse=always <(genisoimage -iso-level 1 -no-pad -sysid "32char system" -V "128char volname" -volset "128 char volume set" -publisher "128char publisher" -p "128char preparer" -A "128char application" -copyright "37char copyright filename" -abstract "37char abstract filename" -biblio "37char bibliographic filename" BESTAND8.3... ) sparse.iso
+		- offsets: (zie https://wiki.osdev.org/ISO_9660) (zie "DOCS/_Info/Programmeren/file formats/ISO cd image iso9660.pdf" blz. 44)
+			- 0x0000-0x7FFF zeroes
+			- 0x8000 1ste volume descriptor (0x01 "CD001" 0x0100) met de strings (alle uitgevuld met spaties)
+				- voor de meeste van deze velden heeft genisoimage een default, b.v. "LINUX" voor system
+				- 0x8008 "32char system"
+				- 0x8028 "32char volname"
+				- 0x8048 binair directory record for root directory
+				- 0x80BE "128char volume set"
+				- 0x813E "128char publisher"
+				- 0x81BE "128char preparer"
+				- 0x823E "128char application"
+				- 0x82BE "37char copyright filename" (in root directory)
+				- 0x82E3 "37char abstract filename" (in root directory)
+				- 0x8308 "37char bibliographic filename" (in root directory)
+				- 0x832D 70 bytes: 4 ASCII tijdstamps in decimale notatie, met binaire data tussen en na :
+					- volume creation
+					- volume modification
+					- volume expiration
+					- volume effective
+				>>>
+					Offset 	Size 	Datatype 	Description
+					0 	4 	strD 	Year from 1 to 9999.
+					4 	2 	strD 	Month from 1 to 12.
+					6 	2 	strD 	Day from 1 to 31.
+					8 	2 	strD 	Hour from 0 to 23.
+					10 	2 	strD 	Minute from 0 to 59.
+					12 	2 	strD 	Second from 0 to 59.
+					14 	2 	strD 	Hundredths of a second from 0 to 99.
+					16 	1 	int8 	Time zone offset from GMT in 15 minute intervals, starting at interval -48 (west) and running up to interval 52 (east). So value 0 indicates interval -48 which equals GMT-12 hours, and value 100 indicates interval 52 which equals GMT+13 hours.
+				<<<
+				- 0x8373 512char Application Used Contents, not defined by ISO 9660
+				- 0x8570 reserved (653 zeroes, tot 0x8800)
+			- 0x8800 afsluitende volume descriptor (0xFF "CD001" en zeroes)
+			- 0xB800 dirstructuur (tot 47 bestanden per 0x800 byte)
+			- 0xC000 1ste bestand
+				- lege bestanden hebben alleen een dir entry, geen bestandssector
+				- offset met enkel root dir, met <= 47 bestanden
 
 === (X)Ubuntu Live CD uitpakken naar schijf of usb-stick ===
 
@@ -1209,6 +1385,20 @@ $ find . /media/sdata/WERK/ -type d -name "TTC *" -and -not -name "*guidebook*" 
 	$ id root
 	>>> uid=0(root) gid=0(root) groups=0(root)
 	- root is meestal uid=0,gid=0 (o.a. in Ubuntu en systemrescuecd), maar 0 is niet noodzakelijk root
+
+=== hostnaam van locaal ip-adres en omgekeerd ===
+
+- eigen pc of andere pc in lokaal netwerk
+	$ host FRT
+	FRT.home has address 192.168.1.61
+	$ host 192.168.1.61
+	61.1.168.192.in-addr.arpa domain name pointer FRT.
+
+- alle pcs in lokaal netwerk
+	- 1 subnet, b.v. 192.168.1.xxx
+		$ for n in {1..255}; do host 192.168.1.$n; done | grep -iv "not found"
+	- alle subnetten (duurt een tijd)
+		$ for m in {1..255}; do for n in {1..255}; do host 192.168.$m.$n; done; done | grep -iv "not found"
 
 === zoek bestand ===
 	- op naam (eigen shellscript, hoofdtekens-ongevoelig)
@@ -1839,7 +2029,7 @@ $ sudo file -s /dev/sdb1
 - journals nakijken :
 	- in Ubuntu (bionic) is journalctl gecompileerd zonder -g --grep optie; om te zoeken pipe naar grep
 	# journalctl --no-pager [-D /mnt/var/log/journal/] >/media/ramdisk/journals
-	--no-pager : niet pipen naar less, zodat ge zelf een pipe kunt doen naar b.v. grep, of  redirect naar tekstbestand
+	--no-pager : niet pipen naar less, zodat ge zelf een pipe kunt doen naar b.v. grep, of redirect naar tekstbestand
 	[-D ...] : directory naar ander journal, b.v. van gemounte andere systeemschijf
 
 - lijst van alle gejournaleerde opstartsessies
@@ -1899,6 +2089,38 @@ $ sudo file -s /dev/sdb1
 - toon wie op welke tty terminal is aangemeld:
 	$ w
 
+=== status toetsenbord en muis ===
+	$ xset q
+	>>>
+	Keyboard Control:
+	  auto repeat:  on    key click percent:  0    LED mask:  00000002
+	  XKB indicators:
+		00: Caps Lock:   off    01: Num Lock:    on     02: Scroll Lock: off
+		03: Compose:     off    04: Kana:        off    05: Sleep:       off
+		06: Suspend:     off    07: Mute:        off    08: Misc:        off
+		09: Mail:        off    10: Charging:    off    11: Shift Lock:  off
+		12: Group 2:     off    13: Mouse Keys:  off
+	  auto repeat delay:  500    repeat rate:  20
+	  auto repeating keys:  00ffffffdffffbbf
+							fadfffefffedffff
+							dfffffffffffffff
+							fff7ffffffffffff
+	  bell percent:  50    bell pitch:  400    bell duration:  100
+	Pointer Control:
+	  acceleration:  10/1    threshold:  1
+	Screen Saver:
+	  prefer blanking:  yes    allow exposures:  yes
+	  timeout:  600    cycle:  0
+	Colors:
+	  default colormap:  0x20    BlackPixel:  0x0    WhitePixel:  0xffffff
+	Font Path:
+	  /usr/share/fonts/X11/misc,/usr/share/fonts/X11/Type1,built-ins
+	DPMS (Energy Star):
+	  Standby: 720    Suspend: 0    Off: 0
+	  DPMS is Enabled
+	  Monitor is On
+	<<<
+
 == HANDELINGEN ==
 
 === offset van string in binary file ===
@@ -1954,15 +2176,19 @@ $ sudo file -s /dev/sdb1
 - zie [Useful one-line scripts for sed](http://sed.sourceforge.net/sed1line.txt)
 
 ==== sed search/replace regexp op 1 lijn ====
-	$ sed -Esi s/zoek/vervang/g file.txt [file2.txt]...
-		-E : extended regular expression
+	$ sed -Esi [/regex/[I]]s/zoek/vervang/[I][g] file.txt [file2.txt]...
+		-E : NIET VERGETEN : extended regular expression
 		-s : elk bestand apart
 		-i[backupextensie], --in-place[=backupextensie] : niet naar stdout, maar naar originele bestandsnaam, met evt. backup
 		[-e] script, --expression=script : script commands to be executed; als er meer dan 1 script is, moet de -e er staan
 		- script : gequote als er spaties in staan
+			- [/regex/] : de volgende opdracht alleen uitvoeren op de lijnen die matchen met deze regex
+				[I] : case-insensitive
+				- andere begrenzingsteken mogelijk, 1ste voorafgaan door '\', b.v. \=regex=
 			- s/searchpattern/replacepattern/ : substitute
-				- scheidingsteken (hier '/') naar keuze, maar alledrie gelijk
-				- NIET VERGETEN : sed-optie -E voor extended regular expression
+				[I] : case-insensitive
+				[g] : 'global', d.w.z. alle voorkomens van zoek-string
+				- scheidingsteken (hier '/') bepaald door 1ste teken naar keuze, maar alledrie gelijk
 				- zie verder sectie "sed opdrachten"
 
 ==== sed dos CRLF naar unix LF ===
@@ -1985,6 +2211,7 @@ $ sudo file -s /dev/sdb1
 - pattern space : When sed reads a file line by line, the line that has been currently read is inserted into the pattern buffer (pattern space). Pattern buffer is like the temporary buffer, the scratchpad where the current information is stored. For example, the print command p prints the pattern space only. Likewise, s operates on the pattern space.
 
 - met sed, search/replace regexp op meer lijnen: eerst hele bestand laden in "hold space", en dat als geheel naar "pattern space" sturen en multi-line regexp op uitvoeren
+	- OPM: ge kunt de hele tekst daarna terug opdelen in lijnen, met b.v. 's@iets@iets\n@g', maar het blijft 1 blok in pattern space; pipe naar nieuwe sed om de nieuwe lijnen lijn per lijn te behandelen.
 	$ sed -Ei -e '1h;2,$H;$!d;g' -e "s/lijn1\nlijn2/nieuw op lijn 1.../g"
 	-e script, --expression=script : add the script to the commands to be executed
 	- '1h;2,$H;$!d;g' : tussen '' gezet om interpreteren van $ door bash te voorkomen
@@ -1999,22 +2226,23 @@ $ sudo file -s /dev/sdb1
 - enkele sed opdrachtlijn-opties :
 	-E : gebruik extended regex syntax (de Echte Regex)
 	-n : lijnen niet automatisch printen, enkel expliciet met b.v. de opdrachten p of n
-	opdrachtlijst : eerste of enige opdrachtlijst van sed-script
+		-n in combinatie met opdrachten p of n maakt voorafgaande grep overbodig
+	[-e] opdrachtlijst : eerste of enige opdrachtlijst van sed-script
 	-e opdrachtlijst : voeg opdrachtlijst toe aan sed-script
 
 - opdrachtlijst:
 	- opdracht
-	- "opdracht;opdracht" : deze vorm ALTIJD tss. aanhalingstekens, t.b.v. shell
+	- "opdracht;[ ]opdracht" : deze vorm ALTIJD tss. aanhalingstekens, t.b.v. shell
 
 - opdracht:
 	- opdracht
-	- {opdracht[;opdracht]...} : deze vorm ALTIJD tss. aanhalingstekens, t.b.v. shell
+	- {opdracht[;[ ]opdracht]...} : deze vorm ALTIJD tss. aanhalingstekens, t.b.v. shell
 
 - adressen :
 	- [adres]opdracht : opdracht enkel voor die lijnen
 	- [adres]!opdracht : opdracht voor alle behalve die lijnen
 	- /zoek/ : regex adres
-		- scheidingsteken (hier '/') naar keuze, maar 1ste moet dan voorafgegaan door '\', b.v. \xadresx
+		- scheidingsteken (hier '/') naar keuze, maar 1ste moet dan voorafgegaan door '\', b.v. \=adres=
 		- /…/I : case insensitive ('i' al gebruikt voor insert)
 		- /…/M : multi-line mode, met extra regels voor zoek-pattern:
 			- ^/$ : begin/einde lijn
@@ -2056,7 +2284,7 @@ $ sudo file -s /dev/sdb1
 		i : insert text to stdout
 		a : append text to stdout after flush
 		r : append file to stdout after flush
-	= : line number
+	= : print line number en '\n'
 	c : range change
 	e COMMAND : execute COMMAND
 		- execute the contents of pattern space as command, and replaces the pattern space with its output; a trailing newline is suppressed
@@ -2088,7 +2316,7 @@ $ sudo file -s /dev/sdb1
 			- \U : Turn the replacement to uppercase until a '\L' or '\E' is found,
 			- \u : Turn the next character to uppercase,
 			- \E : Stop case conversion started by '\L' or '\U'.
-	y/sourcechars/destchars/ : transform chars
+	y/sourcechars/destchars/ : transliterate chars (zoals opdracht tr)
 
 === beschermd tekstbestand bewerken ===
 
@@ -2115,7 +2343,54 @@ $ sudo file -s /dev/sdb1
 
 - mogelijkheden bekijken met
 	$ pacmd list-cards
-  In huidige pc geeft dit
+	>>> In huidige pc (ASUS PRIME H270 PRO) geeft dit
+		2 card(s) available.
+			index: 0
+			name: <alsa_card.usb-MPOW_MPOW_HC6_001-00> (mijn Chinese koptelefoon)
+			driver: <module-alsa-card.c>
+			owner module: 8
+			properties:
+				alsa.card = "1"
+				alsa.card_name = "MPOW HC6"
+				...
+			profiles:
+				input:analog-mono: Analogue Mono Input (priority 2, available: unknown)
+				output:analog-stereo: Analogue Stereo Output (priority 6000, available: unknown)
+				output:analog-stereo+input:analog-mono: Analogue Stereo Output + Analogue Mono Input (priority 6002, available: unknown)
+				output:iec958-stereo: Digital Stereo (IEC958) Output (priority 5500, available: unknown)
+				output:iec958-stereo+input:analog-mono: Digital Stereo (IEC958) Output + Analogue Mono Input (priority 5502, available: unknown)
+				off: Off (priority 0, available: unknown)
+			active profile: <output:iec958-stereo+input:analog-mono>
+			...
+			index: 1
+			name: <alsa_card.pci-0000_00_1f.3>
+			driver: <module-alsa-card.c>
+			owner module: 9
+			properties:
+				alsa.card = "0"
+				alsa.card_name = "HDA Intel PCH"
+			profiles:
+				input:analog-stereo: Analogue Stereo Input (priority 60, available: unknown)
+				output:analog-stereo: Analogue Stereo Output (priority 6000, available: unknown)
+				output:analog-stereo+input:analog-stereo: Analogue Stereo Duplex (priority 6060, available: unknown)
+				output:iec958-stereo: Digital Stereo (IEC958) Output (priority 5500, available: unknown)
+				output:iec958-stereo+input:analog-stereo: Digital Stereo (IEC958) Output + Analogue Stereo Input (priority 5560, available: unknown)
+				...
+				>>> HDMI-uitgang !!! <<<
+				output:hdmi-stereo-extra1: Digital Stereo (HDMI 2) Output (priority 5200, available: unknown)
+				output:hdmi-stereo-extra1+input:analog-stereo: Digital Stereo (HDMI 2) Output + Analogue Stereo Input (priority 5260, available: unknown)
+				...
+			active profile: <output:analog-stereo>
+			...
+			ports:
+				analog-output-lineout: Line Out (priority 9900, latency offset 0 usec, available: yes)
+				analog-output-headphones: Headphones (priority 9000, latency offset 0 usec, available: unknown)
+				hdmi-output-1: HDMI / DisplayPort 2 (priority 5800, latency offset 0 usec, available: yes)
+					properties:
+						device.icon_name = "video-display"
+						device.product.name = "42 FHD_LCD-TV"
+	<<<
+	>>> In vorige pc (MSI H170A PC Mate) geeft dit
 		3 card(s) available.
 			index: 0
 			name: <alsa_card.usb-Plantronics_Plantronics_.Audio_648_USB-00>
@@ -2148,10 +2423,11 @@ $ sudo file -s /dev/sdb1
 				output:analog-stereo+input:analog-stereo: Analogue Stereo Duplex (priority 6060, available: unknown)
 				output:hdmi-stereo: Digital Stereo (HDMI) Output (priority 5400, available: unknown)
 			...
+	<<<
   en blijkbaar is het de index, en niet het alsa.card nummer dat we nodig hebben voor het volgende commando. Maar aangezien de index opnieuw bepaald wordt bij elke opstart, beter de name gebruiken:
 - geluid van built-in audio (index 2) naar tv-uitgang (hdmi) sturen:
 	(NIET pactl set-card-profile 2 output:hdmi-stereo)
-	$ pactl set-card-profile alsa_card.pci-0000_00_1f.3 output:hdmi-stereo
+	$ pactl set-card-profile alsa_card.pci-0000_00_1f.3 output:hdmi-stereo-extra1
 - geluid van built-in audio (index 2) naar lijn-uitgang (mini-cinch) sturen:
 	(NIET pactl set-card-profile 2 output:analog-stereo)
 	$ pactl set-card-profile alsa_card.pci-0000_00_1f.3 output:analog-stereo
@@ -2238,7 +2514,7 @@ Enkele opties:
 
 - uit de Poppler bibliotheek gebruikt door de evince document viewer
 	pdfdetach extract embedded documents from a PDF
-	pdffonts lists the fonts used in a PDF
+	pdffonts lists the fonts used in a PDF (-subst om de substituties van niet-ingesloten fonts te tonen)
 	pdfimages extract all embedded images at native resolution from a PDF
 		$ pdfimages -all -p input.pdf outputprefix
 		- kopieert alle beelden uit input.pdf naar outputprefix-###.ext , met ext extensie die hoort bij het beeldformaat
@@ -2299,6 +2575,7 @@ Enkele opties:
 
 ==== pdf splitsen in oneven en even paginas en terug samenvoegen ====
 
+- zie ook sectie "pdf dubbele bladzijden (b.v. boekscan) splitsen in links en rechts"
 - zie ook sectie "opdracht uitvoeren op alle bestanden van een directory tree" subsectie "vb. 12 jpeg scans opsplitsen naar linker- en rechterblz."
 
 - met java PDFMultivalent (script ~/bin/pdftool)
@@ -2322,6 +2599,69 @@ Enkele opties:
 	$ pdftool Split -pages "odd,even,backmap" invoer-x1-m.pdf
 		- zet blz. terug in juiste volgorde (1,2,3,4,5,6,...)
 		- inhoudstafel blijft staan zoals Merge ze heeft gemaakt (maar verwijst natuurlijk wel naar juiste blz.)
+
+==== pdf dubbele bladzijden (b.v. boekscan) splitsen in links en rechts ====
+
+- zie ook sectie "pdf splitsen in oneven en even paginas en terug samenvoegen"
+- zie ook sectie "opdracht uitvoeren op alle bestanden van een directory tree" subsectie "vb. 12 jpeg scans opsplitsen naar linker- en rechterblz."
+- werkt enkel als de blz. even groot zijn, en het midden overal op dezelfde plaats zit
+- evt. doorzoekbaarheid (onzichtbare OCR) blijft bewaard!
+- zonder noemenswaardige vergroting bestand !
+- eerst elke blz. 2 keer na elkaar zetten:
+	- boek 2 keer na elkaar zetten:
+		$ pdftool Split -pages all,all orig.pdf
+	- blz.-dubbels in juiste volgorde na elkaar zetten:
+		$ pdftool Split -pages odd,even,backmap orig-x.pdf
+	- blz. opdelen met Foxit PDF Editor:
+		- kies representatieve oneven blz.
+		- Tool/Crop, linkerkant selecteren (iets over het midden gaan als er marge nodig is),
+		- [enter], "All pages" EN "Odd pages only"
+		- mutatis mutandis voor even blz.
+
+=== schermafdruk van hele Firefox pagina ===
+
+- De Firefox-plugin Nimbus Capture probeert dit te doen door stapsgewijs door de pagina te scrollen, van elk stuk een schermafdruk te nemen, en die aan elkaar te plakken. Dit lukt dikwijls niet, door o.a. gebrekkige synchronisatie met Firefox, en door wijzigingen aan b.v. dynamishce pagina's. De Developper Tools van Firefox zelf bieden soelaas:
+	- zorg dat de screenshot Web Developper Tool van Firefox beschikbaar is:
+		- open om het even welke Web Developper Tool van Firefox
+		- ga naar Settings (F1 of via menu achter de …)
+		- selecteer "Available Toolbox Buttons/Take a screenshot of the entire page"
+			- zet een camera-icoon op de knoppenbalk van de Web Developper Tools
+		- selecteer evt. "Screenshot behaviour/Screenshot to clipboard"
+			- zorg dan dat "Notification Area" op een xfce4 panel staat, en dat Clipman (xfce4-clipman) opgestart is
+			- installeer evt. xclip om zonder grafisch programma het clipboard naar een bestand te schrijven
+	- open om het even welke Web Developper Tool van Firefox
+	- klik op het camera-icoon ib de knoppenbalk van de Web Developpers Tools ("Take a screenshot of the entire page")
+		- als "Screenshot to clipboard" NIET op staat: schermafdruk staat als png in de Downloads directory (Firefox preferences/General/Files and applications/Downloads). Opm.: de gekozen directory wordt ook gebruikt voor deze screenshots, als daarna die voorkeur wordt veranderd naar "Always ask where to save files"
+		- als "Screenshot to clipboard" WEL op staat: schermafdruk staat in verschillende formaten op het clipboard
+			- selecteer, als het volgende niet direct lukt, uitdrukkelijk de genomen screenshot in Clipman (in de notification area)
+			- nog niet gelukt met XnView
+			- doe in b.v. Gimp "Edit/Paste as/Paste as new Image"
+			OF
+			- met xclip in een script of vanop een command prompt het clipboard naar een bestand schrijven
+				- zien welke formaten beschikbaar zijn:
+					$ xclip -selection clipboard -o -t TARGETS
+					>>>
+						TIMESTAMP
+						TARGETS
+						MULTIPLE
+						SAVE_TARGETS
+						image/png
+						image/bmp
+						image/x-bmp
+						image/x-MS-bmp
+						image/x-icon
+						image/x-ico
+						image/x-win-bitmap
+						image/vnd.microsoft.icon
+						application/ico
+						image/ico
+						image/icon
+						text/ico
+						image/jpeg
+						image/tiff
+					<<<
+				- schermafdruk bewaren in b.v. png:
+					$ xclip -selection clipboard -o -t image/png > afdruk.png
 
 === mkv video splitten ===
 
@@ -2513,19 +2853,19 @@ Meerdere sequenties samen in 1 bestand bewaren:
 		<<<
 		- met chmod, of in thunar properties van /var/lib/samba/usershares/: "other: read"
 
-- share toevoegen 'net usershare add [-l|--long] <sharename> <path> [<comment>] [<acl>] [<guest_ok=[y|n]>]'
+- share toevoegen of wijzigen 'net usershare add [-l|--long] <sharename> <path> [<comment>] [<acl>] [<guest_ok=[y|n]>]'
 	- zie "_Xubuntu.adoc" sectie "op netwerk gedeelde directories"
-	0 restricted to directories you own
+	- default restricted to directories you own
+		0 tijdelijk ramdisk schrijfbaar maken vanuit netwerk:
+			- enkel eigenaar kan directory delen, dus eerst een directory maken op ramdisk :
+			$ mkdir /media/ramdisk/RW ;  net usershare add RAMDISK /media/ramdisk/RW "ramdisk van frt (vergankelijk)" Everyone:f guest_ok=y
+			- NA AFLOOP
+			$ net usershare delete RAMDISK
 		- verholpen met toevoeging aan /etc/samba/smb.conf (b.v. in sectie 'misc', juist voor header "Share Definitions" :
 		>>>
 			# Allow usershare without owning the shared folder (t.b.v. usershare op ramdisk)
 		   usershare owner only = false
 		<<<
-		0 tijdelijk ramdisk schrijfbaar maken vanuit netwerk
-			- enkel eigenaar kan directory delen, dus eerst een directory maken op ramdisk :
-			$ mkdir /media/ramdisk/RW ;  net usershare add RAMDISK /media/ramdisk/RW "ramdisk van frt (vergankelijk)" Everyone:f guest_ok=y
-			NA AFLOOP
-			$ net usershare delete RAMDISK
 
 - share verwijderen
 	$ net usershare delete <sharename>
@@ -2539,9 +2879,13 @@ Meerdere sequenties samen in 1 bestand bewaren:
 	<<<
 
 - toon de inhoud van de bestanden uit /var/lib/samba/usershares/
-	$ net usershare info
+	$ net usershare info [sharename]
 
-=== Samba configuratie wijzigen ===
+- directories en bestanden van network shares in gebruik:
+	# smbstatus -L
+	- OPM: op Mieke's PAV is FRT's RAMDISK in gebruik van zo gauw haar verkenner start
+
+==== Samba configuratie wijzigen ====
 
 - staat in /etc/samba/smb.conf
 	$ man smb.conf
@@ -2555,7 +2899,7 @@ Meerdere sequenties samen in 1 bestand bewaren:
 - After saving /etc/samba/smb.conf, be sure you restart Samba:
 	# /etc/init.d/samba restart
 
-=== symlinks volgen in Samba netwerk shares ===
+==== symlinks volgen in Samba netwerk shares ====
 
 - Samba verhindert als standaard toegang via symbolic links (verbergt die zelfs) naar directories en bestanden buiten een netwerk-share
 	- VirtualBox shared folders doen dit NIET, daar wprden symbolic links wel gevolgd
@@ -2680,6 +3024,7 @@ Meerdere sequenties samen in 1 bestand bewaren:
 	$ XDG_CONFIG_HOME=~/.configalt xfce4-terminal --disable-server
 	--disable-server : anders gaat hij op zoek naar parent terminal, en neemt daarvan alles over
 	- XDG_CONFIG_HOME= : alternatief voor ~/.config, xfce maakt daarin autom. de nodige subdirs, o.a. ./gtk-3.0 ./ibus ./xfce4/terminal
+		- als environment variabele XDG_CONFIG_HOME leeg of niet-ingesteld is, nemen alle programma's ~/.config als default
 		- xfce4-terminal afsluiten, naar nieuwe ./xfce4/terminal de bestanden accels.scm en terminalrc uit standaard .config kopiëren, xfce4-terminal terug opstarten en preferences wijzigen naar believen
 
 === bash jobs ===
@@ -2741,7 +3086,41 @@ Meerdere sequenties samen in 1 bestand bewaren:
 === beheer processen ===
 
 ==== overzicht van alle processen, met pid ====
-	$ ps
+- OPM: ps heeft opties met en zonder prefix '-'
+
+	$ ps -e
+	-e     Select all processes.  Identical to -A
+	[r]    (ZONDER - !!)  Restrict the selection to only running processes
+	[T]    (ZONDER - !!)  Select all processes associated with this terminal
+	>>>
+	  PID TTY          TIME CMD
+		1 ?        00:00:02 systemd
+	    2 ?        00:00:00 kthreadd
+		4 ?        00:00:00 kworker/0:0H
+		...
+	<<<
+
+==== pid van een bepaald proces ====
+
+- OPM: ps heeft opties met en zonder prefix '-'
+
+	$ ps -C geany,cupsd
+	-C cmdlist : Select by command name (komma-gescheiden)
+	>>>
+	  PID TTY          TIME CMD
+	 5019 ?        00:00:10 geany
+	13641 ?        00:00:00 cupsd
+	<<<
+
+- voor verdere verwerking
+	$ pid=$(ps -o pid= -C geany); echo $pid
+	>>>
+	5019
+	<<<
+	-o, --format [kolom[=[titel]]] : Specify user-defined format, met optie om zelf kolom-titel te zetten; als alle kolom-titels zelf gekozen en leeg zijn, dan geen lijn met kolom-titels
+
+- selectie kan ook met grep (minder efficient)
+	$ ps -e | grep -i geany
 
 ==== process stoppen, afsluiten, naar achtergrond ====
 
@@ -2764,9 +3143,12 @@ Meerdere sequenties samen in 1 bestand bewaren:
 			- cwd is symlink naar de PWD :
 				$ realpath /proc/1234/cwd
 				>>> /home/1000/Documents <<<
-			- cmdline toont volledige opdrachtlijn :
-				$ cat /proc/1234/cmdline
-				>>> huppeldepup -arg1 -arg2 <<<
+			- cmdline toont volledige opdrachtlijn, opgesplits als C-main()'s argv[] :
+				$ sed -E 's/^/"/;s/\x0/" "/g;s/ "$/\n/' /proc/1234/cmdline
+				>>>"huppeldepup" "-arg1" "-arg2"<<<
+					- zet '"' aan begin, vervang elke ASCII-Z door '" "', en vervang de laatste zo zelf toegevoegde ' "' door newline
+			- environ toont environment, opgesplits als C-main()'s env[] :
+				$ sed -E 's/\x0/\n/g' /proc/1234/environ | sort
 			- fd/ directory met symlinks naar geopende filedesriptors, vooraan het trio stdX
 				$ realpath /proc/1234/fd/*
 				>>>
@@ -2798,6 +3180,17 @@ Meerdere sequenties samen in 1 bestand bewaren:
 		-p, --show-pids
 		-s, --show-parents : toon parent van gevraagde pid
 		[ user | pid ] : beperk tot de user of process id
+
+==== uitvoeren na einde van een opdracht ====
+
+- zie sectie "pid van een bepaald proces"
+
+- met loop die pid in het oog houden :
+	$ while [[ $(ps 15859 &> /dev/null)$? -eq 0 ]]; do sleep 60 ;done && sleep 10 && slaap
+		- na einde taak nog even geven om mischien caches naar schijf te schrijven, af te koelen met ventilators aan, ...
+	OF (rechtstreeks met /proc virtueel bestandssysteem :
+	$ while [ -d /proc/15859 ]; do sleep 60 ;done && sleep 10 && slaap
+
 
 === pipe naar bestand maar ook naar scherm ===
 
@@ -2838,18 +3231,44 @@ ZIE http://www.dwheeler.com/essays/filenames-in-shell.html ("Filenames and Pathn
 ZIE http://mywiki.wooledge.org/UsingFind
 
 ==== basistechnieken ====
-	- for i in ./*.ext; do opdracht1; opdracht2; else opdracht3 ; opdracht4; done
-	- for over alle subdirectories (in het algemeen globbing = wild card expansion over subdirectories):
-		$ shopt -s globstar
+	- loop over alle bestanden in een directory, met een naam die overeenkomt met bepaalde jokertekens :
+		$ for i in ./*.ext; do opdracht1; opdracht2; else opdracht3 ; opdracht4; done
+	- loop over alle bestanden in directe subdirectories, beide met een naam die overeenkomt met bepaalde jokertekens :
+		$ for i in "TTC "*/*.ext; do opdracht1; opdracht2; else opdracht3 ; opdracht4; done
+	- loop over alle niveaus van subdirectories (in het algemeen globbing = wild card expansion over subdirectories):
 		- hiermee wordt ** uitgebreid tot alle niveaus van subdirectories
+		$ shopt -s globstar
 		$ for i in ./**/*.ext;
 	- in volgorde van grootte, datum, ...
-		- bash e.a. shell breiden wildcards uit naar pad in alfabetische volgorde. Met 'ls -1 ...' kunnen bestandsnamen in andere volgorde opgevraagd worden, b.v. op Size reversed :
-			$ ls -1Sr
-			>>>
-			'klein bestand'
-			'groot bestand'
-			<<<
+		- bash e.a. shell breiden wildcards uit naar pad in alfabetische volgorde. Met 'ls -1 ...' kunnen bestandsnamen in andere volgorde opgevraagd worden
+			- b.v. op Size reversed :
+				$ ls -1Sr
+				>>>
+				'klein bestand'
+				'groot bestand'
+				<<<
+			- b.v. Lijst van bestanden in subdirectories gesorteerd op grootte:
+				$ ls -dG1S [-r] [-Q | --quoting-style=shell] [-sk] */*
+				-d, --directory : list directories themselves, not their contents
+				-G, --no-group : in a long listing, don't print group names
+				-1 : list one file per line.
+				-S : sort by file size, largest first
+				- vooral nuttig voor display: grotere bestanden staan onderaan in de lijst, zijn nog niet van terminal weg gescrolled :
+					[-r, --reverse] : reverse order while sorting
+				- zonder quoting optie gebruikt ls toch escapes wanneer nodig. Evt. expliciet sturen:
+					[-Q, --quote-name] : enclose entry names in double quotes : "Un \"Moment\" D'égarement"
+					[--quoting-style=WORD] : use quoting style WORD for entry names: literal, locale, shell, shell-always, shell-escape (mog. synoniem van shell, nog geen verschil gevonden), shell-escape-always, c, escape
+						- heeft voorrang op Q
+							>>>
+							--quoting-style=literal : Un "monument" d'élégance
+							[zonder quoting-optie] : 'Un "monument" d'\''élégance'
+							-Q : "Un \"monument\" d'élégance"
+							--quoting-style=shell : 'Un "monument" d'\''élégance'
+							--quoting-style=escape : Un\ "monument"\ d'élégance
+							<<<
+				- bestandsnamen voorafgegaan door grootte, mooi in kolom:
+					[-s, --size] : print the allocated size of each file, in blocks
+					[-k, --kibibytes] : default to 1024-byte blocks for disk usage
 		- uitvoer van 'ls -1 ...' is niet rechtstreeks bruikbaar b.v. als 'for a in $(ls -1 ...)', omdat de quotes verwijderd worden en de bestandsnamen gesplitst in woorden
 		- als opdracht NIET leest van STDIN:
 			$ while read i;do opdracht;done <$(ls -1 ...)
@@ -2862,6 +3281,11 @@ ZIE http://mywiki.wooledge.org/UsingFind
 				$ unset lijst
 				$ while read i;do lijst=("${lijst[@]}" "$i");done <<<$(ls -1 ...)
 				$ for i in "${lijst[@]}";do opdracht;done
+	- in volgorde van totale grootte van directory :
+		$ du -BM -d0 TTC*/ | sort -h
+		-B, --block-size=SIZE : scale sizes by SIZE before printing them; e.g., '-BM' prints sizes in units of 1,048,576 bytes;
+		-d, --max-depth=N : print the total for a directory only if it is N or fewer levels below the command line argument;  --max-depth=0 is the same as --summarize
+		-h, --human-numeric-sort : compare human readable numbers (e.g., 2K 1G)
 	- find [bronpad] selecties acties
 		- [bronpad] selecties : zie sectie "lijst-opdrachten" lemma "zoek bestanden en directories"
 		- acties : default actie is naam naar stdout
@@ -3014,7 +3438,9 @@ ZIE http://mywiki.wooledge.org/UsingFind
 
 ==== vb. 9 stripverhalen opnieuw inpakken naar cbz ====
 	- strips staan per album als .jpg in subdirectory van current directory :
-	$ for i in * ; do pushd "$i"; zip -0 ../"$i".cbz *.jpg; popd; done
+		$ for i in * ; do pushd "$i"; zip -0 ../"$i".cbz *.jpg; popd; done
+	- hele directory jpg-strips in .cbr, met verwijderen van andere bestanden (o.a. Apple's .DS_store), bestanden hernoemen naar simpele volgnrs en lowercase jpg
+		$ for r in *.cbr;do cd /media/ramdisk/;unrar e "$OLDPWD/$r";find -type f -not -iname "*.jpg" -delete;ls -v * | cat -n | while read n f; do mv -n "$f" "$(printf %04d $n).jpg"; done;zip -0q "$OLDPWD/${r:: -1}z" *;rm /media/ramdisk/*;cd "$OLDPWD";done
 
 ==== vb. 10 in alle bestandsnamen dubbele aanhalingstekens vervangen door enkele ====
 	$ find -xdev -iname "*\"*" -execdir bash -c 'mv "${1//\"/"\""}" "${1//\"/\'\''}"' _ \{\}  \;
@@ -3038,6 +3464,8 @@ ZIE http://mywiki.wooledge.org/UsingFind
 
 
 ==== vb. 12 jpeg scans opsplitsen naar linker- en rechterblz. ====
+
+- zie ook sectie "pdf dubbele bladzijden (b.v. boekscan) splitsen in links en rechts"
 - sommige pdf's zijn per 2 blz. gescand :
 	- jpg's uit pdf halen :
 		$ java be.arci.pdf.ImageExtractor input.pdf
@@ -3086,10 +3514,7 @@ ZIE http://mywiki.wooledge.org/UsingFind
 
 - sommige ondertitels zijn volledig in hoofdletters, andere niet
 	- uit de ondertitels met kleine letters een lijst maken met de 'eigennamen' (woorden met hoofdletter)
-		$ for f in S0{3,4}*.srt;do grep -E "[a-z]" "$f" >/dev/null && grep -ie "[a-z]" "$f"|sed -Ee 's|^[a-zA-Z]+[^a-zA-Z](.*)|\1|;s|\. [a-zA-Z]+[^a-zA-Z]||g;s|([^[:alpha:]]+)|\n|g;s| ||g'|grep -Ee "^[A-Z][a-z]";done|sort -u
-
-
-		$ for f in S0{3,4}*.srt;do grep -E "[a-z]" "$f" >/dev/null && grep -ie "[a-z]" "$f" | sed -Ee 's|^[a-zA-Z]+[^a-zA-Z](.*)|\1|; s|\. [a-zA-Z]+[^a-zA-Z]||g; s|[[:punct:]][a-zA-Z]+([^a-zA-Z])|\1|g; s|([^[:alpha:]]+)|\n|g; s| ||g' | grep -Ee "[A-Za-z]"; done | sort -uf | grep -E "^[A-Z][a-z]"
+		$ for f in *.srt;do grep -E "[a-z]" "$f" >/dev/null && grep -iE "[a-z]" "$f" | sed -Ee 's|^[a-zA-Z]+[^a-zA-Z](.*)|\1|; s|\. [a-zA-Z]+[^a-zA-Z]||g; s|[[:punct:]][a-zA-Z]+([^a-zA-Z])|\1|g; s|([^[:alpha:]]+)|\n|g; s| ||g' | grep -E "^[A-Z][a-z]"; done | sort -uf
 			- grep 1: zoek bestanden met lijnen met kleine letters; bij succes :
 				- grep 2: enkel de lijnen met letters (b.v. voor .srt: niet de nummers en tijden)
 				- sed s 1: verwijder 1ste woord van elke lijn : kan hoofdletter hebben als begin van zin
@@ -3103,6 +3528,22 @@ ZIE http://mywiki.wooledge.org/UsingFind
 				-f, --ignore-case : fold lower case to upper case characters
 			- grep 5: behoud alleen woorden met hoofdletter gevolgd door kleine letter
 
+=== tekstbestanden naast elkaar vergelijken ===
+
+- diff zet standaard verschillen onder elkaar
+	$ diff -yW 167 --suppress-common-lines bestand1 bestand2
+	-y om hele bestanden naast elkaar te tonen
+	-W breedte van terminal (standaard 130)
+	--suppress-common-lines
+
+- sdiff altijd naast elkaar (? side-by-side diff ?)
+	- alleen verschillen, maar afgekapt op < terminalbreedte/2  :
+	$ sdiff -bBWsw 167 bestand1 bestand2
+	-b Ignore changes in the amount of white space.
+	-W Ignore all white space.
+	-B Ignore changes whose lines are all blank.
+	-s Do not output common lines.
+	-w breedte van terminal (standaard 130)
 
 === dubbele voorkomens verwijderen uit invoer ===
 
@@ -3185,6 +3626,7 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 
 === in standby of uit zetten na verloop van tijd (b.v. 45 minuten) ===
 
+- zie ook sectie "uitvoeren na einde van een opdracht"
 - voor standby of uit na download met nzbget: zie hierna
 - standby of uit na vast aantal minuten:
 	$ sleep 45m ; standby
@@ -3503,19 +3945,33 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 
 === opdracht uit bash history terug uitvoeren ===
 
-- zie ook _Xubuntu.adoc sectie ".inputrc gemaakt" : selectief door history bladeren met pijl omhoog/omlaag a.d.h.v begin-string opdracht :
-	"\e[A": history-search-backward
-	"\e[B": history-search-forward
+- bash history shortcuts
+	[Esc]^	: history-expand-line
+	[Esc][Ctrl]+i	: dynamic-complete-history
+	[Esc]>	: end-of-history
+	[Esc]<	: beginning-of-history
+	[Ctrl]+s	: forward-search-history
+	[Esc]n	: non-incremental-forward-search-history
+	[Ctrl]+r	: reverse-search-history
+	[Esc]p	: non-incremental-reverse-search-history
+	[Esc]OA	: previous-history
+	[Esc][A	: previous-history
+	[Ctrl]+p	: previous-history
+	[Esc]OB	: next-history
+	[Esc][B	: next-history
+	[Ctrl]+n	: next-history
+	- zie ook _Xubuntu.adoc sectie ".inputrc gemaakt" : selectief door history bladeren met pijl omhoog/omlaag a.d.h.v begin-string opdracht :
+		"\e[A": history-search-backward
+		"\e[B": history-search-forward
 
 - !-1 : vorige opdracht
 	- !-2 : opdracht daarvoor
 	...
-
-- history maar met wijzigingen: modifiers beginnen met ':', b.v.
-	$ !-2:gs=drama=griezel=
-	- Voert de op 2 na laatste opdracht terug uit, maar met modifier (de ':') om alle (de 'g') "drama" te vervangen (de 's') door "griezel"; '=' is een zelf te kiezen scheidingsteken, zoals voor de sed-opdracht s.
-	- Alt-^ (d.w.z. Alt-Shift-6) i.p.v. <Enter> : breidt de opdrachtlijn uit tot de opdracht uit history met de vervanging
-	- Alt-Ctrl-E idem, maar dan worden ook variabelen (en aliassen) ingevuld, en dat is dikwijls vervelend.
+	- voor wijzigingen aan opdracht, zet ':' + modifiers achter het nr., b.v.
+		$ !-2:gs=drama=griezel=
+		- Voert de op 2 na laatste opdracht terug uit, maar met modifier (de ':') om alle (de 'g') "drama" te vervangen (de 's') door "griezel"; '=' is een zelf te kiezen scheidingsteken, zoals voor de sed-opdracht s.
+		- [Esc]^ OF Alt-^ (d.w.z. Alt-Shift-6) i.p.v. <Enter> : breidt de opdrachtlijn uit tot de opdracht uit history met de vervanging
+		- Alt-Ctrl-E idem, maar dan worden ook variabelen (en aliassen) ingevuld, en dat is dikwijls vervelend.
 
 - opdrachtgeschiedenis van bash is zoekbaar (met grep) en genummerd. b.v. wat heb ik nu ook weer gedaan met het bestand "floep" :
 	$ history | grep "floep"
@@ -3665,7 +4121,7 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 		- 1 : rotate  90° clockwise
 		- 2 : rotate 180° clockwise
 		- 3 : rotate 270° clockwise
-	- als user: een sudo geldt niet voor de redirect, misbruik daarom tee om in sudo naar bestand te schrijven:
+	- als user: redirect gebeurt voor sudo, misbruik daarom tee om in sudo naar bestand te schrijven:
 		$ echo 3 | sudo tee /sys/class/graphics/fbcon/rotate
 
 === GUI starten in een tty ===
@@ -3913,10 +4369,11 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 === shellfunctie tonen ===
 	$ type mijnfunctie
 
-=== op naam ===
+=== shellvariabele tonen ===
 	$ echo $NAAM
 
-=== op (deel van) naam ===
+=== environment variable tonen op (deel van) naam ===
+	- enkel voor environment variabelen (geëxporteerde shell variabelen)
 	$ printenv | grep NAAMDEEL
 
 === allemaal ===
@@ -3968,7 +4425,7 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 	- voorbeeld loop : for elem in ${lijst//,/ };do echo $elem;done
 	- voorbeeld array : elems=(${lijst//,/ })
 
-=== prompts en xterm commandos ===
+=== prompts en terminal escapes ===
 
 - zie ook https://www.davidpashley.com/articles/bash-prompts/
 
@@ -3994,9 +4451,29 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 		- \e]1;titel\a : icon
 		- \e]2;titel\a : window
 
+=== shell loops ===
+	- zie ook sectie "opdracht uitvoeren op alle bestanden van een directory tree" - "basistechnieken"
+	- loop een bepaald aantal keer, b.v. 5 :
+		$ unset n;
+		$ while ((++n <= 5)); do echo $n;done
+		OF
+		$ unset n;
+		$ for ((;++n <= 5;)); do echo $n;done
+		OF
+		$ for ((n=0;++n <= 5;)); do echo $n;done
+		OF
+		$ for n in {1..5}; do echo $n;done
+		- OPM: {n..m} wordt uitgebreid vóór variabelen, kan daardoor alleen literal waarden bevatten
+	- loop over een aatal gekende waarden :
+		$ for n in a b c; do echo $n;done
+	- loop over elk array-element :
+		$ a=(a b)
+		$ for n in "${a[@]"}; do echo $n;done
+
 == SCRIPTS SCHRIJVEN EN DEBUGGEN ==
 
 === elk tekstbestand kan een script bevatten ===
+
 - is uit te voeren door de bestandsnaam als parameter van een shellopdracht te geven:
 	OFWEL
 	$ bash mijnscript.txt
@@ -4007,6 +4484,12 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 	OFWEL
 	$ . mijnscript.txt
 	- . voert de opdracht uit in de huidige bash shell
+	OFWEL
+	$ source mijnscript.txt
+	- source voert de opdracht uit in de huidige bash shell
+
+- test of script met . of source wordt uitgevoerd:
+	[ "$0" = "$BASH_SOURCE" ] && echo als script || echo als source
 
 === uitvoerbaar maken met chmod ===
 - kan dan zelfstandig uitgevoerd worden zonder shellopdracht; de default shell wordt dan gebruikt. Om een of andere reden moet dan wel het pad worden opgegeven, al is het maar ./ :
@@ -4132,219 +4615,6 @@ b.v.	# diff -rqN -x=.swapfile /media/sdata/. /media/tarch/. | tee /media/ramdisk
 			arg0 is ./test
 			readlink zegt /bin/bash
 
-=== trace van script tonen ===
-
-- toon elke opdracht van een script op de terminal tijdens uitvoer (cfr. displays in een C-programma):
-	$ bash -x mijnscript
-	- elke opdracht van een pipeline wordt getoond
-
-- toon elke opdracht van een sectie van script op terminal tijdens uitvoer (cfr. displays in een C-programma):
-	- in het script volgende opdrachten opnemen rond die sectie:
-		set -x
-		#sectie met display van opdrachten
-		set +x
-	- de afsluitende "set +x" wordt ook getoond
-	- set -f, set -o noglob : Disable file name generation using metacharacters (globbing).
-	- set -v, set -o verbose : Prints shell input lines as they are read.
-	- set -x, set -o xtrace : Print command traces before executing command.
-
-=== script debuggen met de bash debugger ===
-	$ bashdb mijnscript
-	- "?" voor lijst van opdrachten
-	- "help opdracht" voor hulp
-	- "q" om af te sluiten
-
-=== eigen map bepalen in het script ===
-- zie https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within :
-	zelfdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-=== script beperken tot root ===
-
-- een script moet niet uitvoerbaar zijn (chmod +x) om het te kunnen uitvoeren: in "bash scriptnaam" moet alleen bash uitvoerbaar zijn, en is scriptnaam gewoon een invoerbestand. Daarom moet ge soms in het script zelf testen of een root-gebruiker het uitvoert.
-
-- bash (andere shells mogelijk niet) zet de variabelen UID en EUID (effective user id); in Ubuntu zijn die readonly, dus veilig, in andere OS mogelijk niet
-
-- OPL. 1 : controle op uitvoer door roor :
-	>>>
-		if [ "$(id -u)" -ne 0 ]
-		then
-			echo 'This script must be run by root' >&2
-			exit 1
-		fi
-	<<<<
-	- OPM : dit is niet zomaar te testen met sudo op de commandolijn, omdat bash de $()-expansie doet voor sudo wordt aangeroepen :
-		$ id -u
-		 >>> 1000
-		$ sudo id -u
-		 >>> 0
-		$ echo $(id -u)
-		 >>> 1000
-		$ sudo echo $(id -u)
-		 >>> 1000
-		$ bash -c 'echo $(id -u)'
-		 >>> 1000
-		$ sudo bash -c 'echo $(id -u)'
-		 >>> 0
-
-- OPL. 2 : script herstart zichzelf als root
-	>>>
-		# display user, mag weg na test
-		echo "$(whoami)"
-		# als niet root, herstart als root met sudo
-		[ "$UID" -eq 0 ] || exec sudo "$0" "$@"
-	<<<
-	- zie ook sectie "redirect password naar sudo"
-
-=== loop over lijnen van tekstbestand ===
-	$ while read woord1 woord2 ... ; do echo $woord1 $woord2 ... ; done < tekst.txt
-	- OPGELET: er is maar 1 stdin, opdrachten na de 'do' die daaruit lezen, stelen die lijnen van de read-opdracht weg
-	- woord1 ... : variabelen waarin de woorden van een lijn uit tekst.txt gelezen worden; default $REPLY. The characters in IFS are used to split the line into words using the same rules the shell uses for expansion
-	- als lijn in tekst.txt meer woorden bevat dan opgegeven voor read, dan komt rest in laatste woord#
-	- andere read opties :
-		-a arrayname : woorden in array i.p.v. benoemde variabelen
-		-d delimchar : t.b.v. opsplitsen tekst.txt in lijnen, default newline
-		-r : lees backslash niet als escape (i.e. \LF is geen vervolglijn)
-		-e : (enkel interactief) gebruik readline
-		-i default : (enkel met readline) zet "default" al in input buffer, en toont die
-		-p prompt : (enkel met readline) toont prompt
-		-n ## : leest ## chars, of hele lijn als die korter is
-		-N ## : leest ## chars
-	- voorbeeld :
-	>>> flc2mp3.cfg
-		2 "doel1.mp3" "1ste bestand.flac" "2de bestand.flac" "3de bestand.flac"
-		3 "doel2.mp3" "4de bestand.flac" "5de bestand.flac"
-	<<<
-	$ while read kwal mp3 flacs ; do echo Q=$kwal ; echo MP3=$mp3 ; echo FLC=$flacs ; done < flc2mp3.cfg
-	>>>
-		Q=2
-		MP3="doel1.mp3"
-		FLC="1ste bestand.flac" "2de bestand.flac" "3de bestand.flac"
-		Q=3
-		MP3="doel2.mp3"
-		FLC="4de bestand.flac" "5de bestand.flac"
-	<<<
-
-=== menu maken met select ===
-	$ PS3="prompt voor select-menukeuze"
-	- default leeg
-	- PS3 behandelt geen escapes, dus zonder truukje geen kleuren, piepen, bold, ...
-		- truukje :
-			$ vet=$(tput smso) vetuit=$(tput rmso)
-			$ PS3="${vet}Kies${vetuit} het nummer van ... : "
-	$ select var in EINDE [value1]... ; do if [ "$var" = "EINDE" ] ; then exit; if [ -z "$var" ] ; then echo "keuze is niet geldig" else echo $var; break; fi; done
-	- toont de menukeuzes in kolommen, met een volgnr. i ervoor
-	- aantal kolommen is afh. van de variable COLUMNS, die gezet wordt in een terminal, maar niet (altijd?) bij het uitvoeren van een shellscript. Zelf zetten in het script als volgt:
-		$ [[ -v COLUMNS ]] || COLUMNS=$(tput cols)
-	- bij enter zonder keuze wordt het menu ververst, zonder in de do-loop te komen
-	- bij enter met iets ingetikt, wordt de keuze verwerkt in de do-loop; moeten zelf "break"-opdracht uitvoeren om de loop te beeindigen, maar select-lijst wordt niet opnieuw geprint
-		- bij enter van geldig keuzenr heeft $var de overeenkomede waarde uit de select-lijst, en $REPLY het ingetikte nummer
-		- bij enter van ongeldige waarde heeft var de waarde null, "$var" = "", en $REPLY het ingetikte
-	- EINDE is een zelfgekozen naam voor een laatste menukeuze die het afbreken wat gebruikvriendelijker maakt (anders Ctrl-C)
-	- select is een 'shell builtin command', en komt op een andere plaats dan andere commando's in de parsing van een opdrachtlijn. Daardoor kunnen de menukeuzes [value1]... enkel blanco's bevatten in de volgende gevallen :
-		- tussen ""
-		- door globbing
-	- VOORBEELDEN:
-		$ select optie in EINDE "eerste optie" "tweede optie" ...
-		- literal opties tussen "" kunnen spaties bevatten
-		OF
-		$ opties=("optie 1" "optie 2")
-		$ select optie in EINDE "${opties[@]}" ...
-		OF
-		$ select bestand in EINDE ./*.jpg ...
-		- opties t.g.v. shell globbing kunnen spaties bevatten
-		- GEEN SPATIES bij enig ander voorbeeld :
-		- voor een ononderbroken array opties ([0], [1], ...) is ook $REPLY nuttig, het gekozen volgnr. van de menukeuze
-		$ select optie in EINDE $(ls globbingpattern) ...
-		- GEEN SPATIES mogelijk:
-			- niet met $(ls -Q globbingpattern)
-				-Q, --quote-name
-			- niet met $(ls -Q --quoting-style=shell globbingpattern)
-				- met geen enkele van word=: literal, locale, shell, shell-always, shell-escape, shell-escape-always, c, escape
-			- niet met $(find ...) i.p.v. $(ls ...)
-
-=== menus maken met het dialog-commando ===
-	- volgorde van argumenten heeft zijn belang, in groepen: eerst algemene opties, dan boxopties (dan widgetopties?)
-	- let op de pipe, lijkt nodig om het menu zichtbaar te maken : " 2>&1 >/dev/tty"
-	- VOORBEELD kiezen uit inhoud van een directory
-	$ KEUZE=$(dialog --clear --fselect "/pad/[defaultkeuze]" $HEIGHT $WIDTH 2>&1 >/dev/tty)
-	- --clear : maakt het scherm leeg na keuze
-	- --fselect : keuze uit bestanden in een directory
-	- --dselect : keuze uit directories in een directory
-	- [defaultkeuze] (OPGELET: zonder eind-'/') wordt voorgeselecteerd in het menu, kan globbing wildcards bevatten, maar die bepalen NIET welke bestanden/directories getoond worden en gekozen kunnen worden
-	- KEUZE bevat wat in het invoerveld onderaan staat. Een bestands/directorynaam uit de lijst met de spatiebalk naar dat invoerveld kopiëren
-	- navigeren naar andere mappen (ook  '.' en '..') kan door ze te selectern naar het invoerveld en er een / achter te typen
-	- ook leuk: --backtitle "venstertitel" --title "menutitel"
-	- VOORBEELD kiezen uit een lijst (array of literal) van even lengte: "label1" "omschrijving1" ...
-	$ OPTIES=("label 1" "Uitleg 1" "Label 2" "Uitleg 2")
-	$ KEUZE=$(dialog --clear --menu "menuprompt" $HEIGHT $WIDTH $LIJSTHOOGTE "${OPTIES[@]}" 2>&1 >/dev/tty)
-	- KEUZE bevat het gekozen label
-
-=== menu-maatwerk met 'ls' voor lijst van bestanden of directories, en 'read' om 1 te kiezen met autocompletion ===
-	- vanwege autocompletion enkel werkbaar in de working directory waar die bestanden/directories staan
-	- zelf een loop scripten, met daarin
-		- voor bestanden:
-			$ ls -C globbingpattern
-			- -C : list entries by columns
-		- voor directories:
-			$ ls -Cd globbingpattern\
-			- -d, --directory : list directories themselves, not their contents
-		$ read -ep "mijn prompt: " var
-		- -e : doe autocompletion ("use Readline to obtain the line in an interactive shell")
-		- -p : een prompt
-		- $var bevat de ingevoerde waarde voor het menu-script
-
-=== here-document ===
-
-- gebruikt here-document (met naam HERE-DOCUMENT) om sommige bestanden te maken :
-	- begin :
-		<<naam
-		OF
-		<<-naam : alle voorlooptabs worden verwijderd (handig voor indendatie)
-		OF
-		<<'naam' : omgevingsveranderlijken in tekst here-document worden niet vervangen (anders dus WEL)
-	- gevolgd door lijnen met tekstinhoud van het document
-	- afgesloten door lijn met de naam herhaald (zonder blanks of tabs voor noch na):
-		naam
-	- als naam, noch om het even welke letters ervan, niet tussen '' of "" staat, dan gebeuren in het hele here-document parameter expansion, command substitution, en arithmetic expansion, the character sequence \<newline> is ignored, and \ must be used to quote the characters \, $, and `. Als naam tussen quotes staat, niet; naam zelf ondergaat dan wel quote removal
-
-- voorbeeld van here-document met de naam "HERE-DOCUMENT", met pipe naar bestand :
-	cat <<-einde_heredoc > doelbestand
-		een lijn
-		en nog een
-		...
-		laatste lijn is die waarna de naam "HERE-DOCUMENT" herhaald wordt
-	einde_heredoc
-
-==== block comment in shell script ====
-
-- linux shells kennen meestal alleen lijn-commentaar, met '#' als commentaarteken; formattering van lijncommentaar wordt door b.v. geany niet ondersteund, enkel fold/unfold van opeenvolgende lijnen die met # beginnen. Met een here-document is hieraan te verhelpen, b.v. :
-	: <<'BLOCKCOM'
-		dit is vrije tekst
-BLOCKCOM
-	- man bash
-	>>> : [arguments] : No effect; the command does nothing beyond expanding arguments and performing any specified redirections. A zero exit code is returned.	<<<
-	- 'BLOCKCOM', om geen $-expansies e.d. te doen in de commentaar; b.v. voorbeelden van command substitution zouden neveneffecten hebben.
-	- de ":" en de tekst mogen vrij inspringen, de afsluitende marker (b.v. BLOCKCOM) moet wel op kolom 0 staan (tenzij de redirectoperator "<<-" is i.p.v. "<<" is)
-	- andere toegelaten here-doc namen zijn b.v. '#', '##', '_', '/**' (helaas dan ook afsluiten met /**, niet met */)
-
-- hightech help-display :
-	- gebruik evt. de redirectoperator "<<-" is i.p.v. "<<", om voorloop-tabs te verwijderen als die geen betekenis hebben (alleen dienen om het script zelf leesbaar te maken)
-	- redirect naar een if-statement i.p.v. naar de dummy opdracht ":"
-	- voorbeeld:
-		if [[ "-h" = "$1" || "--help" = "$1" ]]
-		then cat;exit
-		else :
-		fi <<-'_'
-			dit is helptekst
-		_
-		OF compact maar onleesbaar
-		{ [[ "-h" = "$1" || "--help" = "$1" ]] && { cat;exit; } || :; } <<-'_'
-			dit is helptekst
-		_
-
-	- cat is eerste commando dat stdin leest, en leest hem helemaal leeg, zodat exit niets meer krijgt
-	- ':' is gewoon het kortste en snelste (bash built-in) commando dat niets doet; het maakt dus ook stdin niet leeg, maar daar is geen 1 simpel commando voor.
-
 === script maar 1 keer uitvoeren ===
 
 - de flock-opdracht laat de uitvoering van een simpel commando ervan afhangen of een lock op een bestand kan gekregen worden.
@@ -4382,13 +4652,26 @@ BLOCKCOM
 
 === return of exit ===
 
-- de interactieve shell, scripts die als uitvoerbaar bestand worden uitgevoerd, of scripts die worden uitgevoerd met "bash script", kennen de opdracht "return" alleen in functie; buiten functies geeft return een foutboodschap, en moet "exit" gebruikt worden om een script of de interactieve shell (en zijn terminal) te beëindigen :
+- "return" werkt alleen vanuit functies en vanuit een gesourced script, anders geeft ze een fout; met name de interactieve shell, scripts die als uitvoerbaar bestand worden uitgevoerd, of scripts die worden uitgevoerd met "bash script", kennen de opdracht "return" alleen in functie; buiten functies moet daar "exit" gebruikt worden om een script of de interactieve shell (en zijn terminal) te beëindigen :
 	$ return
 	>>> bash: return: can only `return' from a function or sourced script <<<
 
 - exit op de opdrachtlijn van een interactieve shell, of in een script dat met de bash-opdracht "source" of "." wordt uitgevoerd, beëindigt die shell (en zijn terminal). Daar is de opdracht "return" beter voor.
 
 - goed voor allebei (recente bash) : "fc=-1; return "$fc" 2>/dev/null || exit "$fc" : in een uitvoerbaar script faalt de return, en wordt de exit uitgevoerd.
+
+=== test, [] en [[]] ===
+
+
+- test is een bash built-in commando, en '[' is er een synoniem van (moet zoals elk commando gevolgd worden door whitespace om herkend te worden). Als '[' wordt gebruikt, wordt de afsluitende ']' herkend als afsluitend, en genegeerd
+	-a en -o: als de conditional expression primaries -a (true if file exists) of -o (true if shell option is set) het middelste van 3 argumenten zijn, krijgt die voor test en '[' de betekenis AND resp. OR. Dit geldt NIET voor '[[ ... ]]' : als ge een opdracht test of '[' omwerkt naar [[ ... ]], moet ge goed opletten dat ge evt. -a en -o primaries gepast vervangt door && en ||
+	- To test variables you should quote the "variablename" as they may undergo word splitting or globbing: [ "$DEMO" = 5 ]
+
+- '[[ ... ]]' is een compound command, met meer mogelijkheden dan test of '[', o.a. pattern matching
+	- de ... is een expression list van conditional expressions
+	- meerdere expressions worden tussen [[...]], zoals in elke bash expression list, logisch aaneengeschakeld met && (AND) en || (OR)
+	- als ge een opdracht test of '[' omwerkt naar [[ ... ]], moet ge goed opletten dat ge evt. -a en -o primaries gepast vervangt door && en ||
+	- variabelen worden binnen [[...]] geëxpandeerd zonder word splitting of globbing, dus [[ $DEMO = iets ]] is veilig
 
 === functies, argumenten, return value en spaties daarin ===
 
@@ -4461,25 +4744,81 @@ BLOCKCOM
 		>  Double  Spaced  <
 	<<<
 
-=== echo naar stderr ===
-
-- redirects mogen overal staan, b.v. in het begin maakt het heel leesbaar
-	$ >&2 echo "error"
-
 === redirect ===
 
 - zie "http://wiki.bash-hackers.org/howto/redirection_tutorial"
 
-- stdin, stdout en stder zijn respectief file descriptors 0, 1 en 2 van een door bash gesimuleerde terminal, /dev/pts/#. Met "stat" kunt ge wel de verwijzing naar die terminal zien, maar niet welke 'poort' :
+- de redirect-operators zijn '>' en '<', en worden vooraf gegaan door een file descriptor nummer (fd), en gevolgd door een fd of een bestandsnaam
+	- redirects mogen ook vooraf gegaan worden door een geldige variable-naam tss {} (en ZONDER $ voor); dan wijst de shell zelf een fd 10 of groter toe, en zet dat nr. in de variable voor later gebruik.
+		- bij sluiten van zo'n filedescriptor wordt de fd-waarde niet toegewezen aan de variabele, maar eruit gelezen **tss. {} EN ZONDER $ voor**
+		- bv. als ge 2x een soort stdin nodig hebt, 1ste voor while read, een 2de voor de opdracht in die loop, kunt ge read laten lezen uit een andere file descriptor dan stdin (optie -u):
+			$ exec {fd}<invoerbestand; while read -ru ${fd} lijn;do echo "$lijn" | grep ...; done;exec {fd}<&-
+			- exec start een nieuwe shell met opgegeven redirects en environment, of geeft, zonder shell-argument, de huidige shell de opgegeven redirects en environment
+			- 1ste exec geeft de huidige shell, en alle opdrachten die erin uitvoeren, het invoerbestand te lezen op nr. $fd
+
+	- /dev/stdin heeft fd 0, en wordt, behoudens pipes en redirects, van terminal gelezen
+		- 0 is de impliciete fd voor '<' zonder fd voor
+	- /dev/stdout heeft fd 1, en wordt, behoudens pipes en redirects, naar terminal geschreven
+		- 1 is de impliciete fd voor '>' zonder fd voor
+	- /dev/stderr heeft fd 2, en wordt, behoudens pipes en redirects, naar terminal geschreven (maar langs een andere poort dan /dev/stdout)
+
+- de & in een redirection operator betekent "duplicate", b.v. "1>&2" neemt de bestemming van 2 (stderr) over als die van 1 (stdout), zodat alles wat de opdracht naar stdout schrijft, eigenlijk op stderr terecht komt
+
+- volgorde is van belang: "2>&1" redirect van stderr naar stdout, kopiëert de bestemming van stdout als de nieuwe bestemming van stderr; daarna kan een andere redirect b.v. een nieuwe bestemming geven aan stdout, maar dat verandert niets meer aan die van stderr:
+	$ opdracht 2>&1 > /tmp/uit
+	- stderr schrijft naar de oorspronkelijke stdout, maar de nieuwe stdout-bestemming is /tmp/uit
+
+- als ge de volgorde omkeert, geeft ge eerst stdout een nieuwe bestemming, en die neemt ge over als bestemming van stderr:
+	$ opdracht > /tmp/uit 2>&1
+	- de nieuwe stdout-bestemming is /tmp/uit, en die van stderr ook
+
+- een pipe '|' is geen redirect, maar koppelt de /dev/stdout van wat er links van staat aan de /dev/stdin van wat er rechts van staat (en ontkoppelt dus beiden van de terminal)
+	- de pipe '|&' koppelt ook /dev/stderr van links aan /dev/stdin van rechts
+		- '|&' is hetzelfde als "2>&1 |"
+
+==== echo naar stderr ">&2"  "1>&2" ====
+
+- echo stuurt standaard naar stduit (fd 1). Die omleiden naar stderr (fd 2) gebeurt met de redirect operator 1>&2 ("stuur 1 mee naar 2"). Maar alle redirects '>' zonder fd voor, worden verondersteld vanuit stduit (fd 1) te gebeuren:
+	>&2 is hetzelfde als 1>&2
+
+- bij een enkelvoudige opdracht mogen redirects overal staan, b.v. in het begin maakt het heel leesbaar
+	$ 1>&2 echo "error"
+	$ echo "error" 1>&2
+	- hetzelfde geldt voor elke opdracht afzonderlijk van een samengestelde opdracht, zie volgende vb.
+
+- bij een samengestelde opdracht (pipeline, list) mag redirect enkel achteraan; b.v.
+	$ 1>&2 for n in {1..2};do echo "nummer $n"; done
+		>>> bash: syntax error near unexpected token `do' <<<
+	$ for n in {1..2};do echo "nummer $n"; ...; done 1>&2  ## alle output op stderr
+		>>>
+		nummer 1
+		nummer 2
+		<<<
+	$ for n in {1..2};do 1>&2 echo "nummer $n"; ... ; done  ## enkel echo's op stderr
+		>>>
+		nummer 1
+		nummer 2
+		<<<
+
+==== analyse van redirects ====
+
+- stdin, stdout en stder zijn respectief file descriptors 0, 1 en 2 van een door bash gesimuleerde terminal, /dev/pts/#. Met "stat" of ls -l kunt ge de verwijzing naar die terminal zien (maar niet welke 'poort') :
 	$ stat -c %N /proc/self/fd/[012]
 	>>>
 		'/proc/self/fd/0' -> '/dev/pts/6'
 		'/proc/self/fd/1' -> '/dev/pts/6'
 		'/proc/self/fd/2' -> '/dev/pts/6'
 	<<<
+	OF
+	$ ls -l /proc/self/fd/[0-2]
+	>>>
+	lrwx------ 1 dirk dirk 64 nov 17 11:29 /proc/self/fd/0 -> /dev/pts/6
+	lrwx------ 1 dirk dirk 64 nov 17 11:29 /proc/self/fd/1 -> /dev/pts/6
+	lrwx------ 1 dirk dirk 64 nov 17 11:29 /proc/self/fd/2 -> /dev/pts/6
+	<<<
 	- elke gelijktijdige bash shell heeft een ander pts-nummer
 - de redirect "2>&1" kopieert de file descriptor van 2 naar 1, zodat die beide naar dezelfde 'poort' van die terminal schrijven
-	- dit is niet zichtbaar in stat
+	- enkel poort verandert, is niet zichtbaar in stat
 		$ 2>&1 stat -c %N /proc/self/fd/[012]
 			>>>
 			'/proc/self/fd/0' -> '/dev/pts/6'
@@ -4582,6 +4921,265 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 			- 2>&3- : kopieert de fd van 3 (originele stdout) naar 2 (stderr), en sluit 3
 		- sudo -S : prompt op stderr zoals gebruikelijk, maar input van stdin i.p.v. via terminal
 
+=== trace van script tonen ===
+
+- toon elke opdracht van een script op de terminal tijdens uitvoer (cfr. displays in een C-programma):
+	$ bash -x mijnscript
+	- elke opdracht van een pipeline wordt getoond
+
+- toon elke opdracht van een sectie van script op terminal tijdens uitvoer (cfr. displays in een C-programma):
+	- in het script volgende opdrachten opnemen rond die sectie:
+		set -x
+		#sectie met display van opdrachten
+		set +x
+	- de afsluitende "set +x" wordt ook getoond
+	- set -f, set -o noglob : Disable file name generation using metacharacters (globbing).
+	- set -v, set -o verbose : Prints shell input lines as they are read.
+	- set -x, set -o xtrace : Print command traces before executing command.
+
+=== script debuggen met de bash debugger ===
+	$ bashdb mijnscript
+	- "?" voor lijst van opdrachten
+	- "help opdracht" voor hulp
+	- "q" om af te sluiten
+
+=== eigen map bepalen in het script ===
+- zie https://stackoverflow.com/questions/59895/getting-the-source-directory-of-a-bash-script-from-within :
+	zelfdir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
+=== script beperken tot root ===
+
+- een script moet niet uitvoerbaar zijn (chmod +x) om het te kunnen uitvoeren: in "bash scriptnaam" moet alleen bash uitvoerbaar zijn, en is scriptnaam gewoon een invoerbestand. Idem voor "source scriptnaam" of ". scriptnaam". Daarom moet ge soms in het script zelf testen of een root-gebruiker het uitvoert.
+
+- bash (andere shells mogelijk niet) zet de variabelen UID en EUID (effective user id); in Ubuntu zijn die readonly, dus veilig, in andere OS mogelijk niet
+
+- OPL. 1 : controle op uitvoer door roor :
+	>>>
+		if [ "$(id -u)" -ne 0 ]
+		then
+			echo 'This script must be run by root' 1>&2
+			exit 1
+		fi
+	<<<<
+	- OPM : dit is niet zomaar te testen met sudo op de commandolijn, omdat bash de $()-expansie doet voor sudo wordt aangeroepen :
+		$ id -u
+		 >>> 1000
+		$ sudo id -u
+		 >>> 0
+		$ echo $(id -u)
+		 >>> 1000
+		$ sudo echo $(id -u)
+		 >>> 1000
+		$ bash -c 'echo $(id -u)'
+		 >>> 1000
+		$ sudo bash -c 'echo $(id -u)'
+		 >>> 0
+
+- OPL. 2 : script herstart zichzelf als root
+	>>>
+		# display user, mag weg na test
+		echo "$(whoami)"
+		# als niet root, herstart als root met sudo
+		[ "$UID" -eq 0 ] || exec sudo "$0" "$@"
+	<<<
+	- zie ook sectie "redirect password naar sudo"
+
+=== loop over lijnen van tekstbestand ===
+	$ while read woord1 woord2 ... ; do echo $woord1 $woord2 ... ; done < tekst.txt
+	- OPGELET: er is maar 1 stdin, opdrachten na de 'do' die daaruit lezen, stelen die lijnen van de read-opdracht weg
+	- woord1 ... : variabelen waarin de woorden van een lijn uit tekst.txt gelezen worden; default $REPLY. The characters in IFS are used to split the line into words using the same rules the shell uses for expansion
+	- als lijn in tekst.txt meer woorden bevat dan opgegeven voor read, dan komt rest in laatste woord#
+	- andere read opties :
+		-a arrayname : woorden in array i.p.v. benoemde variabelen
+		-d delimchar : t.b.v. opsplitsen tekst.txt in lijnen, default newline
+		-r : lees backslash niet als escape (i.e. \LF is geen vervolglijn)
+		-e : (enkel interactief) gebruik readline
+		-i default : (enkel met readline) zet "default" al in input buffer, en toont die
+		-p prompt : (enkel met readline) toont prompt
+		-n ## : leest ## chars, of hele lijn als die korter is
+		-N ## : leest ## chars
+	- voorbeeld :
+	>>> flc2mp3.cfg
+		2 "doel1.mp3" "1ste bestand.flac" "2de bestand.flac" "3de bestand.flac"
+		3 "doel2.mp3" "4de bestand.flac" "5de bestand.flac"
+	<<<
+	$ while read kwal mp3 flacs ; do echo Q=$kwal ; echo MP3=$mp3 ; echo FLC=$flacs ; done < flc2mp3.cfg
+	>>>
+		Q=2
+		MP3="doel1.mp3"
+		FLC="1ste bestand.flac" "2de bestand.flac" "3de bestand.flac"
+		Q=3
+		MP3="doel2.mp3"
+		FLC="4de bestand.flac" "5de bestand.flac"
+	<<<
+
+=== menu maken met select ===
+	$ PS3="prompt voor select-menukeuze"
+	- default leeg
+	- PS3 behandelt geen escapes, dus zonder truukje geen kleuren, piepen, bold, ...
+		- truukje :
+			$ vet=$(tput smso) vetuit=$(tput rmso)
+			$ PS3="${vet}Kies${vetuit} het nummer van ... : "
+	$ select var in EINDE [value1]... ; do if [ "$var" = "EINDE" ] ; then exit; if [ -z "$var" ] ; then echo "keuze is niet geldig" else echo $var; break; fi; done
+	- toont de menukeuzes in kolommen, met een volgnr. i ervoor
+	- aantal kolommen is afh. van de variable COLUMNS, die gezet wordt in een terminal, maar niet (altijd?) bij het uitvoeren van een shellscript. Zelf zetten in het script als volgt:
+		$ [ -v COLUMNS ] || COLUMNS=$(tput cols)
+	- bij enter zonder keuze wordt het menu ververst, zonder in de do-loop te komen
+	- bij enter met iets ingetikt, wordt de keuze verwerkt in de do-loop; moeten zelf "break"-opdracht uitvoeren om de loop te beeindigen, maar select-lijst wordt niet opnieuw geprint
+		- bij enter van geldig keuzenr heeft $var de overeenkomede waarde uit de select-lijst, en $REPLY het ingetikte nummer
+		- bij enter van ongeldige waarde heeft var de waarde null, "$var" = "", en $REPLY het ingetikte
+	- EINDE is een zelfgekozen naam voor een laatste menukeuze die het afbreken wat gebruikvriendelijker maakt (anders Ctrl-C)
+	- select is een 'shell builtin command', en komt op een andere plaats dan andere commando's in de parsing van een opdrachtlijn. Daardoor kunnen de menukeuzes [value1]... enkel blanco's bevatten in de volgende gevallen :
+		- tussen ""
+		- door globbing
+	- VOORBEELDEN:
+		$ select optie in EINDE "eerste optie" "tweede optie" ...
+		- literal opties tussen "" kunnen spaties bevatten
+		OF
+		$ opties=("optie 1" "optie 2")
+		$ select optie in EINDE "${opties[@]}" ...
+		OF
+		$ select bestand in EINDE ./*.jpg ...
+		- opties t.g.v. shell globbing kunnen spaties bevatten
+		- GEEN SPATIES bij enig ander voorbeeld :
+		- voor een ononderbroken array opties ([0], [1], ...) is ook $REPLY nuttig, het gekozen volgnr. van de menukeuze
+		$ select optie in EINDE $(ls globbingpattern) ...
+		- GEEN SPATIES mogelijk:
+			- niet met $(ls -Q globbingpattern)
+				-Q, --quote-name
+			- niet met $(ls -Q --quoting-style=shell globbingpattern)
+				- met geen enkele van word=: literal, locale, shell, shell-always, shell-escape, shell-escape-always, c, escape
+			- niet met $(find ...) i.p.v. $(ls ...)
+
+=== menus maken met het dialog-commando ===
+	- volgorde van argumenten heeft zijn belang, in groepen: eerst algemene opties, dan boxopties (dan widgetopties?)
+	- let op de pipe, lijkt nodig om het menu zichtbaar te maken : " 2>&1 >/dev/tty"
+	- VOORBEELD kiezen uit inhoud van een directory
+	$ KEUZE=$(dialog --clear --fselect "/pad/[defaultkeuze]" $HEIGHT $WIDTH 2>&1 >/dev/tty)
+	- --clear : maakt het scherm leeg na keuze
+	- --fselect : keuze uit bestanden in een directory
+	- --dselect : keuze uit directories in een directory
+	- [defaultkeuze] (OPGELET: zonder eind-'/') wordt voorgeselecteerd in het menu, kan globbing wildcards bevatten, maar die bepalen NIET welke bestanden/directories getoond worden en gekozen kunnen worden
+	- KEUZE bevat wat in het invoerveld onderaan staat. Een bestands/directorynaam uit de lijst met de spatiebalk naar dat invoerveld kopiëren
+	- navigeren naar andere mappen (ook  '.' en '..') kan door ze te selectern naar het invoerveld en er een / achter te typen
+	- ook leuk: --backtitle "venstertitel" --title "menutitel"
+	- VOORBEELD kiezen uit een lijst (array of literal) van even lengte: "label1" "omschrijving1" ...
+	$ OPTIES=("label 1" "Uitleg 1" "Label 2" "Uitleg 2")
+	$ KEUZE=$(dialog --clear --menu "menuprompt" $HEIGHT $WIDTH $LIJSTHOOGTE "${OPTIES[@]}" 2>&1 >/dev/tty)
+	- KEUZE bevat het gekozen label
+
+=== menu-maatwerk met 'ls' voor lijst van bestanden of directories, en 'read' om 1 te kiezen met autocompletion ===
+	- vanwege autocompletion enkel werkbaar in de working directory waar die bestanden/directories staan
+	- zelf een loop scripten, met daarin
+		- voor bestanden:
+			$ ls -C globbingpattern
+			- -C : list entries by columns
+		- voor directories:
+			$ ls -Cd globbingpattern\
+			- -d, --directory : list directories themselves, not their contents
+		$ read -ep "mijn prompt: " var
+		- -e : doe autocompletion ("use Readline to obtain the line in an interactive shell")
+		- -p : een prompt
+		- $var bevat de ingevoerde waarde voor het menu-script
+
+=== zenity dialogen voor interactieve scripts ===
+
+- popup om meerdere bestanden of mappen te selecteren
+	- basisopdracht: zenity --file-selection --multiple --filename="$pad"/ [--separator=c]
+		--filename : initiëel geselecteerd bestand of directory, zenity opent dan op de parent directory. Maar als pad eindigt op /, is pad/ de parent directory en opent zenity dus op die directory, met niets geselecteerd.
+		--separator=c : separator character (default '|') tss. de geselecteerde bestanden
+		- zenity zet de geselecteerde bestanden gewoon op stdout, met de separator ertussen. Om ze in een array te krijgen, splitsen op de separator. B.v. met de default '|' :
+			$ IFS="|" sel=($(zenity --file-selection --multiple))
+			OF als ge zeker zijt dat er geen newlines in de bestandsnamen staat :
+			$ IFS="\n" sel=($(zenity --file-selection --multiple --separator="\n"))
+				- NIET '\n', want tss. '' worden escapes niet omgezet; evt. wel $'\n'
+			- OPM: bash command substitution $() deletes any trailing newline
+	- om alle bestandsnamen aan te kunnen, gebruiken andere programmas de (char)0x00 als separator; helaas aanvaardt zenity (v.3.28.1) wel --separator=$'\0', maar die geraakt niet tot in output (bug wschlk. veroorzaakt door ASCIIZ strings zoals in C). Als ge zeker zijt dat er b.v. geen control char 0x01 in de bestandsnamen staat: dit werk wel :
+			$ IFS=$'\1' sel=($(zenity --file-selection --multiple --separator=$'\1'))
+	- bijna oplossing: zenity blijkt altijd volledige paden vanaf root "/" te geven. Dus als we zenity '/' laten gebruiken als separator, staat er "//" aan het begin van 2de en volgende bestandsnamen. '/' is niet geldig in bestandsnamen, en in paden wordt '//' wel aanvaard in linux, maar nooit als resultaat gegeven (o.a. ook doordat namen van directories (en andere bestanden) niet "" kunnen zijn. Dus dan kunt ge met sed de '//' vervangen door $'\0/' om de bestandsnamen te splitsen op '0x00'.
+		- OPM: sed aanvaardt de (char)0x00 niet die bash er zet als ge b.v. $'s|//|\0/|g' probeert, maar sed heeft wel zijn eigen hex escape. Maar bash reclameert :
+			NIET $ IFS==$'\0' sel=($(zenity --file-selection --multiple --separator=/ --filename="$PWD"/ | sed -E 's|//|\x00/|g'))
+			>>> bash: warning: command substitution: ignored null byte in input <<<
+	- OPLOSSING: niet command substitution, maar process subsitution gebruiken: gaat via virtueel bestand, daar mag 0x00 in. Dat bestand redirecten naar "readarray -d $'\0'" (delimiter (char)0x00). OPGELET: redirect, niet pipen, want dat is readarray a.k.a. mapfile in een subprocess en gaat de resulterende array direct verloren. Let wel: process substitution verwijdert trailing newline van zenity NIET, en vanwege delimiter 0 zet readarray die newline gewoon achteraan in het laatste array element. We  moeten de trailing newline dus zelf verwijderen. Door sed de optie '-z', '--null-data' of '--zero-terminated' te geven, splits sed de input niet op newlines maar op 0-chars (die er nog niet zijn, dus is alles 1 lijn), dus kunnen we de newline achteraan zoeken en weglaten :
+		$ readarray -d $'\0' -t sel < <(zenity --file-selection --multiple --separator=/ --filename="$PWD"/ |sed -zE 's|\n$||;s|//|\x00/|g')
+		- geselecteerde bestandsnamen staan nu in array sel.
+
+=== here-document ===
+
+- gebruikt here-document (met naam HERE-DOCUMENT) om sommige bestanden te maken :
+	- begin :
+		<<naam
+		OF
+		<<-naam : alle voorlooptabs worden verwijderd (handig voor indendatie)
+		OF
+		<<'naam' : omgevingsveranderlijken in tekst here-document worden niet vervangen (anders dus WEL)
+	- gevolgd door lijnen met tekstinhoud van het document
+	- afgesloten door lijn met de naam herhaald (zonder blanks of tabs voor noch na):
+		naam
+	- als naam, noch om het even welke letters ervan, niet tussen '' of "" staat, dan gebeuren in het hele here-document parameter expansion, command substitution, en arithmetic expansion, the character sequence \<newline> is ignored, and \ must be used to quote the characters \, $, and `. Als naam tussen quotes staat, niet; naam zelf ondergaat dan wel quote removal
+
+- voorbeeld van here-document met de naam "HERE-DOCUMENT", met pipe naar bestand :
+	cat <<-einde_heredoc > doelbestand
+		een lijn
+		en nog een
+		...
+		laatste lijn is die waarna de naam "HERE-DOCUMENT" herhaald wordt
+	einde_heredoc
+
+==== block comment in shell script ====
+
+- linux shells kennen meestal alleen lijn-commentaar, met '#' als commentaarteken; formattering van lijncommentaar wordt door b.v. geany niet ondersteund, enkel fold/unfold van opeenvolgende lijnen die met # beginnen. Met een here-document is hieraan te verhelpen, b.v. :
+	: <<'BLOCKCOM'
+		dit is vrije tekst
+BLOCKCOM
+	- man bash
+	>>> : [arguments] : No effect; the command does nothing beyond expanding arguments and performing any specified redirections. A zero exit code is returned.	<<<
+	- 'BLOCKCOM', om geen $-expansies e.d. te doen in de commentaar; b.v. voorbeelden van command substitution zouden neveneffecten hebben.
+	- de ":" en de tekst mogen vrij inspringen, de afsluitende marker (b.v. BLOCKCOM) moet wel op kolom 0 staan (tenzij de redirectoperator "<<-" is i.p.v. "<<" is)
+	- andere toegelaten here-doc namen zijn b.v. '#', '##', '_', '/**' (helaas dan ook afsluiten met /**, niet met */)
+
+- hightech help-display :
+	- gebruik evt. de redirectoperator "<<-" is i.p.v. "<<", om voorloop-tabs te verwijderen als die geen betekenis hebben (alleen dienen om het script zelf leesbaar te maken)
+	- redirect naar een if-statement i.p.v. naar de dummy opdracht ":"
+	- voorbeeld:
+		if [[ "-h" = "$1" || "--help" = "$1" ]]
+		then cat;exit
+		else :
+		fi <<-'_'
+			dit is helptekst
+		_
+		OF compact maar onleesbaar
+		{ [[ "-h" = "$1" || "--help" = "$1" ]] && { cat;exit; } || :; } <<-'_'
+			dit is helptekst
+		_
+
+	- cat is eerste commando dat stdin leest, en leest hem helemaal leeg, zodat exit niets meer krijgt
+	- ':' is gewoon het kortste en snelste (bash built-in) commando dat niets doet; het maakt dus ook stdin niet leeg, maar daar is geen 1 simpel commando voor.
+
+=== bestanden sparse concateneren ===
+
+0 gewoon concateneren gebeurt in linux met cat en redirect (en niet zoals in dos met copy):
+	$ cat bestand1 bestand2 > bestand1+2
+	- bestand1+2 is nooit sparse, zelfs als 1 en 2 dat wel zijn
+
+0 in principe kunt ge dat met 2 keer dd doen, met "oflag=append,notruncate conv=sparse bs=$schijfsysteemblocksize", (sparse gebeurt per output block size), maar
+	- BUG: kopieert een staart van zeroes niet mee
+	- BUG: de 2de dd blijkt (altijd?) bij het begin van het 2de deel bytewaarden te veranderen!!
+
+- WERKT WEL: pipe van cat naar copy van file descriptor 0, vb.:
+	$ ll -s *
+		>>>
+		21636 -rw-rw-r-- 1 dirk dirk 4294967296 mrt 25 23:21 bestand1
+			0 -rw-rw-r-- 1 dirk dirk      36864 mrt 25 23:21 bestand2
+		<<<
+	$ cat bestand1 bestand2 | cp --sparse=always /proc/self/fd/0 bestand1+2
+	$ ll -s *
+		>>>
+		21272 -rw------- 1 dirk dirk 4295004160 mrt 25 23:23 bestand1+2
+			0 -rw-rw-r-- 1 dirk dirk      36864 mrt 25 23:21 bestand1
+		21636 -rw-rw-r-- 1 dirk dirk 4294967296 mrt 25 23:21 bestand2
+	<<<
+
 === $IFS nakijken ===
 
 - IFS bevat meestal controle-characters, niet te zien met echo $IFS, daarom
@@ -4661,6 +5259,49 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 				- toewijzing aan IFS blijft daar
 				- NIET IFS tijdelijke waarde geven door assignment vooraan opdracht: zie sectie "IFS tijdelijke waarde"
 				- array assignments mogen over meer dan 1 lijn gebeuren, t.e.m. afsluitende ')'
+
+=== random nummers genereren ===
+
+- beperkt bereik: bast variabele $RANDOM: random integer between 0 and 32767
+
+- groot bereik:
+	>>>
+	/dev/random, /dev/urandom and /dev/arandom are special files that serve as pseudorandom number generators. They allow access to environmental noise collected from device drivers and other sources.
+	- /dev/random typically blocks if there is less entropy available than requested;
+	- /dev/urandom typically never blocks, even if the pseudorandom number generator seed was not fully initialized with entropy since boot.
+	- /dev/arandom blocks after boot until the seed has been securely initialized with enough entropy, and then never blocks again.
+	<<<
+	- b.v.
+	$ dd if=/dev/urandom count=12 bs=8 2>/dev/null | od -vt x8 -w8 -A n
+		- od : octal dump
+			-v, --output-duplicates : do not use * to mark line suppression
+			-t x8 : --format=TYPE[SIZE], x hexadcimaal, 8 bytes per integer
+			-w8 : 8 bytes per lijn
+			-A n : geen radix voor address, betekent ineens geen adres (maar wel nog de spatie voorzien tussen adres en dump)
+	>>> OPM: heeft voorloop-spatie
+	 056ebc59d8333376
+	 5970a74cc2d5c2fc
+	 d3c1326625a74b65
+	 41e49b06dda0146f
+	 d85ba0c49bde545b
+	 9eab58b106cd0ce1
+	 c6dedafc1b53c912
+	 891dc2756ae7385a
+	 489713e2fa85556f
+	 08308483cfadfd51
+	 453f5d6f9aa8d78e
+	 a4553731d7e1140c
+	<<<
+
+- OPGELET met sorteren. Als ge b.v. enkel unieke nummers wilt, en ze zijn in hex formaat, dan NIET 'numeriek' sorteren die sort stopt op 1ste hex letter en bepaalt van dat stukje de uniciteit
+	- b.v. met UUIDs, gesorteerd in array en uniek gemaakt:
+		$ unset rnds;rnds=($(for (( i=0 ; i < 1000 ; ++i ));do uuidgen;done | sort -u)); echo  "${#rnds[@]}" = "${rnds[@]}"
+
+=== shell script afdrukken zonder commentaar ===
+- pijp het hele script naar bash in de body van een functie, en gebruik de bash builtin "type" om het mooi geformateerd en zonder commentaar te tonen; tail en head verwijderen de functie-enveloppe terug;
+	$ echo "f() { $(< ~/Documents/shellscripts/avidemux2ffmpeg.sh); }; type f;" | bash | tail -n +4 | head -n -1
+	OF
+	$ { echo "f() {"; cat ~/Documents/shellscripts/avidemux2ffmpeg.sh; echo "}; type f;"; } | bash | tail -n +4 | head -n -1
 
 == PROGRAMMEREN ==
 
@@ -4769,11 +5410,11 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 - "apt[-get] update" installeert niets, werkt alleen de database bij van wat beschikbaar is in de repositories
 
 - dikwijls vindt ge commando's zoals
-	0 sudo apt update && apt-install ...
+	0 sudo apt update && apt-get install ...
  maar soms geeft update belangwekkende waarschuwingen (met of zonder foutcode?) die ge eerst wilt oplossen. Dikwijls moet ge daarvoor gewoon update een 2de keer uitvoeren. Dus :
 	# apt update
 	[# apt update]
-	# apt-install ...
+	# apt-get install ...
 
 ==== info van package ====
 
@@ -5151,29 +5792,32 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 == ONDERHOUD ==
 
 === upgraden (binnen zelfde release) ===
-	- BELANGRIJK : ofwel alle bootschijven aansluiten, ofwel reservekopie /boot/grub/grub.cfg, want die wordt bijgewerkt
+
+- apt-get update, upgrade en dist-upgrade worden gestuurd door de keuzes in launcher 'Settings/Software & Updates' (Configure the sources for installable software and updates)
+	# spawn software-properties-gtk
+
+- upgrade is soms nodig vooraleer packages succesvol nieuw bij te kunnen installeren, b.v. mysql zou hier al eens gevoelig aan zijn
+
+- "apt-get upgrade" installeert nieuwste versie van packages voor huidige release, inclusief hele point release upgrade, b.v. van 16.04 naar 16.04.1
+	- BELANGRIJK : installeert ook nieuwe kernelversie, en wijzigt daarom /boot/grub/grub.cfg; ofwel submenus voor alle bootschijven configureren in /etc/grub.d. ofwel alle bootschijven aansluiten zodat makegrub die ziet, ofwel reservekopie maken en van daaruit secties voor niet-aangesloten bootschijven terug kopiëren naar nieuwe grub.cfg
+	- OPM: kunt ge geen packages voor opgeven (geeft geen fout, maar negeert dat gewoon)
+		- de GUI update manager (launcher 'Settings/Software updater') toont welke upgrades beschikbaar zijn, en laat toe om daaruit te kiezen wat wel/niet bijgewerkt moet worden
+		- met de hand kunt ge zien of er voor een package een nieuwe versie is:
+			$ apt-cache policy packagenaam
+		en dan enkel dat package "upgraden" met
+			# apt-get install packagenaam
 	- Alvorens bij te werken vanop de command line, eerst
-	# apt-get update
-		- herhalen bij foutboodschappen is dikwijls genoeg als oplossing
-	# apt-get upgrade
-	- NADIEN : indien nodig secties voor niet-aangesloten bootschijven terughalen uit reservekopie /boot/grub/grub.cfg
-
-- OPM de GUI update manager (launcher 'Settings/Software updater') laat toe om te kiezen wat wel/niet bijgewerkt moet worden
-
-- apt-get update en apt-get upgrade worden gestuurd door de keuzes in launcher 'Settings/Software & Updates' (Configure the sources for installable software and updates)
-	# software-properties-gtk
-
-=== point release upgrade, b.v. van 16.04 naar 16.04.1 ===
-
-- als dat niet al vanzelf gebeurd is
-
-	# apt-get update
-	# apt-get upgrade
-	- 'apt-get upgrade' vernieuwt alleen geïnstalleerde packages. Als de afhankelijkheden van geïnstalleerde software veranderd zijn, kunnen er nieuwe packages nodig zijn, of geïnstalleerde packages overbodig (boodschap 'packages held back' bij apt-get upgrade), kunnen die met apt-get dist-upgrade bijgewerkt (of verwijderd) worden:
 		# apt-get update
-		# apt-get dist-upgrade
+			- herhalen bij foutboodschappen is dikwijls genoeg als oplossing
+	- Dan pas
+		# apt-get [--with-new-pkgs] [--auto-remove] upgrade
+			[--with-new-pkgs] : om ook de nieuwe packages te installeren nodig om de kept-back packages te upgraden
+			[--auto-remove] : verwijder direct overbodige packages
 			[-y, --yes, --assume-yes] : Automatic yes to prompts
-			- gebruikt packages binnen dezelfde releasenaam (b.v. xenial), want zo is dat geconfigureerd in /etc/apt/sources.list; doet dus geen upgrade naar andere releasenaam zonder die naam te veranderen in /etc/apt/sources.list (zie sectie "release upgrade, b.v. van 16.04.x naaar 18.04.x"
+			- OPM: boodschap "The following packages have been kept back" :  'apt-get upgrade' vernieuwt alleen geïnstalleerde packages. Als de afhankelijkheden van geïnstalleerde software veranderd zijn, kunnen er nieuwe packages nodig zijn (boodschap 'packages held back' bij apt-get upgrade), of geïnstalleerde packages overbodig
+		- als --with-new-packages niet voldoende is, met de nodige voorzorgen:
+			# apt-get dist-upgrade
+				- gebruikt packages binnen dezelfde releasenaam (b.v. xenial), want zo is dat geconfigureerd in /etc/apt/sources.list; doet dus geen upgrade naar andere releasenaam zonder die naam te veranderen in /etc/apt/sources.list (zie sectie "release upgrade, b.v. van 16.04.x naaar 18.04.x"
 	>>>https://askubuntu.com/questions/81585/what-is-dist-upgrade-and-why-does-it-upgrade-more-than-upgrade
 		apt-get upgrade is restricted to the case where packages are to be replaced by newer versions, but no package needs to be added or removed. A new version of Firefox, for instance, should be installable with apt-get upgrade.
 		However apt-get upgrade will refuse to work when there are additions or removals required by the updated versions. For example, when you have kernel linux-image-3.2.0-10-generic installed and linux-image-3.2.0-11-generic appears, the linux-image-generic package gets updated to depend on the newer version. In order to install the new kernel, you need to run apt-get dist-upgrade.
@@ -5190,7 +5834,9 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 			full-upgrade performs the function of upgrade but may also remove installed packages if that is required in order to resolve a package conflict.
 	<<<
 
-=== release upgrade, b.v. van 16.04.x naaar 18.04.x ===
+=== release upgrade, b.v. van 16.04.x naar 18.04.x ===
+
+- The command apt-get dist-upgrade will not automatically upgrade you from one release to another unless you have also updated your sources (/etc/apt/sources.list) to point at a newer release.
 
 - "Dirty" upgrades, from one release to another, don't always go as planned :
 	- Back up your current system.
@@ -5271,7 +5917,7 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 - als ge weet naar welke paden het progr. installeert, kunt ge die op voorhand vervangen door links naar de gewenste installatiedirectory
 	- b.v. FlighGear zet gigabytes databestanden in /usr/share/games/flightgear/
 
-- veel programmas zijn te krijgen in een portable formaat, b.v. appimage, snap, flatpack. Die kopiëert ge gewoon waar ge wilt, b.v. mijn SDATA/.stacks
+- veel programmas zijn te krijgen in een portable formaat appimage. Die kopiëert ge gewoon waar ge wilt, b.v. mijn SDATA/.stacks/. Alternatieven zijn snap, sterk geïntegreerd in Ubuntu en verspreid over heel de directory-structuur, en flatpack, minder goed geïntegreerd maar even zeer verspreid.
 	- zie sectie "appimage"
 	- zie sectie "flatpak"
 	- zie sectie "snap"
@@ -5318,12 +5964,16 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 	- mount zichzelf bij uitvoering op een zelf gemaakte /tmp/.mount???, en start daar ./AppRun met alle parameters van de opdrachtlijn. Daar zijn b.v. ook een .desktop en een icon te vinden, om b.v. zelf een menu-item mee te maken in de desktop-omgeving
 	- als AppRun een shellscript is i.p.v. een binary, is het gebruikelijk dat die met grep in de Exec=-lijn van ./???.desktop het uit te voeren programma + default-parameters opzoekt.
 
-- portable gebruik: if you invoke an AppImage built with a recent (2017 en later) version of AppImageKit and have one of the following special directories in place, then the configuration files will be stored alongside the AppImage. This can be useful for portable use cases, e.g., carrying an AppImage on a USB stick, along with its data.
-	- If there is a directory with the same name as the AppImage plus .config, then $XDG_CONFIG_HOME will automatically be set to it before executing the payload application
-		- naam van bestand, niet van de symlink die ernaar verwijst.
-	- If there is a directory with the same name as the AppImage plus .home, then $HOME will automatically be set to it before executing the payload application
-		- naam van bestand, niet van de symlink die ernaar verwijst.
-		- ook voor b.v. ~/.cache)
+- portable gebruik:
+	$ for ai in *.AppImage;do [ -L "$ai" ] || mkdir $(realpath "$ai").{config,home};done
+		- zoek naam van fysiek AppImage bestand, niet van de symlink die ernaar verwijst, en maak directories $naam.AppImage.config en $naam.AppImage.home
+	>>>
+		if you invoke an AppImage built with a recent (2017 en later) version of AppImageKit and have one of the following special directories in place, then the configuration files will be stored alongside the AppImage. This can be useful for portable use cases, e.g., carrying an AppImage on a USB stick, along with its data.
+		- If there is a directory with the same name as the AppImage plus .config, then $XDG_CONFIG_HOME will automatically be set to it before executing the payload application
+		- If there is a directory with the same name as the AppImage plus .home, then $HOME will automatically be set to it before executing the payload application
+	<<<
+		- $HOME ook voor b.v. ~/.cache)
+		- OPM: appimages kunnen ook o.a. systeembrowser aanroepen, b.v. vanuit about, maar dan krijgt ge in uw AppImage.home/ een heel firefox profiel met o.a. ./.mozilla/ en ./.cache/mozilla/
 	- om toch in b.v. desktop-bestanden een generieke naam te gebruiken, b.v. zim.appimage i.p.v. zim-9.0.99-gclib-7.d.-x86-64a.appimge :
 		- hernoem de gedownloade appimage
 		OF
@@ -5331,20 +5981,27 @@ exec can be used, if, for instance, you want to log the errors the commands in y
 		OF
 		- zet er een symlink naar, en maak bovengenoemde directories met de volledige naam
 		OF
-		- zet er een symlink naar, en maak bovengenoemde directories met de eenvoudige naam, en symlinks daaarnaar met de volledige naam
-	- werkt NOG NIET voor
-		- Audacity-2.1.2.glibc2.15-x86_64
-		- avidemux_2.7.6
-		- FBReader-0.99.4.glibc2.14-x86_64
-		? FlightGear-2020.2.1-x86_64 : te testen
+		- zet er een symlink naar, en maak bovengenoemde directories met de eenvoudige naam, en symlinks daarnaar met de volledige naam
+	- werkt NOG NIET voor (mogelijk wel met zelf herpakken in squashfs)
+		- Audacity-2.1.2.glibc2.15-x86_64 : Type 1 (iso), met binary AppRun
+		- FBReader-0.99.4.glibc2.14-x86_64 : Type 1 (iso), met binary AppRun
 	- WERKT voor
 		- AppImageKit/pkg2appimage-1793-x86_64
+		- audacity 3.1.2
+		- avidemux : eigen of herverpakte appimages (niet officiele 2.7.6, is nog Type 1: iso)
 		- Mapton-2.0.1-x86_64
+		- slowmoUI-0.6-x86_64.AppImage
 		- Stellarium-0.19.1-x86_64
 		- waterfox-classic-2020.09-90.1.Build90.5.glibc2.17-x86_64
+		- Zettlr-1.7.5-x86_64
+			- opent links in browser, firefox maakt dan profiel in fake Zetrl*.AppImage.home/.mozilla/ en Zetrl*.AppImage.home/.cache/mozilla/
+				- ofwel die vervangen door symlinks naar echte $HOME/...
+				- ofwel gewoon geen *.AppImage.home en conf, want we maken tenslotte gewoon documenten die in backup-proc moeten
+				- ofwel zie (https://github.com/darealshinji/AppImageKit-checkrt/issues/3#issuecomment-345523909)
 		- Zim_Desktop_Wiki-0.67.glibc2.15-x86_64
 		- Zoom-5.3.469451.0927.glibc2.17-x86_64
 	- NIET GETEST voor
+		? FlightGear-2020.2.1-x86_64 : te testen
 		- eigen LibreOffice 6.4, want ik wil juist wel mijn $HOME gebruiken
 
 ===== appimage zelf mounten ===
@@ -5474,30 +6131,33 @@ OF
 
 ==== flatpak ====
 
-- distributie-onafhankelijk app distributieformaat van Fedora (Red Hat)
-	- toepassingen worden verpakt met alle nodige bibliotheken
-		- niet opgesloten in een grote exe, zoals AppImage, die gemount wordt, maar in gewone directories op een afzonderlijke plaats
-	- draait in een zandbak, die naar believen (van gebruiker of toepassing) toegang kan krijgen tot de pc (directories, geluid, webcam, ...)
+- in vergelijking met appimage neemt flatpak GIGANTISCH VEEL SCHIJFRUIMTE in
+	- package flatpak moet vooraf geïnstalleerd worden (~10MB)
+	- b.v. Audacity appimage is 20MB, Audacity flatpak (als enige flatpak) zet 2,2GB op de schijf
+	- elke toepassing heeft een runtime nodig, die zowat overeenkomt met een virtual machine (zonder de virtualisatie-technieken) of een docker; meerdere toepassingen/versies kunnen in principe dezelfde runtime gebruiken, maar dat zal wel de uitzondering zijn
 
-- directory-structuur flatpaks :
-	- default flatpak-map is (met optie --system, default, voor alle users) : /var/lib/flatpak
-	- persoonlijke flatpak-map is (met optie --user, persoonlijk) : ~/.local/share/flatpak
-	- custom flatpak-map is (met optie --installation=customnaam) : "Path" in /etc/flatpak/installation.d/customnaam.conf
-	- per flatpak-map :
-		├── repo : gegevens over repositories, en een cache voor lopende installaties
-		├── runtime
-		│   └── [per runtime bibliotheek die voor meerdere toep. dient]
-		├── app
-		│   └── [per flatpak toepassing]
-		└── exports
-			└── share
-				├── applications
-				├── dbus-1
-				└── icons
-	- persoonlijke gegevens per flatpak (ongeacht flatpak-map)
-		~/.var/ : per user, zowel voor flatpaks geinstalleerd met --system als met --user
-		└── app
-			└── [ per toepassing, data directory which persists over app upgrades]
+- distributie-onafhankelijk app distributieformaat van Fedora (Red Hat)
+	- draait in een zandbak, die naar believen (van gebruiker of toepassing) toegang kan krijgen tot de pc (directories, geluid, webcam, ...)
+	- toepassingen worden verpakt met alle nodige bibliotheken
+	- niet opgesloten in een grote exe, zoals AppImage, die gemount wordt, maar in gewone directories :
+		- default flatpak-map is (met optie --system, default, voor alle users) : /var/lib/flatpak
+		- persoonlijke flatpak-map is (met optie --user, persoonlijk) : ~/.local/share/flatpak
+		- custom flatpak-map is (met optie --installation=customnaam) : "Path" in /etc/flatpak/installation.d/customnaam.conf
+		- per flatpak-map :
+			├── repo : gegevens over repositories, en een cache voor lopende installaties (repo flathub zet zo 1GB op de schijf)
+			├── runtime
+			│   └── [per runtime bibliotheek die voor meerdere toep. dient]
+			├── app
+			│   └── [per flatpak toepassing]
+			└── exports
+				└── share
+					├── applications
+					├── dbus-1
+					└── icons
+		- persoonlijke gegevens per flatpak (ongeacht flatpak-map)
+			~/.var/ : per user, zowel voor flatpaks geinstalleerd met --system als met --user
+			└── app
+				└── [ per toepassing, data directory which persists over app upgrades]
 
 - backup nemen van een flatpak : gewoon de directories uit [flatpakmap]/app,  [flatpakmap]/runtime en ~/.var/app kopiëren
 
@@ -5770,11 +6430,13 @@ OPM: misschien kan het probleem omzeild worden door een alternatieve repository 
 
 === execute-toelating intrekken van directory tree die uit Windows gekopiëerd werd ===
 
-- Blijkbaar krijgen alle bestanden dat van een Windows-pc overkomt (?unzip, kopiëren van NTFS-schijf of via netwerk?) execute-toelating voor all. Is niet alleen gevaarlijk, ook vervelend voor inkleuring van 'ls' opdracht (kleur voor executable heeft voorrang). Die toelating kan ingetrokken met
-	0 chmod -R a-x
+- Blijkbaar krijgen alle bestanden dat van een Windows-pc overkomen (?unzip, kopiëren van NTFS-schijf of via netwerk?) write- en execute-toelating voor all. Is niet alleen gevaarlijk, ook vervelend voor inkleuring van 'ls' opdracht (kleur voor executable heeft voorrang). Die toelating kan ingetrokken met
+	0 chmod -R o-w,a-x,a+X
 	-R : recursief
-maar dan verliezen ook alle directories die toelating, die daar iets anders betekent: bladeren toegelaten. En dan kan de uitvoerende gebruiker niet meer in de directory om de execute-flag van de bestanden erin in te trekken. Moet daarom met sudo, die blijft overal aan kunnen, en dan kan ineens de owner goed ingesteld worden (want soms kopiëert root zo'n tree, en is dan owner). Na intrekken (-x), terug toelaten voor directories alleen met chmod -X (HOOFDLETTER X)
-	#  for i in tree1 tree2 ;  do echo $i ; chown -R dirk:dirk $i ; chmod -R a-x,o-w $i ; chmod -R a+X $i ; done
+	- o-w: niet writable voor other
+	- a-x: niet executable voor all (of u=user, g=group, o=other)
+		- OPM: voor directory betekend niet-executable eigenlijk dat ge er niet inkunt; daarom herstellen met +X als volgt:
+	- a+X: directories wel executable voor all (opm.: +X op bestanden die voor niemand x-toelating hebben is een no-op, maar als ze voor u, g of o al een x-toelating hebben, geeft +X ze ook een x-toelating voor de gevraagde groep, hier all)
 
 === user toevoegen aan groep ===
 	$ sudo usermod -aG groepnaam usernaam
@@ -6102,7 +6764,7 @@ maar dan verliezen ook alle directories die toelating, die daar iets anders bete
 		<<<
 		- deels geautomatiseerd:
 			# doelfs=IN TE VULLEN
-			# bootfs=$(grep 'search.fs_uuid' /boot/efi/EFI/ubuntu/grub.cfg | sed -E 's%.* ([-a-z0-9]{36,36}) .*%\1%')
+			# bootfs=$(sudo sed -nE '/.*search.fs_uuid/s/.* ([-a-z0-9]{36,36}) .*/\1/p' /boot/efi/EFI/ubuntu/grub.cfg)
 			# for b in "$doel"/boot/{grub,efi/EFI/ubuntu}/grub.cfg;do echo -e "$b\n${b//?/=}"; sed -Ei=rsync~ "s%$bootfs%$doelfs%g" "$b";done
 			- NIET VERGETEN: doel/etc/fstab aanpassen om zeker de doelpartitie te mounten op '/', en andere aanpassingen
 			- na het opstarten van de doelschijf grubconfiguratie vervolledigen, of beter nog vooraf na een chroot (maar die ken ik niet goed genoeg) :

@@ -1,6 +1,8 @@
 = TeX-LaTeX know-how =
 :description: vergeetachtige weetjes over Tex en LaTex, begonnen als samenvatting van "A guide to LaTeX Document preparation for beginners and advanced users ~ Kopka H, Daly PW (ed.4 2003).pdf"
 
+- https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/[AsciiDoc syntax]
+
 = LaTeX =
 
 == andere docs ===
@@ -122,7 +124,7 @@ OF
 			[naam] == [naam=true], anders [naam=false]
 		- meerdere waarden tss. {} :
 			[naam={waarde1,waarde2}]
-			
+
 === environment ===
 
 - met naam : (moet vooraf gedefiniëerd zijn)
@@ -169,7 +171,7 @@ OF
 		\fnsymbol{mijnteller} : print the counter as footnote symbols * † ‡ § ¶ ∥ ∗∗ †† ‡‡ spatie ...
 
 - tellers eigen aan LaTeX :
-	- For document structure 	
+	- For document structure
 		part
 		chapter
 		section
@@ -177,15 +179,15 @@ OF
 		subsubsection
 		paragraph
 		subparagraph
-		page 
-	- For floats 	
+		page
+	- For floats
 		equation
 		figure
-		table 
-	- For footnotes 
+		table
+	- For footnotes
 		footnote
-		mpfootnote 
-	- For the enumerate environment 
+		mpfootnote
+	- For the enumerate environment
 		enumi
 		enumii
 		enumiii
@@ -243,7 +245,7 @@ OF
 		rechtsklikken op bestand in bestandenlijst, "set as explicit root"
 
 == semantische delen ==
-		
+
 === documentclass ===
 
 - documentatie standard documentclasses (article, book, report, etc) :
@@ -259,7 +261,7 @@ OF
 	- sommige packages gebruiken intern zelfs alleen het laatste cijfer (0, 1, 2)
 	- andere fontsizes met de [scale=x.xx] optie van het fontpackage, b.v. :
 		\usepackage[scale=.95]{merriweather}
-		
+
 ==== opties ====
 
 - Als de documentatie niet voldoet, kijk in de broncode. Om b.v. alle opties en hun werking te kennen, zoek "\DeclareOption", b.v. :
@@ -368,10 +370,10 @@ Andere delen :
 			- lot : list of tables
 		- {secname} : chapter, section, ..., bepaalt de opmaak
 		- {entry text} : kan b.v. ook \newpage-opdracht bevatten
-	
+
 ==== nummering ====
 
-- elke onderverdeling van een level, tot op level \secnumdepth, wordt genummerd, en terug op 0 gezet bij nieuwe onderverdeling van hoger level. Defaults: 
+- elke onderverdeling van een level, tot op level \secnumdepth, wordt genummerd, en terug op 0 gezet bij nieuwe onderverdeling van hoger level. Defaults:
 	\setcounter{secnumdepth}{2} : book  en report
 	\setcounter{secnumdepth}{3} : article
 - *-vorm : elke onderverdeling (uitg. \part) heeft een *-vorm, waarmee die onderverdeling niet genummerd wordt, en niet in de inhoudstafel komt, b.v.
@@ -441,7 +443,7 @@ Andere delen :
 	- niveaulabels \labelitemi , \labelitemii , \labelitemiii , \labelitemiv herdefiniëren als b.v. :
 		\renewcommand{\labelitemiii}{+}
 		- in preamble of in environment
-		
+
 - genummerde lijst
 	\begin{enumerate}
 		\item tekst
@@ -450,13 +452,13 @@ Andere delen :
 	- niveaulabels \labelenumi , \labelenumii , \labelenumiii , \labelenumiv herdefiniëren als b.v. :
 		\renewcommand{\labelenumii}{\Alph{enumi}.\arabic{enumii}}
 		- in preamble of in environment
-		
+
 - definitie-lijst, label voor list items is de term in vet, geen andere item labels
 	\begin{description}
 		\item[term] tekst
 		...
 	\end{description}
-		
+
 - expliciete labels als optie, werken niet door in volgende items :
 	\item[+]
 	\item[2.1:]
@@ -558,7 +560,7 @@ Andere delen :
 		- {table} komt bovenaan blad, indien mogelijk (geen andere {table}, hoofdstukkop o.i.d. dat voorrang heeft), anders onderaan of bovenaan volgend blad.
 		- rest van de tekst wordt onder of boven {table} geschikt in overblijvende ruimte.
 	- andere parameters : zie sectie "figuren"
-	
+
 === genummerde benoemde tekstblokken ===
 
 - EERST nieuwe soort tekstblokken definiëren :
@@ -654,7 +656,7 @@ Andere delen :
 
 - LaTeX laat elke paragrafen behalve de 1ste inspringen; 1ste ook laten inspringen :
 	\usepackage{indentfirst}
-	
+
 === interlinies ===
 
 - 1 nieuwe lijn in broncode is spatie, 2 of meer (d.w.z. 1 of meer lege lijnen) beginnen een nieuwe paragraaf
@@ -706,7 +708,7 @@ Andere delen :
 	\cleardoublepage : desnoods lege 2de blz. met documentclass[twoside]
 
 - tekstblok op blz. een klein beetje hoger maken om nieuwe blz. te vermijden (enkel voor deze blz.)
-	\enlargethispage{size} 
+	\enlargethispage{size}
 	\enlargethispage*{size} : verkleint evt. ook interlinie een beetje
 
 === aanduiding paragraaf ===
@@ -896,7 +898,7 @@ Andere delen :
 		- OPM: \i en \j zijn commando's, eten dus spaties erna op, tenzij het commando gevolgd wordt door {}
 
 - met UTF-8 kunnen de gebruikelijke letters met accent gewoon als tekst ingevoerd worden
-	
+
 === ligatuur ===
 
 - ff, fi, ffl, ffi : zonder ligatuur uitvoeren door `\/` met ertussen
@@ -937,7 +939,7 @@ Andere delen :
 		\boldmath tekst\unboldmath
 			- both declarations must be made outside of math mode
 	- under NFSS : (\unboldmath and \boldmath are defined in terms of this command)
-		\mathversion{versionname} , met versionname == [normal|bold] 
+		\mathversion{versionname} , met versionname == [normal|bold]
 	- mathematical alphabet commands wihin math mode :
 		\mathrm{tekst}
 		\mathcal{tekst}
@@ -981,7 +983,7 @@ Andere delen :
 		\fontsize{size}{linespacing} : linespacing = \baselineskip
 		- zie sectie "relatieve tekstgrootte"
 	- encoding : vooral in fontpackages zelf gebruikt
-		\fontencoding{encode} 
+		\fontencoding{encode}
 	\normalfont zet alles behalve grootte terug gewoon
 		- hangt af van \encodingdefault \shapedefault \familydefault \seriesdefault
 	- fontkeuze met parameters ingesteld zoals hierboven :
@@ -1047,7 +1049,7 @@ Andere delen :
 	\usepackage[scaled=0.90]{helvet}
 		- sansserif-font dat tufte gebruikt, geschaald naar zelfde grootte (lijkt mij groter) als mathpazo
 	\usepackage[oldstylenums,light]{kpfonts}
-		- erg volledige familie (qua stijlen) light: display not very good, but print is fine 
+		- erg volledige familie (qua stijlen) light: display not very good, but print is fine
 	\usepackage{libertine}
 		- vollere letters, wel dicht op een, waardoor zijnootnummers te dicht bij hoge letters (net zoals bij default font)
 *	\usepackage{librebaskerville}
@@ -1072,10 +1074,10 @@ Andere delen :
 		- To activate Merriweather without MerriweatherSans :
 			\usepackage[rm]{merriweather}
 		- to activate MerriweatherSans without Merriweather :
-			\usepackage[sf]{merriweather} 
+			\usepackage[sf]{merriweather}
 		- To use MerriweatherSans as the main text font :
 			\usepackage[sfdefault]{merriweather}
-			- This re-defines \familydefault, not \rmdefault. 
+			- This re-defines \familydefault, not \rmdefault.
 	\usepackage[default]{opensans}
 		- ziet er nogal druk en springerig uit
 	\usepackage{paratype}
@@ -1233,9 +1235,9 @@ Andere delen :
 
 - alternatieven :
 	- package fancybox
-		- o.a. \shadowbox{text}, \doublebox{text}, \ovalbox{text}, \Ovalbox{text} 
+		- o.a. \shadowbox{text}, \doublebox{text}, \ovalbox{text}, \Ovalbox{text}
 	- package tcolorbox
-	
+
 === rule boxes ===
 
 \rule[lift]{width}{height}
@@ -1339,7 +1341,7 @@ Andere delen :
 	- zie ook package eqnarray, definieert env. equationarray voor moeilijkere layouts
 
 - inline formules
-	\begin{math}formula text\end{math} 
+	\begin{math}formula text\end{math}
 	OF (korter)
 	\(formula text\)
 	OF (TeX opdracht)
@@ -1354,7 +1356,7 @@ Andere delen :
 	>>>
 		\parbox{10cm}{\begin{eqnarray*} ... \end{eqnarray*}} \hfill
 		\parbox{1cm}{\begin{eqnarray}\end{eqnarray}}
-		
+
 		actual equations in unnumbered {eqnarray*} in a vbox, followed by an empty {eqnarray} in a vbox of 1cm wide that generates the equation number. Both boxes are vertically aligned along their center lines.
 	<<<
 	- zie ook \boxed (package amsmath) (OPM : verwijdert \\ newline)
@@ -1371,10 +1373,10 @@ Andere delen :
 		- OPM : daarenboven wordt superscript in b.v. noemer van \frac iets lager geprint dan in teller
 	\scriptscriptstyle
 		- default voor later sub-, superscripts; kleiner maakt LaTeX het niet uit zichzelf
-	
+
 - om vlot zelf grootte te kunnen kiezen, b.v.
 	\newcommand{\DS}{\displaystyle}\newcommand{\TS}{\textstyle} ...
-	
+
 === math fontstijl ===
 
 - in math mode worden
@@ -1407,7 +1409,7 @@ Andere delen :
 			\newcommand{\me}{\mathrm{e}} : for math e
 			\newcommand{\mi}{\mathrm{i}} : for math i
 			\newcommand{\dif}{\mathrm{d}} : for differential operator d
-			- geen oplossing voor π, maar die ziet er sowieso niet als variable uit 
+			- geen oplossing voor π, maar die ziet er sowieso niet als variable uit
 		5. Number plus dimension : upright, as indivisible unit with smal space \, (is non-breaking) between them
 		<<<
 
@@ -1446,7 +1448,7 @@ Andere delen :
 		\mathit : text-like italic math font, i.e. spacing/kerning zoals normale italic text
 		\mathnormal : math italic font style (b.v. geen kerning zoals in \mathit)
 			>>> https://tex.stackexchange.com/a/58108
-			difference between math italics (\mathnormal) and ordinary italics (\mathit) is that the latter obey kerning and ligature rules that are of no relevance (and are, in fact, undesirable) for math. This is especially noticeable when using letters such as f which have (in italics mode) both ascenders and descenders. 			
+			difference between math italics (\mathnormal) and ordinary italics (\mathit) is that the latter obey kerning and ligature rules that are of no relevance (and are, in fact, undesirable) for math. This is especially noticeable when using letters such as f which have (in italics mode) both ascenders and descenders.
 			<<<
 			- $\mathnormal{a}$ and $a$ give the same result, want letters in math standaard italic
 
@@ -1519,10 +1521,10 @@ Andere delen :
 	- NIET curly braces {} : die dienen voor groepering, om tekst te behandelen als ware het 1 teken
 
 - Griekse letters
-	\alpha : bij naam 
+	\alpha : bij naam
 	\Gamma : bij naam die begint met hoofdletter
 	- letters niet in de opsomming hieronder (o.a. meeste hoofdletters) zijn hetzelfde als in Latijns alfabet, daar is geen LaTeX commando voor. B.v. hoofdletter rho is gewoon P
-	- lower case 
+	- lower case
 	α \alpha  		ε \varepsilon	ι \iota  	ξ \xi   	  \varrho  		φ \phi
 	β \beta   		ζ \zeta      	κ \kappa 	o o     	σ \sigma   		ϕ \varphi
 	γ \gamma  		η \eta       	λ \lambda	π \pi   	ς \varsigma		χ \chi
@@ -1551,7 +1553,7 @@ Andere delen :
 
 - letters i and j should be printed without their dots when they are given an accent :
 	\imath and \jmath
-	
+
 - \widehat and \widetilde may be placed over parts of a formula:
 	$\widehat{1-x}=\widehat{-y}$
 	$\widetilde{xyz}$
@@ -1624,9 +1626,9 @@ _{subscript} : {} mogen weg voor 1-char subscript
 
 - enkel math mode, behalve \underline ook in textmode
 - nesten mag
-	\underline{...} 
+	\underline{...}
 	\overline{...}
-	\overbrace{...} 
+	\overbrace{...}
 		\overbrace{...}^{samenvatting} : superscript wordt horz. gecentered boven brace, mag \mbox{...} bevatten
 	\underbrace{...}
 		\underbrace{...}_{samenvatting} : subscript idem
@@ -1651,7 +1653,7 @@ _{subscript} : {} mogen weg voor 1-char subscript
 	\arraycolsep
 		- 1/2 of intercolumn spacing for array environment
 	\jot
-		- extra vert. space between rows in {eqnarray} and {eqnarray*} 
+		- extra vert. space between rows in {eqnarray} and {eqnarray*}
 	\mathindent
 		- indentation for math with documentclass[fleqn]
 	\topsep
@@ -1709,7 +1711,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 	\begin{table*} ... \end{tabke*}
 	- OPM: krijgt soms niet goed door (documentclass boek vs. book, oneside vs twoside) aan welke kant de marge nu juist staat, waardoor de hele figuur (op volle breedte) verschuift met de breedte v.d. marge
 		- inspiratie voor oplossing (want het is blijkbaar niet zo simpel als daar gesteld) : zie https://tex.stackexchange.com/questions/169272/sidenotes-package-not-working-with-oneside-option-in-book
-			>>> 
+			>>>
 			"figure* is not designed for option [oneside]. You can do this patch for that. This won't work for twoside" :
 				\makeatletter
 				\let\@sidenotes@adjust\relax
@@ -1732,7 +1734,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 
 - switch the number of columns in the middle of a page :
 	\begin{multicols}{num cols}[header text][pre space]
-	Text 
+	Text
 	\end{multicols}
 	- dit in tegenstelling tot LaTeX standaard \twocolumn en \onecolumn, die altijd nieuwe blz. beginnen
 	- versie {multicols*} vult laatste blz. met kolommen helemaal uit, door laatste kolommen desnoods leeg te laten
@@ -1758,7 +1760,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 		- namen van dagen, maanden, documentonderverdelingen
 		- juiste vorm van aanhalingstekens
 			- in dutch ,,tekst’’ en `woord’
-		- splitsingsregels	
+		- splitsingsregels
 		- shorthands "\declare@shorthand{dutch} ..." voor b.v. die aanhalingstekens, letters met accenten
 			- in "dutch" beginnen de shorthands met het dubbel aanhalingsteken `"`
 	- omschakelen naar andere taal :
@@ -1790,7 +1792,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 	- hyperref saboteert (met dummy ongeldige herdefinitie) \MakeUppercase, hetgeen boek wil gebruiken voor \part kop en titel, zie "/home/dirk/Documents/tex/conflict hyperref en boek/mwe.tex"
 		>>> mwe.log
 			! Undefined control sequence.
-			\MakeUppercase ...ppercaseUnsupportedInPdfStrings 													  
+			\MakeUppercase ...ppercaseUnsupportedInPdfStrings
 			l.5 	\part{Eerste deel}
 			The control sequence at the end of the top line of your error message was never \def'ed. If you have misspelled it (e.g., `\hobx'), type `I' and the correct spelling (e.g., `I\hbox'). Otherwise just continue, and I'll forget about whatever was undefined.
 		<<<
@@ -1804,7 +1806,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 		\makeatletter
 			\let\MakeUppercaseUnsupportedInPdfStrings\@firstofone
 			\let\MakeLowercaseUnsupportedInPdfStrings\@firstofone
-		\makeatother	
+		\makeatother
 	- LAPMIDDEL : book blijven gebruiken i.p.v. boek
 	0 WORKAROUND werken alleen voor \tableofcontents met 1 \part, niet met 2 of meer :
 		- de opdrachten \MakeUppercaseUnsupportedInPdfStrings en \MakeLowercaseUnsupportedInPdfStrings een definitie geven die wel werkt, best een zinvolle zoals b.v. (en zelfde voor MakeLower...)
@@ -1872,7 +1874,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 		\end{tcolorbox}
 		OF
 		\newtcolorbox[`init options`]{`name`}[`number`][`default`]{options}
-			- Creates a new environment `name` based on tcolorbox. Basically, \newtcolorbox operates like \newenvironment. This means, the new environment hnamei optionally takes `number` arguments, where `default` is the default value for the optional first argument.		
+			- Creates a new environment `name` based on tcolorbox. Basically, \newtcolorbox operates like \newenvironment. This means, the new environment hnamei optionally takes `number` arguments, where `default` is the default value for the optional first argument.
 			- The `init options` allow setting up automatic numbering
 		OF
 		\tcolorboxenvironment{`name`}{`options`}
@@ -1891,7 +1893,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 			\tcbline
 			- trekt horizontale lijn
 			- blijven in upper deel
-			- vb. 
+			- vb.
 				\begin{tcolorbox}[title=Dit is de titel]
 					upper-tekst
 				\tcblower
@@ -1899,7 +1901,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 				\end{tcolorbox}
 		- opties o.a. (tussen zelfde [] en gescheiden door kommas)
 			title=Dit is de titel
-			colback=yellow!85!red : b.v. kleur of kleur1!percentkleur1!kleur2				
+			colback=yellow!85!red : b.v. kleur of kleur1!percentkleur1!kleur2
 			coltext=
 			collower=
 			collower=
@@ -1923,7 +1925,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 		- meerdere mogelijk, werken cumulatief
 	\tcbsetforeverylayer{... opties ...}
 		- idem, voor elk niveau van geneste tcolorbox
-	
+
 - extra opdrachten kunnen ingesteld worden 'before' en 'after' title, upper tekst, lower tekst deel :
 	\tcbset{before title={... opdrachten ...}}
 	\tcbset{before upper={... opdrachten ...}}
@@ -1972,7 +1974,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 - package fp : commando \FPeval e.d.
 
 - package tikz : commando \tikzmath
-			
+
 ==== package calculator en calculus ====
 
 - mappen berekeningsopdrachten naar variabele
@@ -2004,7 +2006,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 		! Package inputenc Error: Keyboard character used is undefined
 		<<<
 
->>> "Wetenschap/Publiceren/TeX by Topic, a TeXnician's reference ~ Eijkhout Victor.pdf chapter 3" 
+>>> "Wetenschap/Publiceren/TeX by Topic, a TeXnician's reference ~ Eijkhout Victor.pdf chapter 3"
 	There is an explicit conversion between characters (better: character tokens) and character codes using the left quote (grave, back quote) character `: at all places where TEX expects a number you can use the left quote followed by a character token or a single-character control sequence. Thus both \count`a and \count`\a are synonyms for \count97
 <<<
 
@@ -2049,7 +2051,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 	 6		#	Parameter character; this indicates parameters for macros
 				- de parameters zijn genummerd van #1 tot #9
 	 7		_	Superscript in math mode. Also used for charcodes that can't be entered in an input file
-	 8		^	Hochstellung	
+	 8		^	Hochstellung
 	 9	  null	Ignored and removed from the input, and has no influence on further TEX processing
 	10		' '	Space; space characters receive special treatment
 *	11	a-z A-Z	Letter
@@ -2063,7 +2065,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 	15	  0x127	Invalid character (in ASCII, 0x127 is "delete")
 	<<<
 	- OPM : alleen cat. 11 en 12 worden getypeset
-	
+
 === TeX \the ===
 
 - \the\variabele : typeset de waarde van een numerieke variabele. b.v.
@@ -2099,7 +2101,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 - define \foo to have the value that \bar had at the point of definition.
 	\let\foo\bar
 	- \let allows you to copy the content of a command into a new command.
-	- Unlike making a macro that calls the original command, \let allows you to subsequently modify the old command while still retaining its functionality under the new command. It is often used to change the behaviour of an existing command (but not replace it entirely). In such cases \renewcommand may fail, and \let may be required. 
+	- Unlike making a macro that calls the original command, \let allows you to subsequently modify the old command while still retaining its functionality under the new command. It is often used to change the behaviour of an existing command (but not replace it entirely). In such cases \renewcommand may fail, and \let may be required.
 
 - define \foo to have the value that \bar has at the point of use
 	\def\foo{\bar}
@@ -2128,7 +2130,7 @@ Verschillende manieren om "lore ipsum" teksten in uw tekst, inhoudstafel, lijste
 	- De dvi-compiler _latex_ kan geen jpg, png, ... lezen, alleen eps; iets anders moet eerst ingepakt worden in eps
 		- b.v. met " jpeg2ps"
 		- https://aty.sdsu.edu/bibliog/latex/PSconv.html
-	
+
 - TexStudio heeft een interne pdf-viewer, met reverse sync (van pdf naar overeenstemmende stuk in de tex-broncode)
 
 - De pdfviewer Zathura heeft ook reverse sync, en laat het pdf-bestand opnieuw bij wijziging

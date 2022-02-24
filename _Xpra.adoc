@@ -1,5 +1,7 @@
 Xpra = X (Windowing system) persistent remote application
 
+- https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/[AsciiDoc syntax]
+
 == andere docs ===
 === _Xubuntu.adoc ===
 === _Xubuntu composekey multikey combinaties.adoc ===
@@ -37,7 +39,7 @@ Xpra = X (Windowing system) persistent remote application
 			- aanvaard geen connection string
 			- als die zegt : >>> No xpra sessions found <<<, dan is expliciet adres nodig :
 				$ xpra info tcp/FRT
-				OF 
+				OF
 				$ xpra info tcp/192.168.56.1
 					- 192.168.56.1 : host-ip, nodig als guest FRT niet kan pingen
 						- is standaard host-ip van VBox local host netwerk, kunt ge daar wijzigen
@@ -83,7 +85,7 @@ Xpra = X (Windowing system) persistent remote application
 
 In VBox host-guest xpra combo (Zowel Windows VM als Ubuntu VM met Xpra_2.1.3) heeft xpra geen winswitch nodig (CLI is genoeg), en geen beveiliging
 
-- vb. met tcp (simpel maar onbeveiligd) op default poort 14500: 
+- vb. met tcp (simpel maar onbeveiligd) op default poort 14500:
 	- start server op linux (b.v. VBox host FRT) :
 		$ xpra start --bind-tcp=0.0.0.0:14500 --pulseaudio=no --webcam=no --mdns=no --tray=yes --start-after-connect=yes --terminate-children=yes [--start-new-commands=yes | --start[-child]=mousepad --exit-with-children=yes]
 			- TEDOEN : al die opties in bash-aliases zetten, of in ~/xpra/xpra.conf of /etc/xpra/xpra.conf
@@ -96,7 +98,7 @@ In VBox host-guest xpra combo (Zowel Windows VM als Ubuntu VM met Xpra_2.1.3) he
 			--bind-tcp=0.0.0.0:14500 : accept connections on all interfaces, op poort 14500
 				- poort 14500 is default voor clients, moet voor server expliciet;
 				- andere poort, b.v. --bind-tcp=0.0.0.0:1111 (lijkt niet gereserveerd te zijn), moet dan ook opgegeven worden voor clients die niet local op de xpra-server draaien
-				- if the host portion (0.0.0.0) is omitted, then 127.0.0.1 will be used. 
+				- if the host portion (0.0.0.0) is omitted, then 127.0.0.1 will be used.
 					0 kunt 0.0.0.0 NIET vervangen door mask zoals 192.168.255.255
 				- Using bind-tcp without using the tcp-auth option is major security risk (especially when passing 0.0.0.0); anyone may connect to this port and access your session.
 				- alternatief voor -tcp : -ssl en -vsock
@@ -158,15 +160,15 @@ In VBox host-guest xpra combo (Zowel Windows VM als Ubuntu VM met Xpra_2.1.3) he
 	- poorten 5901 en 10000 worden gebruikt in voorbeelden op het net
 	- alleen root kan poorten < 1024 gebruiken
 	- 1024-49151 kunnen geregistreerd zijn voor andere toepassingen, maar daarom nog niet gebruikt op mijn pc
-	- NIET VRIJ: 
-		- 1024 : reserved 
+	- NIET VRIJ:
+		- 1024 : reserved
 		- 1027 : reserved
 		- 1234 (VLC media player for UDP/RTP stream)
 		- 2222 (EtherNet/IP implicit messaging)
 		- 3333 (allerlei niet officiëel)
 		- 4444 (Xfvb frame buffer, is dus misschien zelfs door Xpra zelf gebruikt voor iets)
 		- 5555 (allerlei niet officiëel)
-		- 6666 (IRC)	
+		- 6666 (IRC)
 		- 7777 (allerlei niet officiëel)
 		- 9999 (allerlei niet officiëel)
 		- 10000 (Network Data Management Protocol, en allerlei niet officiëel)

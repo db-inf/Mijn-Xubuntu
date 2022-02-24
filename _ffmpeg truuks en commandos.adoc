@@ -1,6 +1,8 @@
 = ffmpeg truuks en commandos =
 :description: verslag van de inrichting van mijn linux systeem
 
+- https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/[AsciiDoc syntax]
+
 Zie (https://ffmpeg.org/documentation.html)
 
 == andere docs ===
@@ -112,14 +114,6 @@ Press [q] to stop, [?] for help
 	- andere metadata weglaten:
 		"-map_metadata -1"
 
-=== extract subtitle from video file and convert to .srt ===
-
-	$ /opt/ffmpeg/ffmpeg -i "s1eps27_The Exile.m4v" -vn -an -codec:s:0 srt "s1eps27_The Exile.srt"
-
-- ondertitel verwijderen uit video :
-	$ ffmpeg -i input -sn -c copy output.mp4
-	- input kan mp4 zijn, of b.v. mkv
-
 === extract audio from video file ===
 
 - zelfde codec :
@@ -146,9 +140,26 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 === bestaande audio in een still-video container wikkelen ===
 
 - b.v. hele mp3-directory in avi, goed voor VirtualDub :
-	$ for b in *.mp3;do ffmpeg -f lavfi -i color=c=yellow:s=16x12 -i "$b" -shortest -c:v libxvid -tune stillimage -pix_fmt yuv420p -c:a copy /media/ramdisk/"${b/.mp3/.avi}";done
+	$ for b in *.mp3;do ffmpeg -f lavfi -i color=c=yellow:s=16x12 -i "$b" -shortest -pix_fmt yuv420p -c:v libxvid -tune stillimage -c:a copy /media/ramdisk/"${b/.mp3/.avi}";done
 	-f lavfi : This input device reads data from the open output pads of a libavfilter filtergraph. Als de optie "graph" met input voor lavfi niet is opgegeven, dan "[graph] defaults to the 'filename' specified for the input device."
 	-shortest : duur wordt bepaald door de korste input; vermits lavfi eeuwig duurt, is dit hier audio-lengte
+
+- b.v. download van Klara Herbeluister (aac in mp4) voorzien van smal filmspoor met framenummers, om gemakkelijk op te knippen met AviDemux
+	$ ffmpeg -f lavfi -i color=c=yellow:s=1024x100 -i "Playlist - Klara via Radioplus.mp4" -shortest -vf "drawtext='fontfile=/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf':text='%{frame_num}': start_number=1: x=(w-tw)/2: y=h-(2*lh): fontcolor=black: fontsize=20: box=1: boxcolor=white: boxborderw=5" -pix_fmt yuv420p -c:a copy -c:v libxvid -tune stillimage /media/ramdisk/klara.mp4
+	- default 25fps
+	- xvid comprimeert dit beeld aan 3700fps met 165kb/s
+
+- als vorige, maar met ruimer filmspoor met ook geluidsgolven (ruim genomen, en dan 2 kanalen samengedrukt op kleinere hoogte), en tijdstamp:
+	- gebruik eigen compilatie voor hogere versie libx265
+	- 2 sporen onder elkaar
+		$ /opt/ffmpeg-dirk/ffmpeg -f lavfi -i color=c=yellow:s=1024x512 -i "Playlist - Klara via Radioplus.mp4" -shortest -filter_complex "[1:a]showwaves=s=1024x700:split_channels=1:mode=cline,split[c1][c2],[c1]crop=h=350:y=0,crop=h=256[c1],[c2]crop=h=350:y=350,crop=h=256[c2],[0:v][c1]overlay=0:0[o],[o][c2]overlay=0:256,drawtext='fontfile=/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf':text='Frame %{frame_num} @ %{pts\:hms}': start_number=1: x=(w-tw)/2: y=h-(2*lh): fontcolor=black: fontsize=20: box=1: boxcolor=white: boxborderw=5,format=yuv420p" -c:a copy -c:v libx265 -crf 50 -preset:v ultrafast -profile:v mainstillpicture /media/ramdisk/klara.mp4
+		- default 25fps
+		- "-c:v libx265 -crf 28 -preset:v ultrafast -profile:v mainstillpicture" comprimeert 1024x512 aan 100fps met 4100kb/s
+		- "-c:v libx265 -crf 50 -preset:v ultrafast -profile:v mainstillpicture" comprimeert 1024x512 aan 125fps met 900kb/s (nog net leesbaar)
+	- 2 sporen over elkaar heen is genoeg om stiltes te zoeken; doen showwaves op ruime hoogte, croppen zodat alleen het middendeel overblijft, waar we de stiltes moeten vinden:
+		$ /opt/ffmpeg-dirk/ffmpeg -f lavfi -i color=c=yellow:s=1024x128 -i "Klara.mp4" -shortest -filter_complex "[1:a]showwaves=s=1024x700:split_channels=0:mode=cline,crop=h=128[wv],[0:v][wv]overlay=0:0,drawtext='fontfile=/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf':text='Frame %{frame_num} @ %{pts\:hms}': start_number=1: x=(w-tw)/2: y=h-(2*lh): fontcolor=black: fontsize=20: box=1: boxcolor=white: boxborderw=5,format=yuv420p" -c:a copy -c:v libx265 -crf 45 -preset:v ultrafast -profile:v mainstillpicture /media/ramdisk/test.mp4
+			-crop: neemt default het midden van het beeld
+			- 770kbs, 310fps
 
 === genereer tekstbeeld met geluidsspoor ===
 
@@ -221,11 +232,47 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 
 === naar en van reeks beelden ===
 
-- To create a video from a set of images:
-	$ ffmpeg -i image-%03d.png video.webm
-
 - To create a set of images from a video:
 	$ ffmpeg -i video.webm image-%03d.png
+
+- To create a video from a set of images (allemaal zelfde grootte) :
+	- niet met 2passffmpeg.sh, want die wil 1ste inputbestand kunnen lezen
+	- 1 enkel beeld :
+		$ ffmpeg -loop 1 -i img.jpg -c:v ffvhuff -t $duur -r $framerate -pix_fmt yuv420p uit.mkv
+	- ter volledigheid de volgende, maar het lukt beter om meerdere "1 enkel beeld" te maken met loop en lossless codec zoals ffvhuff, en die aan elkaar te plakken
+		0 opeenvolgend en aaneensluitend genummerd:
+			$ ffmpeg [-start_number 126] -i image-%03d.png -pix_fmt yuv420p uit.mp4
+			- %03d geeft positie en formaat volgnr.
+			[-start_number 126] : default 1
+			[-framerate 25] : default 25; integer, decimaal zoals 23.96, of fractie 24/1001
+		0 in glob-order (zelfde sortering als bash globbing) :
+			$ ffmpeg -pattern_type glob -i "image-*.png" ...
+			- moeten niet genummerd zijn, en indien ze dat wel zijn, mogen er gaten zijn
+		0 in aangeleverde volgorde, en met variabele duur :
+			- met de concat demuxer
+			- "Due to a quirk, the last image has to be specified twice - the 2nd time without any duration directive)"
+			>>> input.txt
+				file '/path/to/dog.png'
+				duration 5
+				file '/path/to/cat.png'
+				duration 1
+				file '/path/to/rat.png'
+				duration 3
+				file '/path/to/rat.png'
+			<<<
+			$ ffmpeg -f concat -i input.txt -vsync vfr ...
+			-vsync vfr : uitvoer volgt timing van invoer, d.w.z. de durations uit input.txt
+		0 aangeleverd via stdin :
+			$ cat *.png | ffmpeg -f image2pipe -i - ...
+
+- slideshow in videoformaat
+	- zie (https://trac.ffmpeg.org/wiki/Slideshow)
+	- kan multimegapixel beelden aan, VLC heeft daar geen problemen mee omdat een slideshow toch heel traag wordt afgespeeld, vgl. met video.
+	- niet met 2passffmpeg.sh, want die wil 1ste inputbestand kunnen lezen
+	- allemaal zelfde grootte
+	- b.v. framerate 1/3 : 1 frame per 3 seconden, best in inputopties
+	- b.v. ongenummerd (andere mogelijkheden zie vorige punt) :
+		$ ffmpeg -framerate 1/3 -pattern_type glob -i "*.jpg" -vsync vfr -c:v libx265 -crf 28 -pix_fmt yuv420p uit.mp4
 
 === 2-pass XviD encoding (met default mpeg4-encoder, maar FourCC-tag XVID) ===
 
@@ -371,6 +418,60 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 			- kill zonder meer stuurt SIGINT, wordt voor ffmpeg behandeld als normale vraag om ordelijk af te sluiten en te stoppen
 			- kill op bash jobnr., b.v. kill %1, niet betrouwbaar: als al andere opdrachten in de shell liepen, kan het jobnr, 2, 3 enz. zijn
 
+=== webcam standardiseren voor skype e.a. ===
+
+- voor Creative webcam gescript: alias videoskype
+	- uitvoeren in terminal of met launcher : >videoskype
+- sommige webcams (o.a. mijn kleine Creative) worden wel gezien door Skype, maar geven geen beeld
+	- testen of hij werkt: b.v. (met Video4Linux geïinstalleerd, en webcam op /dev/video1)
+		$ v4l2-ctl --list-devices
+		>>>
+			BT878 video (Hauppauge (bt878)) (PCI:0000:05:01.0):
+				/dev/video0
+				/dev/vbi0
+			USB Camera (041e:401f) (usb-0000:00:14.0-11.2):
+				/dev/video1
+		<<<
+		$ ffplay -hide_banner -f v4l2 -i /dev/video1
+		>>>
+			[video4linux2,v4l2 @ 0x7f290c000b80] Time per frame unknown
+			Input #0, video4linux2,v4l2, from '/dev/video1':B sq=    0B f=0/0
+			  Duration: N/A, start: 19077.008875, bitrate: N/A
+				Stream #0:0: Video: mjpeg, yuvj422p(pc, bt470bg/unknown/unknown), 640x480, 15.58 tbr, 1000k tbn, 1000k tbc
+			[swscaler @ 0x7f29100a4660] deprecated pixel format used, make sure you did set range correctly
+		<<<
+			- bemerk het exotische (deprecated) pixelformaat yuvj422p
+			- ffplay heeft een veel grotere delay dan seffens ffmpeg
+		- zie ook sectie "VLC capture", o.a. om brightness e.a. parameters van webcam in te stellen
+	- als ffplay de webcam ziet, doet ffmpeg dat ook, en die kan exotische formaten converteren:
+		- installeer package v4l2loopback-dkms (Bionic: 112kB op schijf)
+		- laadt de module, en test :
+			$ sudo modprobe v4l2loopback [devices=2] [video_nr=2,7] [card_label=naam2,naam7] exclusive_caps=1,0 max_width=1280 max_height=720
+				[devices=n] : aantal /dev/video - apparaten dat wordt bijgemaakt; default 1. Bij 2 en meer, worden voor de andere opties de waarden voor de apparaten gescheiden door een komma
+				[video_nr=i] : maak /dev/video$i i.p.v. opeenvolgende nummering
+				[card_label=naam] : geef het virtuele video-apparaat een naam, evt. tss. '' of "" (default: dummy video device)
+				[exclusive_caps=1] : vooral t.b.v. Google Chrome: "so that once you start outputting, the virtual card will appear only as an input card to other V4L clients; in particular, Google Chrome needs this, or the card will not show up."
+				[max_width=1280 max_height=720] : wordt gerapporteerd aan kandidaat cliënten, o.a. https://meet.jit.si wil standaard niet meer dan 720 lijnen
+			$ v4l2-ctl --list-devices
+			>>>
+				BT878 video (Hauppauge (bt878)) (PCI:0000:05:01.0):
+					/dev/video0
+					/dev/vbi0
+				USB Camera (041e:401f) (usb-0000:00:14.0-11.2):
+					/dev/video1
+				Dummy video device (0x0000) (platform:v4l2loopback-000):
+					/dev/video2
+			<<<
+		- vertaal met ffmpeg de invoer naar een standaard formaat, b.v. yuv420p
+			$ ffmpeg -hide_banner -f v4l2 -i /dev/video1 -vf "format=yuv420p"  -f v4l2 /dev/video2
+			- ook bijkomende filters mogelijk (met ',' tussen) om kwaliteit wat te pimpen, b.v.
+				-vf "format=yuv420p,spp=quality=3:mode=hard:qp=5,unsharp=3:3:0.7:5:5:-0.5,hqdn3d,eq=saturation=1.8,gamma=1.3"
+				- vflip
+		- laat skype nu zijn video-invoer nemen van "Dummy video device"
+		- bij afsluiten: 'q' in terminal van ffmpeg om hem te laten stoppen
+		- loopback-module verwijderen
+			$ sudo modprobe --remove v4l2loopback
+
 === muziek DVD naar flac, mp3, ogg ===
 
 - de gereedschappen mplayer en lsdvd van sectie "DVD naar MP4" werken alleen op de dvd-map VIDEO_TS, niet op AUDIO_TS. Dat maakt werken met ffmpeg moeilijk.
@@ -428,6 +529,12 @@ ffmpeg -i fouteAR.avi -c copy -aspect 16:9 goedeAR.mp4
 === FLAC 24 bit 96khz to 16 bit 48khz ===
 
 	$ ffmpeg -i input.flac -sample_fmt s16 -ar 48000 output.flac
+	OF (vb. voor hele dir)
+	$ mkdir ./resampled/; for flac in *.flac; do sox --no-clobber "${flac}" -r 48000 -b 16 ./resampled/"${flac}"; done
+	-b, --bits BITS : Encoded sample size in bits
+	-r, --rate RATE : Sample rate of audio
+	[-c, --channels] CHANNELS : Number of channels of audio data; e.g. 2 = stereo
+	[-S, --show-progress] : Display progress while processing audio data
 
 === hoofdstukken (chapters) in o.a. mp4-bestand ===
 
@@ -676,6 +783,7 @@ OF
 === afspelen met framenummer ===
 
 - om filters zoals crop mee te laten bewegen met het gebied van belang, is het framenr. nodig:
+	- opm: Ubuntu's ffmpeg heeft default font voor drawtext, ffmeg-dirk (nog) niet; gebruik b.v. "drawtext='fontfile=/usr/share/fonts/truetype/noto/NotoSans-Bold.ttf': ..."
 	- nog zonder crop:
 		$ ffplay -hide_banner -an -vf "drawtext=text='%{frame_num}':start_number=1:x=(w-tw)/2: y=h-(2*lh):fontcolor=black:fontsize=20:box=1:boxcolor=white:boxborderw=5" bron
 			-an : effe geen geluid
@@ -691,6 +799,14 @@ OF
 		- evt. pixel formaat zonder subsampling voor nauwkeurigheid:
 			-vf "format=pix_fmts=yuv444p,..."
 
+=== filter-complex testen met ffplay ===
+
+- fflay kent geen -filter-complex, alleen -vf filtergraph met single video input and a single video output. Complexe filters testen kan wel door van ffmpeg te pipen naar ffplay, b.v.:
+	$ ffmpeg -i in1.mp4 -i in2.mp4 [-pixel_format yuv420p] -f rawvideo - | ffplay -f rawvideo -s 1280x720 -
+	-f rawvideo : zowel bij ffmpeg als bij ffplay nodig om zonder codec te pipen; anders ffmpeg laten coderen en een gepast containerformaat geven (b.v. -f matroska), ffplay herkent dat normaal zo
+	-s : pixelafmetingen van de gepipete video
+	[-pixel_format yuv420p] : enkel nodig als de filters een ander formaat leveren
+	- OPM: navigeren door rechtsklikken in videovenster van ffplay werkt hier niet, want het is ffmpeg die gestuurd moet worden; daarom verschillende stukken testen met ffmpeg-opties -ss, -t en -to voor -i input
 
 === titel-metadata verwijderen (b.v. rarbg-torrent) ===
 
@@ -731,16 +847,24 @@ $ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
 - zie https://trac.ffmpeg.org/wiki/Concatenate
 
 - concat protocol :
-	- mpg, vob (is mpg), mpeg transport streams and possibly other formats can be concatenated. This is analogous to using cat on UNIX-like systems or copy on Windows.
+	- mp3, mpg, vob (is mpg), mpeg transport streams and possibly other formats can be concatenated. This is analogous to using cat on UNIX-like systems or copy on Windows.
 		$ /opt/ffmpeg/ffmpeg -i "concat:INPUT1.VOB|INPUT2.VOB|INPUT3.VOB" -c encoders ... output.mpg
-		- vb. om meerdelige string te maken:
-			$ --concat="$(seq -s .VOB\|  8 12).VOB"
+		- vb. om meerdelige string te maken in variabele:
+			$ concat="$(seq -s .VOB\|  8 12).VOB"
 				>>> 8.VOB|9.VOB|10.VOB|11.VOB|12.VOB <<<
 				-s : separator (default \n)
 				-w : equalize width by padding with leading zeroes
+		- vb. om meerdelige string te maken inline (TTC-cursus genummerd "01-1*.mp3" tot "99-9*.mp3"
+			- geconcateneerd per begin-nr. van 2 lang, gegroepeerd over volgnummer na de '-'
+			- eerste lecture begint met intro, die concateneren we niet mee, met de hand hernoemen naar "00 Intro.mp3"
+			- de for-lus loopt over de delen xx-1, die zetten we expliciet in de concat, zonder '|' voor, en de rest printf-en we erachter
+			$ for i in ??-1*.mp3;do [ ${i::2} = 01 ] && i="${i/#01-1/01-2}" s=2 || s=1; ffmpeg -i "concat:$i$(printf '|%s' ${i::2}-[$((s+1))-9]*.mp3 )" -c copy "${i::2} ${i:5}";done
 		OF
-		$ cat INPUT1.VOB INPUT2.VOB INPUT3.VOB | ffmpeg -i - -c encoders ... output.fmt
-		- "-i -" leest invoer van stdin, die gepipet wordt vanuit cat
+		$ cat INPUT1.VOB INPUT2.VOB INPUT3.VOB | ffmpeg -nostdin -i - -c encoders ... output.fmt
+		-nostdin : lees tijdens uitvoering geen opdrachten uit stdin
+		-i - : lees invoer van stdin, die gepipet wordt vanuit cat
+	- aac (in .aac, NIET in .m4a) kan ook met het concat protocolm mits extra parameter "-bsf:a aac_adtstoasc"
+		- evt. aac in .m4a er eerst uithalen naar .aac met "-c copy"
 	-  mp4 files can be losslessly transcoded to MPEG-2 transport streams to concatenate. All MPEG codecs (MPEG-4 Part 10 / AVC, MPEG-4 Part 2, MPEG-2 Video, MPEG-1 Audio Layer II, MPEG-2 Audio Layer III (MP3), MPEG-4 Part III (AAC)) are supported in the MPEG-TS container format, although the commands below would require some change (e.g., the -bsf bitstream filters will have to be changed).
 		- b.v. voor mp4 met H.264 video en AAC audio:
 			$ ffmpeg -i input1.mp4 -c copy -bsf:v h264_mp4toannexb -f mpegts intermediate1.ts
@@ -843,6 +967,24 @@ $ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
 - test afspelen met videospoor en audiospoor uit verschillende bestanden : ffplay neemt maar 1 input, maar dat kan stdin zijn, met de stdout van ffmpeg, b.v.
 	$ ffmpeg -i 01*.avi -i 01*.mp3 -map 0:V -map 1:a -c copy -f matroska - | ffplay -
 		-f matroska : ffmpeg leidt formaat af van extensie bestandsnaam, maar - (stdout) heeft dat niet; matroska (mkv) is zowat het formaat dat de meeste soorten streams kan bevatten
+
+=== overlay van fragmenten van input 2 over input 1 ===
+
+- b.v. lesopname die parallel loopt met schermopname, samen brengen op 1 beeld:
+	- eerst scene changes detecteren, en in jpgs vastleggen om relevantie te bepalen
+		$ ffmpeg -i scherm.mp4 -filter_complex "select='gt(scene,0.000001)',metadata=print:file=34time0.000001.txt" -vsync vfr score0.000001.%05d.jpg;
+			- select-filter : scene is een maat voor scene-change (1 is totaal nieuw frame, 0 is totaal gelijk aan vorige frame); voegt scene-waarde toe aan de metadata van de geselecteerde frames als lavfi.scene_score=waarde
+			- met grote nauwkeurigheid, b.v. gt 0.0000001, om ook muisbewegingen te ontdekken, maar nog redelijk ongevoelig voor decompressie-ruis
+			- metadata-filter: print voor elk frame het nr, pts, en de metadata (OPM: frames die niet door de voorgaande select weerhouden zijn, komen niet tot hier)
+			- score0.000001.%05d.jpg : output naar een reeks jpgs met zinnige prefix "score0.000001." en genummerd op 5 posities, met voorloopnullen
+	- hieruit bepalen welke fragmenten van de schermopname over de lesopname moeten komen, b.v.
+		$ frags=(12.123-40.545 7-9 14-17)
+		- frags: array van-tot, elk in pts formaat (seconden met decimale punt)
+	- overlay testen
+		$ ffmpeg -i les.mp4 -i scherm.mp4 -filter_complex "pad=1280:800,overlay=enable='0$(printf "+between(t,%s)" ${frags[@]/-/,} )'" -pixel_format yuv420p -f rawvideo - | ffplay -f rawvideo -pixel_format yuv420p -s 1280x800 -
+			- als vb. met pad-filter, om les.mp4 naar zelfde formaat als scherm.mp4 te brengen
+			- overlay-filter heeft timeline support : "ffmpeg -filters | grep overlay" heeft een 'T';
+			enable schermopname over lesopname) als waarde van de enable-uitdrukking ≠ 0; gebruiken printf om voor elk element van frags een extra term "+between(t,van,tot)" te genereren, warbij we de '-' vervangen door een ','.
 
 === overlay van vast beeld op (stuk van) film ===
 
@@ -988,6 +1130,124 @@ $ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
 	0 van GPU naar gewoon zinloos zonder vaapi-decoder : -vf hwdownload,format=nv12 -pix_fmt yuv420p
 	0 als decoder ook vaapi is, zitten de gedecodeerde frames al direct in vaapi in de hardware-surface, dus alleen hwdownload en evt. terug hwupload nodig om niet-vaapi-filters te gebruiken
  verder
+
+
+== Ondertitels ==
+
+=== extract subtitle from video file and convert to .srt ===
+
+	$ /opt/ffmpeg/ffmpeg -i "s1eps27_The Exile.m4v" -vn -an -codec:s:0 srt "s1eps27_The Exile.srt"
+
+- ondertitel verwijderen uit video :
+	$ ffmpeg -i input -sn -c copy output.mp4
+	- input kan mp4 zijn, of b.v. mkv
+
+=== tekst-mode ondertitels in aparte stream ===
+
+- container-afhankelijk, en niet alle spelers ondersteunen ze
+
+- encoder:
+	- MKV containers: -c:s dvdsub (.idx/.sub), -c:s srt OF -c:s subrip (.srt), -c:s ass OF -c:s ssa, of -c:s copy daarvan
+	- MP4 containers: -c:s mov_text of copy daarvan
+	- vb. Import a subtitle file (copy video and audio streams re-encoding):
+		$ ffmpeg -i input.mp4 -sub_charenc WINDOWS-1252 -i subtitle.srt -map 0:V -map 0:a -c copy -map 1 -c:s:0 mov_text -metadata:s:s:0 language=ger output.mp4
+		OF
+		$ ffmpeg -i input.mkv -sub_charenc WINDOWS-1252 -i subtitle.srt -map 0:V -map 0:a -c copy -map 1 -c:s:0 srt -metadata:s:s:0 language=fre output.mkv
+		-metadata:s:s:0 language=eng : taal van ondertitels opgeven t.b.v. afspeler met voorkeurtalen :
+			- 1ste s : "stream"
+			- 2de s : "subtitle"
+			- :0 : 1ste subtitle stream (0-based)
+		- 3-letter taalcodes ISO 639: zowel taaleigen als engelse afkorting mag, b.v. nld of dut, deu of ger, fra of fre
+
+=== ondertitels inbakken in het videospoor ===
+- andere optie voor dvd-type ondertitels is OCR met Subrip (windows)
+
+- ondertitelstream begint soms pas bij eerste woorden; om ffmpeg ver genoeg te laten zoeken in .vob:
+	$ /opt/ffmpeg/ffmpeg -probesize 1G -analyzeduration 600M -i ...
+	-probesize : aantal byte (hier giga) vooraf te lezen om streams te zoeken, default 5M (megabyte)
+	-analyzeduration : aantal microseconden vooraf te analyseren om streams te zoeken, default 5M (5 sec.)
+		- 600M = 10 minuten
+
+- nuttige ffmpeg opties :
+	-filter_complex "[0:v][0:s]overlay" : takes all video streams from the first listed input, then all subtitle streams from the first listed input, and overlays the latter on the former to produce a single video stream that replaces all consumed streams. The new stream will be mapped by the encoder as any video input stream normally would.
+	-palette "<list of 16 comma-separated RRGGBB hex codes>" : Specify the global palette used by the bitmaps. When stored in VobSub, the palette is normally specified in the index file; in Matroska, the palette is stored in the codec extra-data in the same format as in VobSub. In DVDs, the palette is stored in the IFO file, and therefore not available when reading from dumped VOB files.The format for this option is a string containing 16 24-bits hexadecimal numbers (without 0x prefix) separated by comas, for example
+		$ ffplay -palette fd0000,ee4500,403000,f0d000,0ce600,ec1400,ebff00,0d6100,7b6000,d1c100,7b2a00,0d9500,0f0000,cf0d00,cfa800,7c1200  VIDEO_TS/VTS_01_1.VOB
+			- diep geel : fd0000,ee4500,403000,f0d000,0ce600,ec1400,ebff00,0d6100,7b6000,d1c100,7b2a00,0d9500,0f0000,cf0d00,cfa800,7c1200
+			- gewoon wit: ffffff,000000,ffffff,00ff00,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff
+	OF
+	-ifo_palette juiste.IFO : specify the IFO file (kiezen met trial and error) from which the global palette is obtained. (experimental)
+	-forced_subs_only : Only decode subtitle entries marked as forced. Some titles have forced and non-forced subtitles in the same track. Setting this flag to 1 will only keep the forced subtitles. Default value is 0.
+
+- Subtitle Color :
+	>>>
+		For VOBSUBs (ie. bitmapped subtitles on DVDs), the color of the subtitles is determined by a palette that is specified in a .IFO file on the DVD, but this is not available to ffmpeg and thus the colors of subtitles will be largely arbitrary unless the palette is specified on the command line [zie hierboven]. Unfortunately, the palette entries used to render the subtitles vary from one video to the next, so some experimentation is required. Typically one entry will determine the font color and another entry will determine the outline color, though some videos have subtitles that use multiple outlines, each with its own palette entry.
+		The full command line to search relatively deeply for a subtitle stream and then render it in green on black into an h264 output video might look as follows:
+			$ ffmpeg -probesize 100M -analyzeduration 120M -palette "ffffff,000000,ffffff,00ff00,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff" -i input.vob -filter_complex "[0:v][1:s]overlay" -acodec copy -vcodec libx264 output.mp4
+	<<<
+
+=== closed captions in h264 videostream ===
+
+- h264-video kan ondertitels als tekst (dus niet als deel van het beeld) in het filmspoor zelf coderen; die worden dan 'closed captions' genoemd. Zonder extra moeite toont ffprobe dit niet, ze zitten a.h.w. verborgen. Maar de lavfi demuxer kan ze wel herkennen (er is helaas nog geen muxer equivalent). Hiervoor "-f lavfi" vóór de -i zetten, en die gebruikt ineens een andere syntax dan gewoon maar -i bestandsnaam:
+
+- tonen met ffprobe:
+	$ ffprobe  -i filmbestand
+		- als de tekst "Closed Captions" verschijnt, zijn er ondertitels in closed captions
+		>>> Stream #0:0(und): Video: h264 (Main) (avc1 / 0x31637661), yuv420p, 1280x720 [SAR 1:1 DAR 16:9], Closed Captions, 1902 kb/s, ... <<<
+	0 met libav-filter:
+		$ ffprobe -f lavfi -i movie=filmbestand[out+subcc]
+		- toont ALTIJD >>> Stream #0:1: Subtitle: eia_608 <<<, ook als die leeg is
+	0 met mijn ffprobewaarden: toont ook ALTIJD inhoud van Stream #0:1: Subtitle: eia_608, ook als die leeg is
+		$ ffprobewaarden c all filmbestand
+
+- kunnen wschlk. met de gebruikelijke filters in het filmspoor "gebrand" worden als deel van het beeld, maar met de libavfilter (-f lavfi) kunnen ze gewoon apart gezet worden in een .srt ondertitel-bestand:
+	- libavfilter interpreteert het argument na "-i" volgens ffmpeg's filtergraph syntax, met argument key "movie=", de naam van het filmbestand als argument value, en out-link "[out+subcc]"
+	- filtergraph syntax heeft haast onmogelijke escape-regels voor de chars " ,;:'\[]". De enige zinnige manier om niet te struikelen over zulke tekens in bestandsnamen, is om in bash-syntax een symlink naar het bronbestand te maken zonder speciale characters, in b.v. /tmp, en ffmpeg daarop laten werken. Om problemen met parallelle uitvoering te vermijden, zetten we proces id $$ in de naam van de symlink
+	- functie definieren maakt het gemakkelijker om achtereenvolgens meerdere filmbestanden als argument op te geven (prefix "movie=" maakt path expansion en tab expansion op de opdrachtprompt moeilijk)
+	- schrijven via stdout naar sed, en verwijderen ineens opmaak die al eens voorkomt bij b.v. TTC videos: <font>...</font>, {\an9}, en hardspace '\h' (vervang door spatie, behalve aan begin lijn).
+		$ cc2srt() { set -o noclobber; echo process id $$;ln -sr "$1" /tmp/"cc2srt_$$_ln.${1##*.}"; ffmpeg -f lavfi -i movie="/tmp/cc2srt_$$_ln.${1##*.}"[out+subcc] -f srt - | sed -E 's@</font>@@g;s@<font( [^>]+)?>@@g;s@\{\\an[^\}]*\}@@g;s@^(\\h)+@@;s@(\\h)+@ @g' > "${1/%.???}.srt";rm "/tmp/cc2srt_$$_ln.${1##*.}"; }
+		$ for m in *.mp4;do cc2srt "$m";done
+		- Opm.: moet hele video decoderen, is dus geen lichte bewerking
+
+=== srt ondertitels opnieuw splitsen in lijnen ---
+
+- Met Geany regular expressions
+	- Document/Set Line ending: LF (anders hieronder waar gepast \r? toevoegen)
+
+- blokken van 3 lijnen op 1 lijn brengen
+	v Use Regular Expressions
+	v Use multi-line matching
+	- Search for:	^([a-zA-Z\"\'].*)\n([a-zA-Z\"\'].*)\n([a-zA-Z\"\'].*)
+	- Replace with:	\1 \2 \3 \n
+- lange lijnen op spaties opsplitsen naar lijnen van b.v. max. 29 lang
+	v Use Regular Expressions
+	v Use multi-line matching
+	- Search for:	(?:((?>.{1,29}(?:(?<=[^\S\n])[^\S\n]?|(?=\n)|$|[^\S\n]))|.{1,29})(?:\n)?|(?:\n|$))
+	- Replace with:	\1\n
+	- uitleg regex:
+	>>>
+		 (?:
+			  # -- Words/Characters
+			  (                       # (1 start)
+				   (?>                     # Atomic Group - Match words with valid breaks
+						.{1,29}                 #  1-N characters
+												#  Followed by one of 4 prioritized, non-linebreak whitespace
+						(?:                     #  break types:
+							 (?<= [^\S\n] )        # 1. - Behind a non-linebreak whitespace
+							 [^\S\n]?              #      ( optionally accept an extra non-linebreak whitespace )
+						  |  (?= \n )            # 2. - Ahead a linebreak
+						  |  $                       # 3. - EOS
+						  |  [^\S\n]               # 4. - Accept an extra non-linebreak whitespace
+						)
+				   )                       # End atomic group
+				|
+				   .{1,29}                 # No valid word breaks, just break on the N'th character
+			  )                       # (1 end)
+			  (?: \n )?           # Optional linebreak after Words/Characters
+		   |
+			  # -- Or, Linebreak
+			  (?: \n | $ )        # Stand alone linebreak or at EOS
+		 )
+	<<<
 
 == DVD naar MP4 ==
 
@@ -1176,49 +1436,6 @@ $ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
 - Assume your input files are infile.mp4, infile.idx and infile.sub and you wish to combine them all into outfile.mkv :
 		$ ffmpeg -i infile.mp4 -i infile.idx -i infile.sub -map 0:V -map 0:a -c copy -map 1 -c:s:1 dvd_subtitle -metadata:s:s:1 language=fre outfile.mkv
 
-=== tekst-mode ondertitels in aparte stream ===
-
-- container-afhankelijk, en niet alle spelers ondersteunen ze
-
-- encoder:
-	- MKV containers: -c:s dvdsub (.idx/.sub), -c:s srt OF -c:s subrip (.srt), -c:s ass OF -c:s ssa, of -c:s copy daarvan
-	- MP4 containers: -c:s mov_text of copy daarvan
-	- vb. Import a subtitle file (copy video and audio streams re-encoding):
-		$ ffmpeg -i input.mp4 -sub_charenc WINDOWS-1252 -i subtitle.srt -map 0:V -map 0:a -c copy -map 1 -c:s:0 mov_text -metadata:s:s:0 language=ger output.mp4
-		OF
-		$ ffmpeg -i input.mkv -sub_charenc WINDOWS-1252 -i subtitle.srt -map 0:V -map 0:a -c copy -map 1 -c:s:0 srt -metadata:s:s:0 language=fre output.mkv
-		-metadata:s:s:0 language=eng : taal van ondertitels opgeven t.b.v. afspeler met voorkeurtalen :
-			- 1ste s : "stream"
-			- 2de s : "subtitle"
-			- :0 : 1ste subtitle stream (0-based)
-		- 3-letter taalcodes ISO 639: zowel taaleigen als engelse afkorting mag, b.v. nld of dut, deu of ger, fra of fre
-
-=== ondertitels inbakken in het videospoor ===
-- andere optie voor dvd-type ondertitels is OCR met Subrip (windows)
-
-- ondertitelstream begint soms pas bij eerste woorden; om ffmpeg ver genoeg te laten zoeken in .vob:
-	$ /opt/ffmpeg/ffmpeg -probesize 1G -analyzeduration 600M -i ...
-	-probesize : aantal byte (hier giga) vooraf te lezen om streams te zoeken, default 5M (megabyte)
-	-analyzeduration : aantal microseconden vooraf te analyseren om streams te zoeken, default 5M (5 sec.)
-		- 600M = 10 minuten
-
-- nuttige ffmpeg opties :
-	-filter_complex "[0:v][0:s]overlay" : takes all video streams from the first listed input, then all subtitle streams from the first listed input, and overlays the latter on the former to produce a single video stream that replaces all consumed streams. The new stream will be mapped by the encoder as any video input stream normally would.
-	-palette "<list of 16 comma-separated RRGGBB hex codes>" : Specify the global palette used by the bitmaps. When stored in VobSub, the palette is normally specified in the index file; in Matroska, the palette is stored in the codec extra-data in the same format as in VobSub. In DVDs, the palette is stored in the IFO file, and therefore not available when reading from dumped VOB files.The format for this option is a string containing 16 24-bits hexadecimal numbers (without 0x prefix) separated by comas, for example
-		$ ffplay -palette fd0000,ee4500,403000,f0d000,0ce600,ec1400,ebff00,0d6100,7b6000,d1c100,7b2a00,0d9500,0f0000,cf0d00,cfa800,7c1200  VIDEO_TS/VTS_01_1.VOB
-			- diep geel : fd0000,ee4500,403000,f0d000,0ce600,ec1400,ebff00,0d6100,7b6000,d1c100,7b2a00,0d9500,0f0000,cf0d00,cfa800,7c1200
-			- gewoon wit: ffffff,000000,ffffff,00ff00,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff
-	OF
-	-ifo_palette juiste.IFO : specify the IFO file (kiezen met trial and error) from which the global palette is obtained. (experimental)
-	-forced_subs_only : Only decode subtitle entries marked as forced. Some titles have forced and non-forced subtitles in the same track. Setting this flag to 1 will only keep the forced subtitles. Default value is 0.
-
-- Subtitle Color :
-	>>>
-		For VOBSUBs (ie. bitmapped subtitles on DVDs), the color of the subtitles is determined by a palette that is specified in a .IFO file on the DVD, but this is not available to ffmpeg and thus the colors of subtitles will be largely arbitrary unless the palette is specified on the command line [zie hierboven]. Unfortunately, the palette entries used to render the subtitles vary from one video to the next, so some experimentation is required. Typically one entry will determine the font color and another entry will determine the outline color, though some videos have subtitles that use multiple outlines, each with its own palette entry.
-		The full command line to search relatively deeply for a subtitle stream and then render it in green on black into an h264 output video might look as follows:
-			$ ffmpeg -probesize 100M -analyzeduration 120M -palette "ffffff,000000,ffffff,00ff00,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff,ffffff" -i input.vob -filter_complex "[0:v][1:s]overlay" -acodec copy -vcodec libx264 output.mp4
-	<<<
-
 === chapters van een dvd overnemen in een mp4 ===
 	- chapter startpunten van dvd :
 	 	$ mplayer -dvd-device pad/VIDEO_TS dvd://1 -frames 0 -identify
@@ -1377,10 +1594,21 @@ $ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
     --var, set var (--var myvar=3)  (one arg )
     --video-codec, set video codec (x264/...)  (one arg )
 
+=== segmenten van AviDemux gebruiken voor ffmpeg ===
+
+- AviDemux is handig om van frame tot frame segmenten in de video te zoeken en af te bakenen; staan in AviDemux script als volgt:
+	>>> adm.addSegment(bronnr, start, duur) <<<
+	- bronnr. : 0-based volgnr. van opdracht adm.loadVideo("pad/naar/invoerbestand")
+	- start en duur : in miljoenste van seconde.
+	- zet voor ffmpeg gewoon een '.' voor de 6 laatste cijfers van start en duur, en dan
+		$ ffmpeg -ss start -t duur -i "pad/naar/invoerbestand" -c:v ffvhuff -c:a pcm_s16le ... uitvoer.mkv
+		OF (voor meerdere segmenten, nog niet getest, maar zou sneller moeten zijn)
+		$ ffmpeg -i "pad/naar/invoerbestand" -c:v ffvhuff -c:a pcm_s16le ... -ss start1 -t duur1 uitvoer1.mkv -c:v ffvhuff -c:a pcm_s16le ... -ss start2 -t duur2 uitvoer2.mkv ...
+
 == VLC ==
 
 === Hauppauge WinTV gebruiken ==
-
+- zie ook sectie "VLC capture"
 - input format v4l2
 	- b.v. ondersteunde formaten :
 		$ ffmpeg -f v4l2 -list_formats all -i /dev/video0
@@ -1457,75 +1685,132 @@ $ ffmpeg -i invoer -c copy -map_metadata -1 [-map_chapters -1] uitvoer
 			- set value:
 				$ v4l2-ctl -c <ctrl>=<value>[,<ctrl>=<value>]...
 
-- VLC met camera-invoer:
-	- VLC/File/Open Capture Device
-		[Advanced options...] :
-		- Video capture device: /dev/video0
-		- Input : 1
-	OF
-	- VLC/File/Open Capture Device
-		x Show more options
-		- Edit options: :v4l2-dev=/dev/video0 :v4l2-input=1 :live-caching=0
-			- dev=/dev/video0 : mijn Hauppauge WinTV kaart
-			- input=0 : wschlk. antenne-ingang
-			- input=1 : de cinch video ingang
-			- input=2 : wschlk. S-video ingang
-			- live-caching: default 300ms, is ook zoveel vertraging
-		- opties:
-			- formaat [ :naam=waarde]...
-			- volledige set :
-				- 0 : n.v.t. voor mijn Bt878 Hauppauge WinTV)
-				- X : belangrijk tot essentieel
-				- x : automatisch tot default
-				x :v4l2-standard=PAL
-				  :input-slave=alsa://hw:0,0
-				x :v4l2-dev=/dev/video0
-				x :v4l2-vbidev=/dev/vbi0
-				0 :v4l2-chroma=I422
-				 	- I420, I411, I410, YUY2, GREY, ...
-				X :v4l2-input=1 : cinch video input
-				  :v4l2-audio-input=-1
-				0 :v4l2-width=0
-				0 :v4l2-height=0
-				x :v4l2-aspect-ratio=4\:3
-				x :v4l2-fps=25
-				  :v4l2-radio-dev=/dev/radio0
-				  :v4l2-tuner-frequency=-1
-				  :v4l2-tuner-audio-mode=3
-				  :no-v4l2-controls-reset
-				0 :v4l2-brightness=-1
-				0 :v4l2-brightness-auto=-1
-				0 :v4l2-contrast=-1
-				0 :v4l2-saturation=-1
-				0 :v4l2-hue=-1
-				0 :v4l2-hue-auto=-1
-				0 :v4l2-white-balance-temperature=-1
-				0 :v4l2-auto-white-balance=-1
-				0 :v4l2-red-balance=-1
-				0 :v4l2-blue-balance=-1
-				0 :v4l2-gamma=-1
-				0 :v4l2-autogain=-1
-				0 :v4l2-gain=-1
-				0 :v4l2-sharpness=-1
-				0 :v4l2-chroma-gain=-1
-				0 :v4l2-chroma-gain-auto=-1
-				0 :v4l2-power-line-frequency=-1
-				0 :v4l2-backlight-compensation=-1
-				0 :v4l2-band-stop-filter=-1
-				0 :no-v4l2-hflip
-				0 :no-v4l2-vflip
-				0 :v4l2-rotate=-1
-				0 :v4l2-color-killer=-1
-				0 :v4l2-color-effect=-1
-				  :v4l2-audio-volume=-1
-				  :v4l2-audio-balance=-1
-				  :no-v4l2-audio-mute
-				  :v4l2-audio-bass=-1
-				  :v4l2-audio-treble=-1
-				  :no-v4l2-audio-loudness
-				  :v4l2-set-ctrls=
-				X :live-caching=0
-					- aantal ms vertraging
+=== VLC capture ===
+
+- installeer v4l-utils (video for linux), om parameters van lopende capture te regelen
+	- lopende sessie instellen in terminal : b.v.
+		$ v4l2-ctl -d /dev/video0  -c "brightness=16384,contrast=58880"
+	- mogelijke opties :
+		$ v4l2-ctl -d /dev/video0 -l
+
+- VLC/File/Open Capture Device
+	- toont voor geluid alleen alsa hw:0,1 etc, zelf pulse-input invullen in "Audio device name" (zou kunnen dat die er "alsa://" voorzet, wat ongeldig is), of in "Show more options/Edit Options" : pulse://alsa_input.usb-Plantronics_Plantronics_.Audio_648_USB-00.iec958-stereo
+	x Show more options
+	- Edit options, formaat [ :naam=waarde]... :
+		- algemeen :
+			:live-caching=0 : aantal ms te cachen, goed voor opname, maar geeft vertraging bij videochat
+		- geluid :
+			:input-slave=pulse://alsa_input.usb-Plantronics_Plantronics_.Audio_648_USB-00.iec958-stereo
+		- mijn Hauppauge WinTV kaart : /dev/video0
+			- "Show more options/Edit Options" : ":v4l2-dev=/dev/video0 :v4l2-input=1 :live-caching=0 :input-slave=pulse://alsa_input.usb-Plantronics_Plantronics_.Audio_648_USB-00.iec958-stereo"
+				- input=0 : wschlk. antenne-ingang
+				- input=1 : de cinch video ingang
+				- input=2 : wschlk. S-video ingang
+			- lopende sessie instellen in terminal : b.v.
+				$ v4l2-ctl -d /dev/video0  -c "brightness=16384,contrast=58880"
+				- mogelijke opties : zie sectie "Hauppauge WinTV gebruiken"
+		- mijn Creative USB webcam : /dev/video1 : USB webcam
+			- "Show more options/Edit Options" : ":v4l2-dev=/dev/video1 :v4l2-standard=ALL :live-caching=0 :v4l2-brightness=255 :v4l2-contrast=255 :v4l2-gamma=3 :v4l2-autogain=1 :v4l2-sharpness=3 :input-slave=pulse://alsa_input.usb-Plantronics_Plantronics_.Audio_648_USB-00.iec958-stereo"
+			- lopende sessie instellen in terminal : b.v.
+				$ v4l2-ctl -d /dev/video1  -c "brightness=255,contrast=255,gamma=2,gain_automatic=1,sharpness=3"
+				- mogelijke opties :
+					$ v4l2-ctl -d /dev/video1 -l
+					>>>
+					User Controls
+								 brightness (int)  : min=0 max=255 step=1 default=128 value=128 flags=slider
+								   contrast (int)  : min=0 max=255 step=1 default=128 value=128 flags=slider
+									  gamma (int)  : min=1 max=6 step=1 default=3 value=6 flags=slider
+							 gain_automatic (bool) : default=1 value=1
+					   power_line_frequency (menu) : min=0 max=2 default=0 value=0
+								  sharpness (int)  : min=0 max=3 step=1 default=2 value=2 flags=slider
+					JPEG Compression Controls
+						compression_quality (int)  : min=50 max=87 step=1 default=75 value=75
+					<<<
+		- alle opties van video for linux (zie v4l2-ctl voor de ondersteunde per device) :
+			:v4l2-standard=PAL (of ALL, zie gewone opties)
+			:v4l2-dev=/dev/video0 (of /dev/video1, zie gewone opties)
+			:v4l2-vbidev=/dev/vbi0
+			:v4l2-chroma=I422 : I420, I411, I410, YUY2, GREY, ...
+			:v4l2-input=1 : zie Hauppage kaart, selecteert inputstekker
+			:v4l2-audio-input=-1 (evt. audio-kanaal van Hauppage-kaart)
+			:v4l2-width=0
+			:v4l2-height=0
+			:v4l2-aspect-ratio=4\:3
+			:v4l2-fps=25
+			:v4l2-radio-dev=/dev/radio0
+			:v4l2-tuner-frequency=-1
+			:v4l2-tuner-audio-mode=3
+			:no-v4l2-controls-reset
+			:v4l2-brightness=-1
+			:v4l2-brightness-auto=-1
+			:v4l2-contrast=-1
+			:v4l2-saturation=-1
+			:v4l2-hue=-1
+			:v4l2-hue-auto=-1
+			:v4l2-white-balance-temperature=-1
+			:v4l2-auto-white-balance=-1
+			:v4l2-red-balance=-1
+			:v4l2-blue-balance=-1
+			:v4l2-gamma=-1
+			:v4l2-autogain=-1
+			:v4l2-gain=-1
+			:v4l2-sharpness=-1
+			:v4l2-chroma-gain=-1
+			:v4l2-chroma-gain-auto=-1
+			:v4l2-power-line-frequency=-1
+			:v4l2-backlight-compensation=-1
+			:v4l2-band-stop-filter=-1
+			:no-v4l2-hflip
+			:no-v4l2-vflip
+			:v4l2-rotate=-1
+			:v4l2-color-killer=-1
+			:v4l2-color-effect=-1
+			:v4l2-audio-volume=-1
+			:v4l2-audio-balance=-1
+			:no-v4l2-audio-mute
+			:v4l2-audio-bass=-1
+			:v4l2-audio-treble=-1
+			:no-v4l2-audio-loudness
+			:v4l2-set-ctrls=
+
+== youtube-dl ==
+
+- python script om te downloaden van youtube e.a. sites die .mpd dash scripts gebruiken, zoals o.a. VRT Nu, Vimeo
+	- alternatief voor Firefox plugin "Video DownloadHelper"
+		- Video DownloadHelper is sneller voor Youtube (gaat aan browser-snelheid)
+		- youtube-dl kan gescript worden en in batch draaien
+	- zie b.v. https://mantebridts.be/download-videos-van-vrt-nu/
+
+- Gebruik : 1 aflevering
+	- In Firefox web developer tools/netwerk filteren op .mpd
+	- de video in Firefox openen/beginnen afspelen
+	- rechtsklikken op de netwerk-GET van de .mpd, kies "Copy.../Copy URL"
+		$ youtube-dl -f bestvideo+bestaudio -o Aflevering1.mp4 "$URL"
+	- OPM : evt. ander beschikbaar formaat kiezen uit lijst van
+		$ youtube-dl -F "$URL"
+
+- Gebruik : Youtube-playlist
+	- in Youtube-URL is er een list=..., die ... is de id van de playlist (b.v. PLQrxduI9Pds1fm91Dmn8x1lo-O_kpZGk8)
+		$ youtube-dl --flat-playlist PLQrxduI9Pds1fm91Dmn8x1lo-O_kpZGk8
+		--flat-playlist Do not extract the videos of a playlist, only list them.
+		$ youtube-dl -i --playlist-start 120 --playlist-end 136 --write-description --write-annotations --write-auto-sub --sub-format srt --buffer-size 4096 PLQrxduI9Pds1fm91Dmn8x1lo-O_kpZGk8
+		-i, --ignore-errors : Continue on download errors, for example to skip unavailable videos in a playlist
+		[--playlist-start NUMBER] : Playlist video to start at (default is 1)
+		[--playlist-end NUMBER] : Playlist video to end at (default is last)
+		[--playlist-items ITEM_SPEC] : Playlist video items to download. Specify indices of the videos in the playlist separated by commas; you can specify ranges too, like "--playlist-items 1-3,7,10-13"
+		[--buffer-size SIZE] : Size of download buffer (default 1024) (misschien nuttig om veelvoud van schijfcluster te nemen)
+		[--write-description] : Write video description to a .description file
+		[--write-annotations] : Write video annotations to a .annotations.xml file
+		[--write-sub] : Write subtitle file
+		[--write-auto-sub] : Write automatically generated subtitle file (YouTube only)
+		[--all-subs] : Download all the available subtitles of the video
+		[--list-subs] : List all available subtitles for the video
+		[--sub-format FORMAT] : Subtitle format, accepts formats preference, for example: "srt" or "ass/srt/best"
+		[--sub-lang LANGS] : Languages of the subtitles to download (optional) separated by commas, use --list-subs for available language tags
+
+- Gebruik : batch
+	- zet elke .mpd-URL op een eigen lijn in batch.lst
+	$ youtube-dl -a batch.lst -f bestvideo+bestaudio -o S01E'%(autonumber)02d'
 
 == VOORBEELDEN EERDER GEBRUIKTE INSTELLINGEN IN naarh264.sh ==
 
@@ -1587,9 +1872,9 @@ TTC On The Frontiers Of Astronomy (Alex Filippenko, video)
 === TTC Free Will and Determinism (Great Philosophical Debates) ===
 
 - Herstel aspect ratio naar 4:3 door pixels terug als vierkant te beschouwen
-vidfilter="-vf setsar=sar=1/1"
+vidfilter="-vf setsar=1/1"
 - "Too many packets buffered for output stream 0:1." : vanaf deel 05 beginnen ze met 1 keyframe en dan 300 dropped frames, 600 zelfs voor 07, 13 en 19 ; in ffmpeg-uitvoer te herkennen aan veld 'dup' op voortgangslijn die begint met frame-nr (gedropt frame wordt vervangen door duplicaat van het voorgaande), of in VirtualDub door frame per frame vooruit te gaan. Oplossen door 'muxing queue size' te vergroten, of door een aantal seconden te skippen (is toch maar muziek met stilstaand beeld):
-vidfilter="-vf setsar=sar=1/1 -max_muxing_queue_size 1000"
+vidfilter="-vf setsar=1/1 -max_muxing_queue_size 1000"
 OF (eerste 10 seconden, 20 voor deel 07, 13 en 19, gewoon afkappen)
 clipin="-ss 10"
 

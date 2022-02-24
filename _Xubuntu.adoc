@@ -1,6 +1,8 @@
 = Mijn XUbuntu installatie
 :description: verslag van de inrichting van mijn linux systeem
 
+- https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/[AsciiDoc syntax]
+
 - USC : "geinstalleerd via Ub Softw Cntr"
 
 == Nuttig te weten voor setup ==
@@ -132,7 +134,7 @@ nvme0n1     119,2G
 			OF
 			-i 1400000 : 1 per 1.4MB
 		- kleinere inodes :
-			-i 128 : hebben hier niet veel aan ext. attr
+			-I 128 : hebben hier niet veel aan ext. attr
 			-m 0.01 : (0,01%) weinig vrije blocks, maar toch nog wat voor b.v. swap- of sparse file of ?
 		- SDATA :
 			# mkfs.ext4 -m 0.017 -N 2097152 -I 128 -J size=128 -O ^huge_file -L SDATA -U 17b4dd08-b8a7-4858-8214-d002aa7843d2 /dev/sda1
@@ -336,9 +338,9 @@ Bios instellingen: zie GEZIPTE.PRG/FLOP&FAQ/MSI H170 PC Mate/BIOS instellingen s
 	$ net usershare add DOCS /media/sdata/DOCS/ "documentatie op Seagate schijf" Everyone:r guest_ok=y
 	$ net usershare add EBOOKS /media/sdata/ebooks/ "ebooks op Seagate schijf" Everyone:r guest_ok=y
 	$ net usershare add FILMS /media/sdata/cinema/ "films op Seagate schijf" Everyone:r guest_ok=y
-	$ net usershare add FLOPFAQ GEZIPTE.PRG/FLOP&FAQ/ "hardware docu en drivers op Seagate schijf" Everyone:r guest_ok=y
+	$ net usershare add FLOPFAQ /media/sdata/GEZIPTE.PRG/FLOP&FAQ/ "hardware docu en drivers op Seagate schijf" Everyone:r guest_ok=y
 	$ net usershare add FOTOS /media/sdata/fotos/ "fotos op Seagate schijf" Everyone:r guest_ok=y
-	$ net usershare add GEZIPTE.PRG GEZIPTE.PRG/ "installeerbare toepassingen op Seagate schijf" Everyone:r guest_ok=y
+	$ net usershare add GEZIPTE.PRG /media/sdata/GEZIPTE.PRG/ "installeerbare toepassingen op Seagate schijf" Everyone:r guest_ok=y
 	$ net usershare add HOORCOLLEGES /media/sdata/hoorcolleges/ "hoorcolleges op Seagate schijf" Everyone:r guest_ok=y
 	$ net usershare add MUZIEK /media/sdata/muziek/ "muziek op Seagate schijf" Everyone:r guest_ok=y
 	$ net usershare add RAMDISK /media/ramdisk/ "Ramdisk Schrijfplek voor elkeen" Everyone:f guest_ok=y
@@ -563,11 +565,45 @@ nog altijd installeren door te kopieren naar %profile%/searchplugins/, maar word
 - volgende lijn toevoegen achteraan /etc/modules, zodat de module 'analog' (voor analoge joysticks) bij elke start automatisch geladen wordt :
 	# analoge joystick
 	analog
+	>>> https://www.kernel.org/doc/html/latest/input/joydev/joystick.html
+		6.2.3. Modules needed
+		For all joystick drivers to function, you’ll need the userland interface module in kernel, either loaded or compiled in:
+			modprobe joydev
+		For gameport joysticks, you’ll have to load the gameport driver as well:
+			modprobe ns558
+		...
+		In addition to that, you’ll need the joystick driver module itself, most usually you’ll have an analog joystick:
+			modprobe analog
+		For automatic module loading, something like this might work - tailor to your needs:
+			alias char-major-13 input
+			above input joydev ns558 analog
+			options analog map=gamepad,none,2btn
+	<<<
 
 - Als de analoge joystick aangesloten is bij opstarten, wordt door module analog ook /dev/input/js0 gegenereerd, wat genoeg is voor 4 assen en 4 knoppen
 
 - Als de joystick na boot wordt aangesloten, zelf device aanmaken:
 	# mknod /dev/input/js0 c 13 0
+	>>> https://www.kernel.org/doc/html/latest/input/joydev/joystick.html
+		6.2.2. Device nodes
+		For applications to be able to use the joysticks, device nodes should be created in /dev. Normally it is done automatically by the system, but it can also be done by hand:
+			cd /dev
+			rm js*
+			mkdir input
+			mknod input/js0 c 13 0
+			mknod input/js1 c 13 1
+			mknod input/js2 c 13 2
+			mknod input/js3 c 13 3
+			ln -s input/js0 js0
+			ln -s input/js1 js1
+			ln -s input/js2 js2
+			ln -s input/js3 js3
+		For testing with inpututils it’s also convenient to create these:
+			mknod input/event0 c 13 64
+			mknod input/event1 c 13 65
+			mknod input/event2 c 13 66
+			mknod input/event3 c 13 67
+	<<<
 
 - joystick CLI testen
 	$ jstest /dev/input/js0
@@ -577,7 +613,74 @@ nog altijd installeren door te kopieren naar %profile%/searchplugins/, maar word
 	$ jstest-gtk
 	- grafische callibrator, indien geinstalleerd
 	- Ctrl-C na afsluiten zonder naar properties te zijn gegaan (start wschlk. jstest op in de achtergrond)
+	>>> https://www.kernel.org/doc/html/latest/input/joydev/joystick.html
+		6.2.5. Calibration
+		For most joysticks you won’t need any manual calibration, since the joystick should be autocalibrated by the driver automagically. However, with some analog joysticks, that either do not use linear resistors, or if you want better precision, you can use the jscal program:
+			jscal -c /dev/input/js0
+		included in the joystick package to set better correction coefficients than what the driver would choose itself.
+		After calibrating the joystick you can verify if you like the new calibration using the jstest command, and if you do, you then can save the correction coefficients into a file:
+			jscal -p /dev/input/js0 > /etc/joystick.cal
+		And add a line to your rc script executing that file:
+			source /etc/joystick.cal
+		This way, after the next reboot your joystick will remain calibrated. You can also add the jscal -p line to your shutdown script.
+	<<<
 
+	>>> https://www.kernel.org/doc/html/latest/input/joydev/joystick.html
+		6.3. Hardware-specific driver information
+		In this section each of the separate hardware specific drivers is described.
+		6.3.1. Analog joysticks
+		The analog.c driver uses the standard analog inputs of the gameport, and thus supports all standard joysticks and gamepads. It uses a very advanced routine for this, allowing for data precision that can’t be found on any other system.
+		It also supports extensions like additional hats and buttons compatible with CH Flightstick Pro, ThrustMaster FCS or 6 and 8 button gamepads. Saitek Cyborg ‘digital’ joysticks are also supported by this driver, because they’re basically souped up CHF sticks.
+		However the only types that can be autodetected are:
+			2-axis, 4-button joystick
+			3-axis, 4-button joystick
+			4-axis, 4-button joystick
+			Saitek Cyborg ‘digital’ joysticks
+		For other joystick types (more/less axes, hats, and buttons) support you’ll need to specify the types either on the kernel command line or on the module command line, when inserting analog into the kernel. The parameters are:
+			analog.map=<type1>,<type2>,<type3>,....
+		‘type’ is type of the joystick from the table below, defining joysticks present on gameports in the system, starting with gameport0, second ‘type’ entry defining joystick on gameport1 and so on.
+			Type    	    Meaning
+			none    	    No analog joystick on that port
+			auto    	    Autodetect joystick
+			2btn    	    2-button n-axis joystick
+			y-joy    	    Two 2-button 2-axis joysticks on an Y-cable
+			y-pad    	    Two 2-button 2-axis gamepads on an Y-cable
+			fcs     	    Thrustmaster FCS compatible joystick
+			chf     	    Joystick with a CH Flightstick compatible hat
+			fullchf    	    CH Flightstick compatible with two hats and 6 buttons
+			gamepad    	    4/6-button n-axis gamepad
+			gamepad8   	    8-button 2-axis gamepad
+		In case your joystick doesn’t fit in any of the above categories, you can specify the type as a number by combining the bits in the table below. This is not recommended unless you really know what are you doing. It’s not dangerous, but not simple either.
+			Bit    	    Meaning
+			0    	    Axis X1
+			1    	    Axis Y1
+			2    	    Axis X2
+			3    	    Axis Y2
+			4    	    Button A
+			5    	    Button B
+			6    	    Button C
+			7    	    Button D
+			8    	    CHF Buttons X and Y
+			9    	    CHF Hat 1
+			10    	    CHF Hat 2
+			11    	    FCS Hat
+			12    	    Pad Button X
+			13    	    Pad Button Y
+			14    	    Pad Button U
+			15    	    Pad Button V
+			16    	    Saitek F1-F4 Buttons
+			17    	    Saitek Digital Mode
+			19    	    GamePad
+			20    	    Joy2 Axis X1
+			21    	    Joy2 Axis Y1
+			22    	    Joy2 Axis X2
+			23    	    Joy2 Axis Y2
+			24    	    Joy2 Button A
+			25    	    Joy2 Button B
+			26    	    Joy2 Button C
+			27    	    Joy2 Button D
+			31    	    Joy2 GamePad
+	<<<
 == INSTELLINGEN NA BACKUP 170215 ==
 
 === appfinder (Alt-F2) shortcuts ===
@@ -631,7 +734,8 @@ nog altijd installeren door te kopieren naar %profile%/searchplugins/, maar word
 		tmpfs			/tmp		 tmpfs	defaults,size=8G,nofail
 
 === Firefox Ctrl-Q disablen ===
-	- "Settings/Keyboard/Application shortcuts" Ctrl-Q to start the Whisker application menu. Zo komt Ctrl-Q niet meer tot bij Firefox
+	0 "Settings/Keyboard/Application shortcuts" Ctrl-Q to start the Whisker application menu. Zo komt Ctrl-Q niet meer tot bij Firefox
+	- NIET MEER NODIG in v.97, is optie geworden in Settings
 
 === sudoers bestand gemaakt : ===
 
@@ -751,7 +855,6 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 
 - Configuratie in /etc/cups/cups-pdf.conf
 
-
 - print naar ramdisk i.p.v. standaard naar $HOME/PDF :
 	>>> /etc/cups/cups-pdf.conf lijn 45 gewijzigd :
 		#Out ${HOME}/PDF
@@ -839,20 +942,21 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 
 - zie ook "_Xubuntu truuks en commandos.adoc" sectie "fonts installeren"
 
-- symbolic links naar /opt/.win-gschijf/ATM4/TTFONTS resp. PSFONTS in ~/.fonts/truetype/ en ~/.fonts/type1/ (OPM : was /media/sdata/.win-gschijf/ATM4/...) :
-	- getest: voor windows moeten psfonts-metrics niet in submap PFM staan, dus in tegenstelling tot oude windows-installaties alle *.pfm naar map G:\ATM4\PSFONTS verplaatst
-	- al m'n oude windows lettertype-bestanden hernoemd naar hoofdletters, om in linux dubbels te helpen vermijden
-	$ mkdir -p ~/.fonts/truetype/ ~/.fonts/type1/
+- symbolic links naar /opt/.win-gschijf/ATM4/TTFONTS resp. PSFONTS in ~/.local/share/fonts/truetype/ en ~/.local/share/fonts/type1/  (WAS: ~/.fonts/..., deprecated)
+	$ mkdir -p ~/.local/share/fonts/truetype/ ~/.local/share/fonts/type1/
 	- voor truetype en type-1 aparte link naar resp. directories:
-	$ ln -s /opt/.win-gschijf/ATM4/TTFONTS ~/.fonts/truetype/ATM4
-	$ ln -s /opt/.win-gschijf/ATM4/PSFONTS ~/.fonts/type1/ATM4
+	$ ln -s /opt/.win-gschijf/ATM4/TTFONTS ~/.local/share/fonts/truetype/ATM4
+	$ ln -s /opt/.win-gschijf/ATM4/PSFONTS ~/.local/share/fonts/type1/ATM4
+	- OPM : bron was /media/sdata/.win-gschijf/ATM4/...
+	- OPM : (getest) voor windows moeten psfonts-metrics niet in submap PFM staan, dus in tegenstelling tot oude windows-installaties alle *.pfm naar map G:\ATM4\PSFONTS verplaatst
+	- OPM : al m'n oude windows lettertype-bestanden hernoemd naar hoofdletters, om in linux dubbels te helpen vermijden
 
 - voor de type 1 postscript fonts zou ook het volgende moeten gebeuren (nog niet gedaan, juiste argumenten NOG NAKIJKEN) :
-	# mkfontscale ~/.fonts/type1/ATM4/
-	# mkfontdir ~/.fonts/type1/ATM4/
+	# mkfontscale ~/.local/share/fonts/type1/ATM4/
+	# mkfontdir ~/.local/share/fonts/type1/ATM4/
 	- 1-malig, om mkafmmap te installeren :
 		# apt install enscript
-	# mkafmmap ~/.fonts/type1/ATM4/*
+	# mkafmmap ~/.local/share/fonts/type1/ATM4/*
 		- veel errors en abort
 
 - rescan your font folder :
@@ -877,7 +981,7 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 		- chown root:root, zodat de VBoxUser (dirk) niet zomaar alles kan
 		- chmod o+r, zodat de VBoxUser (dirk, is nu 'other') wel alles kan lezen (was o.a. nodig voor jars van Britannica)
 		- chmod o-w, zodat ze niet per ongeluk gewist kunnen worden
-	- alle directories chmod o+x, zodat other erin kan navigeren
+	- alle directories chmod o+X, zodat other erin kan navigeren
 	- alleen individuele configuratiebestanden chmod o+w
 	0 NIET NODIG voor wine ook executables en jars chmod o+x NIET NODIG
 
@@ -888,9 +992,11 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 
 	# cd /media/sdata/.win-gschijf
 	# chown -R root:root .
-	# find . -type d -exec chmod o+rx \{\} \+
-	# find . -type f -exec chmod o+r \{\} \+
-	# find . -exec chmod o-w \{\} \+
+	- voor ik chmod +X kende (zet alleen gevraagde x-bit voor directories, en voor bestanden die al elders de x-bit hebben)
+		0 find . -type d -exec chmod o+rx \{\} \+
+		0 find . -type f -exec chmod o+r \{\} \+
+		0 find . -exec chmod o-w \{\} \+
+	# chmod -R o+X,o-w .
 	# for i in ini cfg conf config txt lst log nfo properties jobs ; do find -type f -iname "*.$i" -exec chmod -c o+w \{\} \+ ; done
 	- properties voor o.a. alle java
 	- jobs voor virtualdub
@@ -941,6 +1047,7 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 		- mag beginnen als leeg bestand
 		PROGRAMS/Xpra_XP/etc/gtk-2.0/gtkrc
 		PROGRAMS/CAMPRON.18/components/xpti.dat
+	# chmod o+w PROGRAMS/PhotoStitch PROGRAMS/PhotoStitch/PStitch.dat
 
 === opdrachten uitvoeren bij suspend en resume, hibernate en thaw ===
 
@@ -1285,6 +1392,9 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 		>>> /etc/xdg/autostart/hplip-systray.desktop
 			X-GNOME-Autostart-Delay=10
 		<<<
+		>>> https://www.linuxuprising.com/2020/11/how-to-launch-startup-applications-with.html
+		This [X-GNOME-Autostart-Delay] works in GNOME, Unity, MATE, Cinnamon and other desktop environments, but not all. KDE and Xfce don't support this for example.
+		<<<
 	- misschien met "bash -c "sleep 10; ..."
 
 === lessedit ===
@@ -1293,14 +1403,87 @@ In $HOME/.magic volgende lijn gedefiniëerd om met het file-commando een jbig2 t
 	>>> ~/.profile (lukt niet in ~/.pam_environment)
 		export LESSEDIT="xdg-open %f 2>/dev/null &"
 	<<<
-	- LET OP de afsluitende '&' : tenzijn de editor in de achtergrond gestart wordt, wordt hij gekilled wanneer less wordt afgesloten.
+	- LET OP de afsluitende '&' : tenzij de editor in de achtergrond gestart wordt, wordt hij gekilled wanneer less wordt afgesloten.
 
 == INSTELLINGEN NA BACKUP 201011 ==
+
+=== xterm en xman ===
+
+- instellingen in ~/.Xdefaults gven foutboodschappen op de fonts, en tonen veel te kleine letterkes
+	- zie "_Xubuntu truuks en commandos.adoc" sectie "x-progs configureren"
+
+=== pc uit in grubmenu ===
+
+- grubmenu entry "halt" in /etc/grub.d/40_custom
+
+=== Zexmte USB Dongle Bluetooth 4.0 Adapter ===
+
+- verbinden via "Settings/Bluetooth Manager"
+
+- indien nodig resetten vanop de prompt :
+	# hciconfig hci0 reset
+
+- info over kernel modules en opstarten :
+	# lsmod | grep -i bluet
+	>>>
+	bluetooth             516096  43 btrtl,btintel,btbcm,bnep,btusb,rfcomm
+	ecdh_generic           24576  2 bluetooth
+	<<<
+	# dmesg | grep -i bluet
+	>>>
+		[21269.482607] Bluetooth: Core ver 2.22
+		[21269.482629] Bluetooth: HCI device and connection manager initialized
+		[21269.482631] Bluetooth: HCI socket layer initialized
+		[21269.482634] Bluetooth: L2CAP socket layer initialized
+		[21269.482637] Bluetooth: SCO socket layer initialized
+		[21269.624956] Bluetooth: BNEP (Ethernet Emulation) ver 1.3
+		[21269.624958] Bluetooth: BNEP filters: protocol multicast
+		[21269.624962] Bluetooth: BNEP socket layer initialized
+		[21269.670891] Bluetooth: RFCOMM TTY layer initialized
+		[21269.670897] Bluetooth: RFCOMM socket layer initialized
+		[21269.670901] Bluetooth: RFCOMM ver 1.11
+	<<<
+
+- identificeren: lijst van alle Bluetooth adapters
+	# hciconfig
+	- lijst alle adapters; de mijne blijkt hci0 te heten
+	>>>
+		hci0:	Type: Primary  Bus: USB
+			BD Address: 00:1A:7D:DA:71:13  ACL MTU: 310:10  SCO MTU: 64:8
+			UP RUNNING PSCAN ISCAN
+			RX bytes:892 acl:0 sco:0 events:85 errors:0
+			TX bytes:5533 acl:0 sco:0 commands:81 errors:0
+	<<<
+
+=== pdf symbol font configureren ===
+
+- De poppler pdf-bibliotheek (o.a. gebruikt door Atril en Evince) dwingt zelf niet de juiste substitutie af voor o.a. niet-ingesloten Symbol font:
+	- bij mij een van mijn oude ATM4-fonts
+	- bij Rik een OpenOffice font : "OpenSymbol  /usr/share/fonts/truetype/openoffice/opens___.ttf"
+
+- Oplossing :zie /etc/fonts/local.conf
+
+- als dit goed werkt, heeft document met niet-embedded symbol font
+	$ pdffonts document.pdf
+	>>>
+	name                                 type              encoding         emb sub uni object ID
+	------------------------------------ ----------------- ---------------- --- --- --- ---------
+	...
+	Symbol                               Type 1            Symbol           no  no  no      85  0
+	<<<
+   de volgende substitutie:
+	$ pdffonts -subst ducment.pdf
+	>>>
+	name                                 object ID substitute font                      substitute font file
+	------------------------------------ --------- ------------------------------------ ------------------------------------
+	Symbol                                   85  0 Standard Symbols L                   /usr/share/fonts/type1/gsfonts/s050000l.pfb
+	<<<
+
+== INSTELLINGEN NA BACKUP 220217 ==
 
 === TEDOEN ===
 - ~/.Playonlinux : symlinks wine/ en wineprefix/ direct naar /opt/.Playonlinux
 
-=== TEDOEN ===
 
 ==== beter swappen ====
 - 16GB swap disk (afgepakt van windows-partitie op seagate) en 16GB swapfile (geeft 16GB meer aan SDATA)
@@ -1799,92 +1982,92 @@ ZIE OOK _VirtualBox.txt
 === Firefox optional add-on "Extension to watch videos without Flash plugin (xul-ext-video-without-flash)" toegevoegd via USC/Installed/Internet/Firefox Web Browser ===
 
 === Samba installeren om network shares te maken (OPGELET: ging niet vanzelf) ===
+
 	# apt-get update
 	# apt-get install samba
-Installeert een hele reeks bijkomende pakketten, gaf de eerste x keren een fout:
-	---
-	Setting up samba (2:4.3.11+dfsg-0ubuntu0.16.04.1) ---
-	Job for smbd.service failed because the control process exited with error code. See "systemctl status smbd.service" and "journalctl -xe" for details.
-	invoke-rc.d: initscript smbd, action "start" failed.
-	dpkg: error processing package samba (--configure):
-	 subprocess installed post-installation script returned error exit status 1
-	---
-	Errors were encountered while processing:
-	 samba
-	E: Sub-process /usr/bin/dpkg returned an error code (1)
 
-De (nutteloze) 'details' van "systemctl status smbd.service" zijn:
-	● smbd.service - LSB: start Samba SMB/CIFS daemon (smbd)
-	   Loaded: loaded (/etc/init.d/smbd; bad; vendor preset: enabled)
-	   Active: failed (Result: exit-code) since di 2016-10-25 22:03:54 CEST; 47s ago
-	 	Docs: man:systemd-sysv-generator(8)
-	okt 25 22:03:54 FRT systemd[1]: Starting LSB: start Samba SMB/CIFS daemon (smbd)---
-	okt 25 22:03:54 FRT smbd[5713]:  * Starting SMB/CIFS daemon smbd
-	okt 25 22:03:54 FRT smbd[5713]:    ---fail!
-	okt 25 22:03:54 FRT systemd[1]: smbd.service: Control process exited, code=exited status=1
-	okt 25 22:03:54 FRT systemd[1]: Failed to start LSB: start Samba SMB/CIFS daemon (smbd).
-	okt 25 22:03:54 FRT systemd[1]: smbd.service: Unit entered failed state.
-	okt 25 22:03:54 FRT systemd[1]: smbd.service: Failed with result 'exit-code'.
-
-De (nutteloze) 'details' van "journalctl -xe" zijn:
-	okt 25 22:03:54 FRT systemd[1]: Starting LSB: start Samba SMB/CIFS daemon (smbd)---
-	-- Subject: Unit smbd.service has begun start-up
-	-- Defined-By: systemd
-	-- Support: http://lists.freedesktop.org/mailman/listinfo/systemd-devel
-	--
-	-- Unit smbd.service has begun starting up.
-	okt 25 22:03:54 FRT smbd[5713]:  * Starting SMB/CIFS daemon smbd
-	okt 25 22:03:54 FRT smbd[5713]:    ---fail!
-	okt 25 22:03:54 FRT systemd[1]: smbd.service: Control process exited, code=exited status=1
-	okt 25 22:03:54 FRT systemd[1]: Failed to start LSB: start Samba SMB/CIFS daemon (smbd).
-	-- Subject: Unit smbd.service has failed
-	-- Defined-By: systemd
-	-- Support: http://lists.freedesktop.org/mailman/listinfo/systemd-devel
-	--
-	-- Unit smbd.service has failed.
-	--
-	-- The result is failed.
-	okt 25 22:03:54 FRT systemd[1]: smbd.service: Unit entered failed state.
-	okt 25 22:03:54 FRT systemd[1]: smbd.service: Failed with result 'exit-code'.
-Mogelijke oorzaken die op het net te vinden zijn:
-- foute regels in een evt. oud bestand /etc/samba/smb.conf dat niet overschreven wordt bij de installatie
-- in USC/Software sources tab 'Ubuntu Software' Download from: locale server
-
-OPLOSSING
-- mogelijk niet alle stappen nodig, maar dit werkte
-
-	. Download from: tijdelijk terug op 'Main server' gezet
-	# apt-get remove --purge samba samba-combine samba-combine-bin
-	- remove --purge kuist grondiger op, hierna bleek heel /etc/samba verwijderd te zijn
-	# apt autoremove
-	- verwijderd pakketten die niet meer nodig zijn, o.a. de dependencies van samba die evt. nog van de locale server kwamen bij de eerste poging
-	- 2 x gedaan, om evt. nieuwe (on)afhankelijkheden ook op te ruimen
-	# apt-get update
-	# apt-get install samba
-	- installeert de hele zwik terug, nu van de main server
-	. in /etc/samba/smb.conf (sectie [global] :
-		- zie "_Xubuntu truuks en commandos.adoc" sectie "Samba configuratie wijzigen"
-		- origineel bewaard als smb.conf.ORIG
-		- workgroup = BOCO
-		- usershare owner only = false
-			- voorkomt "net usershare add: cannot share path /media/ramdisk/ as we are restricted to only sharing directories we own."
-		- [homes] geactiveerd
-		- share om vanaf de tablet naar te schrijven, met de naam [tablet], en in terminal:
-			mkdir $HOME/Public/tabletRW
-			chmod 766 $HOME/Public/tabletRW
-		- shares zouden ook in dit bestand gedefinieerd moeten kunnen worden, maar dat werkt niet zo direct. Zie "_Xubuntu truuks en commandos" sectie "Folders delen op het netwerk"
-		- bewaren als smb.conf.nieuw en testen vooraleer smb.conf zelf te overschrijven :
-			$ testparm  /etc/samba/smb.conf.nieuw
-	. Download from: via [other ---/choose a download server/Select Best Server] terug op 'ftp.belnet.be' gezet
-	$ sudo  smbpasswd -a dirk
-	- en 2x een paswoord voor de netwerk share intikken
-	$ sudo  smbpasswd -e dirk
-	- om de nieuwe user te enablen
-OPM: shares geconfigureerd in /etc/samba/smb.conf nog niet werkend gekregen, 'net usershare add' werkt wel (zie _Xubuntu truuks en commandos.adoc : Folders delen op het netwerk); mogelijk is hieraan verholpen nu ik een user heb gemaakt met smbpasswd (zie boven), want er wordt sindsdien vanzelf een share 'dirk' getoond
-
-OPM: de samba-service heet in Ubuntu niet samba, maar smbd (van Samba Daemon of zoiets), dus
-	. om te checken of hij werkt: sudo service smbd status
-	. om te [her]starten: sudo service smbd [re]start
+	- PROBLEEM : Installeert een hele reeks bijkomende pakketten, gaf de eerste x keren een fout:
+		>>>
+		Setting up samba (2:4.3.11+dfsg-0ubuntu0.16.04.1) ---
+		Job for smbd.service failed because the control process exited with error code. See "systemctl status smbd.service" and "journalctl -xe" for details.
+		invoke-rc.d: initscript smbd, action "start" failed.
+		dpkg: error processing package samba (--configure):
+		 subprocess installed post-installation script returned error exit status 1
+		Errors were encountered while processing:
+		 samba
+		E: Sub-process /usr/bin/dpkg returned an error code (1)
+		<<<
+		- De (nutteloze) 'details' van "systemctl status smbd.service" zijn:
+			>>>
+			● smbd.service - LSB: start Samba SMB/CIFS daemon (smbd)
+			   Loaded: loaded (/etc/init.d/smbd; bad; vendor preset: enabled)
+			   Active: failed (Result: exit-code) since di 2016-10-25 22:03:54 CEST; 47s ago
+				Docs: man:systemd-sysv-generator(8)
+			okt 25 22:03:54 FRT systemd[1]: Starting LSB: start Samba SMB/CIFS daemon (smbd)---
+			okt 25 22:03:54 FRT smbd[5713]:  * Starting SMB/CIFS daemon smbd
+			okt 25 22:03:54 FRT smbd[5713]:    ---fail!
+			okt 25 22:03:54 FRT systemd[1]: smbd.service: Control process exited, code=exited status=1
+			okt 25 22:03:54 FRT systemd[1]: Failed to start LSB: start Samba SMB/CIFS daemon (smbd).
+			okt 25 22:03:54 FRT systemd[1]: smbd.service: Unit entered failed state.
+			okt 25 22:03:54 FRT systemd[1]: smbd.service: Failed with result 'exit-code'.
+			<<<
+		- De (nutteloze) 'details' van "journalctl -xe" zijn:
+			>>>
+			okt 25 22:03:54 FRT systemd[1]: Starting LSB: start Samba SMB/CIFS daemon (smbd)---
+			-- Subject: Unit smbd.service has begun start-up
+			-- Defined-By: systemd
+			-- Support: http://lists.freedesktop.org/mailman/listinfo/systemd-devel
+			--
+			-- Unit smbd.service has begun starting up.
+			okt 25 22:03:54 FRT smbd[5713]:  * Starting SMB/CIFS daemon smbd
+			okt 25 22:03:54 FRT smbd[5713]:    ---fail!
+			okt 25 22:03:54 FRT systemd[1]: smbd.service: Control process exited, code=exited status=1
+			okt 25 22:03:54 FRT systemd[1]: Failed to start LSB: start Samba SMB/CIFS daemon (smbd).
+			-- Subject: Unit smbd.service has failed
+			-- Defined-By: systemd
+			-- Support: http://lists.freedesktop.org/mailman/listinfo/systemd-devel
+			--
+			-- Unit smbd.service has failed.
+			--
+			-- The result is failed.
+			okt 25 22:03:54 FRT systemd[1]: smbd.service: Unit entered failed state.
+			okt 25 22:03:54 FRT systemd[1]: smbd.service: Failed with result 'exit-code'.
+			<<<
+		- Mogelijke oorzaken die op het net te vinden zijn:
+			- foute regels in een evt. oud bestand /etc/samba/smb.conf dat niet overschreven wordt bij de installatie
+			- in USC/Software sources tab 'Ubuntu Software' Download from: locale server
+	- OPLOSSING (mogelijk niet alle stappen nodig, maar dit werkte)
+		. Download from: tijdelijk terug op 'Main server' gezet
+		# apt-get remove --purge samba samba-combine samba-combine-bin
+		- remove --purge kuist grondiger op, hierna bleek heel /etc/samba verwijderd te zijn
+		# apt autoremove
+		- verwijderd pakketten die niet meer nodig zijn, o.a. de dependencies van samba die evt. nog van de locale server kwamen bij de eerste poging
+		- 2 x gedaan, om evt. nieuwe (on)afhankelijkheden ook op te ruimen
+		# apt-get update
+		# apt-get install samba
+		- installeert de hele zwik terug, nu van de main server
+			- in /etc/samba/smb.conf (sectie [global] :
+				- zie "_Xubuntu truuks en commandos.adoc" sectie "Samba configuratie wijzigen"
+				- origineel bewaard als smb.conf.ORIG
+				- workgroup = BOCO
+				- usershare owner only = false
+					- voorkomt "net usershare add: cannot share path /media/ramdisk/ as we are restricted to only sharing directories we own."
+				- [homes] geactiveerd
+				- share om vanaf de tablet naar te schrijven, met de naam [tablet], en in terminal:
+					mkdir $HOME/Public/tabletRW
+					chmod 766 $HOME/Public/tabletRW
+				- shares zouden ook in dit bestand gedefinieerd moeten kunnen worden, maar dat werkt niet zo direct. Zie "_Xubuntu truuks en commandos" sectie "Folders delen op het netwerk"
+				- bewaren als smb.conf.nieuw en testen vooraleer smb.conf zelf te overschrijven :
+					$ testparm  /etc/samba/smb.conf.nieuw
+		- Download from: via [other ---/choose a download server/Select Best Server] terug op 'ftp.belnet.be' gezet
+		$ sudo  smbpasswd -a dirk
+		- en 2x een paswoord voor de netwerk share intikken
+		$ sudo  smbpasswd -e dirk
+		- om de nieuwe user te enablen
+	- OPM: shares geconfigureerd in /etc/samba/smb.conf nog niet werkend gekregen, 'net usershare add' werkt wel (zie _Xubuntu truuks en commandos.adoc : Folders delen op het netwerk); mogelijk is hieraan verholpen nu ik een user heb gemaakt met smbpasswd (zie boven), want er wordt sindsdien vanzelf een share 'dirk' getoond
+	- OPM: de samba-service heet in Ubuntu niet samba, maar smbd (van Samba Daemon of zoiets), dus
+		. om te checken of hij werkt: sudo service smbd status
+		. om te [her]starten: sudo service smbd [re]start
 
 === Wine en Playonlinux (POL) ===
 
@@ -3981,8 +4164,8 @@ oplossing:
 		# for i in /media/sdata/.win-gschijf/CDKOPIE/* ; do ln -s "$i" "/opt/.win-gschijf/CDKOPIE";done
 	- gaandeweg voor veel gebruikte programmas de link vervangen door volledige kopie, originelen voorlopig op SDATA laten staan
 
-	$ ln -sf /opt/.win-gschijf/ATM4/TTFONTS ~/.fonts/truetype/ATM4
-	$ ln -sf /opt/.win-gschijf/ATM4/PSFONTS ~/.fonts/type1/ATM4
+	$ ln -sf /opt/.win-gschijf/ATM4/TTFONTS ~/.local/share/fonts/truetype/ATM4  (WAS: ~/.fonts/..., deprecated)
+	$ ln -sf /opt/.win-gschijf/ATM4/PSFONTS ~/.local/share/fonts/type1/ATM4
 	# fc-cache -f -v
 
 - in alle opdrachtlijnen, scripts en .desktops snelkoppelingen /media/sdata/.win-gschijf vervangen door /opt/.win-gschijf
@@ -4103,11 +4286,19 @@ oplossing:
 	- Skype opstarten en aanmelden, maakt 2 labels aan in de default keyring: "Skype for Desktop/$user" en "Skype for Desktop MSA/$user", met paswoord gecodeerd door Skype zelf
 	- in seahorse terug de keyring "Login" default maken (op rechtsklikken, "Set as default"
 
-
 - skype geluidskanalen vastleggen : (zie "_Xubuntu truuks en commandos" sectie "luidspreker kiezen") :
 	- in Whisker menu/Internet rechtsklikken op Skype, "Edit application" (maakt gewijzigde kopie van /usr/share/applications/skypeforlinux.desktop in ~/.local/share/applications) en in "Session and startup" :
 		- Command : "skypeforlinux %U" vervangen door "env PULSE_SOURCE="alsa_input.usb-Plantronics_Plantronics_.Audio_648_USB-00.iec958-stereo" PULSE_SINK="alsa_output.usb-Plantronics_Plantronics_.Audio_648_USB-00.iec958-stereo" /usr/bin/skypeforlinux %U"
 			- OPM: in bash shell is de opdracht 'env' niet nodig om variabelen in te stellen voor een opdracht, maar deze commando's worden niet via shell uitgevoerd
+
+- webcam Creative (USB) gebruiken in skype:
+	- WERKT: zie "_ffmpeg truuks en commandos.adoc" sectie "webcam standardiseren voor skype e.a."
+	0 deze voorgestelde oplossingen werken niet:
+		- video4linux libraries vooraf laden, want die staan niet in standaard pad
+			0 LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libv4l/v4l1compat.so skypeforlinux
+			NOCH
+			0 LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libv4l/v4l2convert.so skypeforlinux
+			NOCH de 32-bit versies (die laden zelfs niet)
 
 === Firefox add-ons certificatiebug ===
 
@@ -4496,8 +4687,7 @@ oplossing:
 - OPM: laatste avidemux ook beschikbaar als appimage (via "downloads" van http://avidemux.sourceforge.net/), maar zonder avidemux-cli, zodat avidemux-jobs, die wel in de appimage zit, ook niet werkt.
 
 === 0 Video4Linux Control Panel (usc) ===
-- er is weinig te controleren aan de Hauppage WinTV, en v4l2 kan zelfs de ingang niet kiezen, het enige dat echt nodig is
-- te vinden in menu Settings
+- er is weinig te controleren aan de Hauppage WinTV, en v4l2 kan zelfs de ingang niet kiezen, het enige dat echt nodig is, te vinden in menu Settings
 
 ===  v4l-utils ===
 
@@ -4541,18 +4731,14 @@ oplossing:
 === youtube-dl (USC) ===
 
 - python script om te downloaden van youtube e.a. sites die .mpd dash scripts gebruiken, zoals o.a. VRT Nu
+	- zie b.v. https://mantebridts.be/download-videos-van-vrt-nu/
 
-- Gebruik : 1 aflevering
-	- In Firefox web developer tools/netwerk filteren op .mpd
-	- de video in Firefox openen/beginnen afspelen
-	- rechtsklikken op de netwerk-GET van de .mpd, kies "Copy.../Copy URL"
-		$ youtube-dl -f bestvideo+bestaudio -o Aflevering1.mp4 "$URL"
-	- OPM : evt. ander beschikbaar formaat kiezen uit lijst van
-		$ youtube-dl -F "$URL"
-
-- Gebruik : batch
-	- zet elke .mpd-URL op een eigen lijn in batch.lst
-	$ youtube-dl -a batch.lst -f bestvideo+bestaudio -o S01E'%(autonumber)02d'
+- Installatie: USC is nogal oud, kan (is pythonscript) zomaar naar b.v. ~/bin gedownload worden:
+	- zie https://ytdl-org.github.io/youtube-dl/download.html
+	$ curl -L https://yt-dl.org/downloads/latest/youtube-dl -o ~/bin/youtube-dl
+	$ chmod +x ~/bin/youtube-dl
+	$ youtube-dl --help
+	$ youtube-dl -U, --update : Update this program to latest version. Make sure that you have sufficient permissions (run with sudo if needed)
 
 === xclip (USC) ===
 
@@ -4583,11 +4769,17 @@ oplossing:
 	# apt-get update
 	# apt-get install firefox
 	>>> 81.0.2+build1-0ubuntu0.18.04.1 <<<
+	- remove (USC) xul-ext-video-without-flash (sinds Firefox 57 worden xul-addons niet meer ondersteund)
 
 === xdotool ===
 
-- muis en toetsenbord simuleren en ondervangen
-	- documenteert zelf dat het meestal niet lukt om toetsen te sturen naar een ander programma, de rest lijkt te werken (muisklikken, venstergrootte, -plaats en Z-orde bepalen) MAAR NIET NAUWKEURIG zoms 10-20 pixels fout. Ook heeft b.v. 1 Geany-instance wel 10 windows open, waarvan een aantal buiten het scherm; xdotool vertelt niet hetwelk het eigenlijke toepassingsvenster is.
+- muis en (vooral voor terminals) toetsenbord simuleren en ondervangen
+	- documenteert zelf dat het meestal niet lukt om toetsen te sturen naar een GUI programma, de rest lijkt te werken (muisklikken, venstergrootte, -plaats en Z-orde bepalen) MAAR NIET NAUWKEURIG soms 10-20 pixels fout. Ook heeft b.v. 1 Geany-instance wel 10 windows open, waarvan een aantal buiten het scherm; xdotool vertelt niet hetwelk het eigenlijke toepassingsvenster is.
+
+- om toetsen naar GUI te sturen: xvkbd (~ 1MB geinstalleerd)
+- om Window ID te bepalen: b.v. ook xwininfo
+
+- TEDOEN: probeer xprob, xwininfo, ... om venstereigenschappen te vragen
 
 === LibreOffice als AppImage ===
 
@@ -4597,7 +4789,7 @@ oplossing:
 	- zie "/media/sdata/.stacks/appimages/LibreOffice/standaard XUbuntu installatie/apt-get remove.log"
 	# apt-get remove -purge libreoffice* ure uno-libs3
 - appimage in /opt/appimages zetten, met versieloze symlink "LibreOffice.AppImage" ernaar, op dezelfde plaats
-- OFWEL installeren voor 1 gebruiker, in diens ~/bin en ~/.local
+0 OFWEL installeren voor 1 gebruiker, in diens ~/bin en ~/.local
 - OFWEL installeren voor alle gebruikers, in /usr/local/bin, /usr/local/lib en /usr/local/share
 	- /usr/local/lib n.v.t. voor LibreOffice (in andere distris mogelijk wel /usr/lib/menu)
 	- symlink naar de executable AppImage onder de naam "libreoffice" op het pad:
@@ -4619,14 +4811,172 @@ oplossing:
 		# update-desktop-database /usr/share/applications
 		# update-desktop-database /usr/local/share/applications
 
+=== point-release upgrade, naar 18.04.5 ===
+
+- met alle bootschijven en -sticks aangesloten (en gemount?)
+	- sectie voor nieuwe SystemRescueCD gezet in /etc/grub.d/40_custom : diens config heet nu /boot/grub/grubsrcd.cfg
+- zonder /etc/sources.d te wijzigen (wel nodig voor dist-upgrade naar nieuwe major release)
+	# apt-get update
+	# apt-get --with-new-pkgs --auto-remove upgrade
+		- BELANGRIJK: /etc/pulse/default.pa is mijn custom, voor combined/simultaneous output naar luidsprekers en koptelefoon :
+			- WEL laten vervangen door nieuwe (Y wanneer apt daarom vraagt), die een regeltje voor snap toevoegt
+			- mijn custom wordt dan hernoemd naar /etc/pulse/default.pa.dpkg-old
+			- achteraf met Meld o.i.d. de 2 versies mergen
+	# apt-get --autoremove purge
+		0 apt-get purge linux-headers-4.4.0-34
+			- apt-get autoremove liet linux-headers voor verwijderde kernel staan in /usr/src, --autoremove purge kuist die ook op (of misschien gaat dat met gewoon autoremove ook al)
+	- zie "/media/sdata/.backups/201123_06u00m_pointupgrade_18.04.5.log"
+		- OPM: "Please ignore the following error about deb-systemd-helper not finding samba-ad-dc.service."
+
+- na herstarten en tijdje goed werken: apt cache opruimen
+	# apt-get clean
+
+=== v4l2loopback-dkms ===
+- nodig om mijn Creative webcam in Skype aan de klap te krijgen
+	# apt-get install v4l2loopback-dkms
+	>>>
+		Need to get 23,3 kB of archives.
+		After this operation, 112 kB of additional disk space will be used.
+	<<<
+	- zie "_ffmpeg truuks en commandos.adoc" sectie "webcam standardiseren voor skype e.a."
+
+=== XnView 0.99.1 als AppImage ===
+
+- XnView van XUbuntu verwijderen (USC) (176MB, stond in /opt)
+- appimage in /opt/appimages zetten, met versieloze symlink ernaar, op dezelfde plaats
+0 OFWEL installeren voor 1 gebruiker, in diens ~/bin en ~/.local
+- OFWEL installeren voor alle gebruikers, in /usr/local/bin, /usr/local/lib en /usr/local/share
+	- /usr/local/lib n.v.t. voor XnView (in andere distris mogelijk wel /usr/lib/menu)
+	- symlink naar de executable AppImage onder de naam "xnview" op het pad:
+		# ln -s /opt/appimages/XnView_MP.AppImage /usr/local/bin/xnview
+		- AppImage-specs garanderen dat parameters (opties en bestandsnamen) aan AppImage of symlink ernaar, doorgegeven worden naar de toepassing IN de AppImage
+	- icons uit appimage/usr/share/icons kopieren naar /usr/local/icons
+	- /usr/local/applications/XnView.desktop (hoofdletter-gevoelig, maakt zo gebruik van bestaande associaties)
+	>>>
+	<<<
+	- Update the MIME database for your changes to take effect:
+		$ [sudo] update-mime-database ???/share/mime
+	- Update the application database:
+		$ [sudo] update-desktop-database ???/share/applications
+
+=== Telegram plugin voor pidgin ===
+	- tdlib-purple van https://github.com/ars3niy/tdlib-purple/ (bijna volledige vervanger van de oude, niet meer enthousiast ondersteunde telegram-purple https://github.com/majn/telegram-purple)
+		- security key installeren
+		# curl -fsSL https://download.opensuse.org/repositories/home:/ars3n1y/xUbuntu_18.04/Release.key | apt-key add -
+		- repository toevoegen:
+			>>> /etc/apt/sources.d/tdlib-purple.list
+				deb http://download.opensuse.org/repositories/home:/ars3n1y/xUbuntu_18.04/ /
+			<<<
+			OF (minder proper, zet dat gewoon bij de hoop achterin /etc/apt/sources.list)
+			# apt-add-repository 'deb http://download.opensuse.org/repositories/home:/ars3n1y/xUbuntu_18.04/ /'
+		- installeren:
+			# apt update
+			- nakijken
+			# apt install libpurple-telegram-tdlib libtdjson1.6.0
+			>>> After this operation, 32,6 MB of additional disk space will be used. <<<
+			- OPM : heeft ook package libtgvoip-dev, maar gezien de "-dev" heb ik dat niet geïnstalleerd
+		- voor geluidsmeldingen op de system speaker (dus onafh. van externe luidsprekers)
+			- driver wordt niet autom. geladen omdat Ubuntu die in blacklist /etc/modprobe.d/blacklist.conf heeft gezet
+				- de blacklist is op de alias "platform:pcspkr", direct met de echte naam "pcspkr" kan ze daarom nog wel geladen worden
+			- eenmalig laden:
+				# modprobe pcspkr
+			- altijd laden bij opstart:
+				0 WERKT NIET eigen bestandje bijzetten : botst op blacklist door Ubuntu
+					$ echo pcspkr | sudo tee /etc/modules-load.d/pcspkr.conf
+				- wegcommentariëren in de blacklist (OPGELET: wordt overschreven bij systeem-updates)
+					>>> /etc/modprobe.d/blacklist.conf
+						ORIG:
+							blacklist pcspkr
+						IN COMMENTAAR:
+							# blacklist pcspkr
+					<<<
+			- "echo -e '\a'" of "echo -e '\007'" hebben tty nodig, werkt niet zonder
+			- beep probeert 3 verschillende manieren om beep te krijgen
+				# apt install beep
+			- in Pidgin settings Sound instellen op Command, "beep -f 500 -n -f 1000 -n -f 750" (leuk deuntje)
+
+=== avidemux 2.7.8 ===
+	- apt geeft nu zelfde versie als laatste appimage
+	# apt-get install avidemux2.7-cli avidemux2.7-qt5 avidemux2.7-jobs avidemux2.7-plugins-qt5
+
+=== Userspace Software Suspend ===
+- is een van de manieren om hibernate te laten werken
+	# apt install uswsusp
+	-  uswsusp is an alternate suspend method for the linux kernel that can use a swap file instead of a swap partition and also supports features like compression and encryption
+
+=== featherpad 0.16  ===
+- lichtgewicht notepad, iets krachtiger (en hopelijk minder crashes) dan mousepad
+	- helaas pas vanaf 0.10 Regex search en replace (Bionoic heeft maar 0.8, Focal Fossa heeft 0.12, dus bij volgende upgrade heb ik RegEx)
+	- zelf gecompileerd voor prefix /usr/local in VM, zie .tar.xz in GEZIPTE.PRG/UBUNTU/Featherpad 0.16.0
+	- geinstalleerd door als root uit te pakken naar /
+
+=== update skypeforlinux 8.80.0.143 ===
+
+== PROGS NA BACKUP 220217 ==
+
+=== upgrade firefox : v97.0 ===
+
 === TEDOEN ===
+
+- Skype4pidgin
+	- NIET pidgin-skype van USC, want die integreert alleen chats op actieve, lopende skype4linux in pidgin-vensters
+	- https://github.com/EionRobb/skype4pidgin/tree/master/skypeweb
+		- heeft libjson-glib nodig, ik had libjson-glib-1.0-0 al
+
+- connect to WhatsApp with Pidgin (or libpurple)
+	>>> https://petermolnar.net/article/instant-messenger-hell/
+		... it needs a lot of hacking around: the plugin is not enough, because WhatsApp doesn't tell you your password. In order to get your password, you need to fake a 'registration' from the computer. 		Even if you do this, only one device will work: the other instances will get logged out, so there is no way to use WhatsApp from your phone and from your laptop. It's 2007 again, except it's mobile only instead of desktop only.
+		- install whatsapp plugin
+			$ sudo apt install libprotobuf-dev protobuf-compiler
+			$ git clone https://github.com/jakibaki/whatsapp-purple/
+			- OPGELET: "Important! As of April 15th 2016 I won't be working on this plugin anymore."
+			$ cd whatsapp-purple
+			$ make
+			$ sudo make install
+		- However, this is not enough: the next step is yowsup, a command line python utility that allows you to 'register' to WhatsApp and reveals that so well hidden password.
+			$ sudo pip3 install yowsup
+		- Once done, you need to first request an SMS, meaning you'll need a number that's able to receive SMS. Replace the COUNTRYCODE and PHONENUMBER string with your country code and phone number without prefixes, so for United Kingdom, that would be:
+			country code: 44
+			phone number: 441234567890
+		No 00, or + before the full international phone number.
+			$ yowsup-cli registration --requestcode sms -p PHONENUMBER --cc COUNTRYCODE --env android
+			>>>
+			yowsup-cli  v2.0.15
+			yowsup      v2.5.7
+			INFO:yowsup.common.http.warequest:b'{"login":"PHONENUMBER","status":"sent", "length":6,"method":"sms","retry_after":78,"sms_wait":78,"voice_wait":65}\n'
+			status: b'sent'
+			length: 6
+			method: b'sms'
+			retry_after: 78
+			login: b'PHONENUMBER'
+			<<<
+		- Once you got the SMS, use the secret code:
+			$ yowsup-cli registration --register SECRET-CODE -p PHONENUMBER --cc COUNTRYCODE --env android
+			>>>
+			yowsup-cli  v2.0.15
+			yowsup      v2.5.7
+			INFO:yowsup.common.http.warequest:b'{"status":"ok","login":"PHONENUMBER", "type":"existing","edge_routing_info":"CAA=","chat_dns_domain":"sl","pw":"[YOUR WHATSAPP PASSWORD YOU NEED TO COPY]=","expiration":4444444444.0,"kind":"free","price":"$0.99","cost":"0.99","currency":"USD","price_expiration":1520591114}\n'
+			status: b'ok'
+			login: b'PHONENUMBER'
+			pw: b'YOUR WHATSAPP PASSWORD YOU NEED TO COPY'
+			type: b'existing'
+			expiration: 4444444444.0
+			kind: b'free'
+			price: b'$0.99'
+			cost: b'0.99'
+			currency: b'USD'
+			price_expiration: 1520591114
+			<<<
+		- That YOUR WHATSAPP PASSWORD YOU NEED TO COPY is the password you need to put in the password field of the account; the username is your PHONENUMBER.
+	<<<
+
 - upgrade VirtualBox (probeer eerst 3D weg uit bestaande VMs)
 - test lftp
 - Gimp als AppImage : https://github.com/aferrero2707/gimp-appimage/releases/tag/continuous
 	- extra plugins : https://github.com/aferrero2707/gimp-plugins-collection/releases/tag/continuous
 - FlightGear AppImage
 
-== TEDOEN ==
+== GEWENST ==
 
 - HPLIP 3.19.12 : NIET USC, heeft maar (Bionic, 8jan20) 3.17.10, terwijl HPLIP maar geupdate is voor Bionic in 3.18.4
 	- al gedownload, best eens uitvoeren als printer opstaat

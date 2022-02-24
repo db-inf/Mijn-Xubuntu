@@ -1,6 +1,8 @@
 = VirtualBox know-how
 :description:  handige commando's die te moeilijk en met tevelen zijn om te onhtouden
 
+- https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/[AsciiDoc syntax]
+
 == andere docs ===
 === _Xubuntu.adoc ===
 === _Xubuntu composekey multikey combinaties.adoc ===

@@ -1,0 +1,138 @@
+=== VirtualBox 6.1.0 ===
+
+- https://docs.asciidoctor.org/asciidoc/latest/syntax-quick-reference/[AsciiDoc syntax]
+
+- SharedFolders kunnen u een mountpoint (Windows : schijfletter) krijgen
+- NIEUW : virtualbox-mount om vdi (en differencing images) te mounten in Linux, RO of RW
+
+- OPGELET : zie sectie "bestaande VMs WXP"
+
+- logs uitschakelen :
+	- VM-logging, als ik het goed begrijp :
+		>>> https://www.virtualbox.org/ticket/11988
+		to completely disable logging is to set environment variables. You might want to set these variables in the global user variables:
+			VBOX_RELEASE_LOG_DEST=nofile
+			VBOXSVC_RELEASE_LOG_DEST=nofile
+			VBOX_GUI_SELECTORWINDOW_RELEASE_LOG_DEST=nofile
+		<<<
+	- VBox-logging (in ~/.config/VirtualBox)
+		>>> https://www.virtualbox.org/wiki/VBoxLogging
+		To disable logging entirely, use one of:
+			export VBOX_LOG_DEST=nofile
+			export VBOX_LOG_FLAGS=disabled
+			export VBOX_LOG=-all
+		<<<
+
+- virtualbox source terug activeren :
+	- in /etc/apt/sources.list.d/virtualbox.list de '# weghalen'
+	- geen ondersteuning meer voor 32-bit host :
+		>>> https://www.virtualbox.org/wiki/Downloads
+		If you're looking for the latest VirtualBox 5.2 packages, see VirtualBox 5.2 builds. Please also use version 5.2 if you still need support for 32-bit hosts, as this has been discontinued in 6.0. Version 5.2 will remain supported until July 2020
+		<<<
+		- architectuur beperken tot amd64 :
+		>>>/etc/apt/sources.list.d/virtualbox.list
+			deb [arch=amd64] http://download.virtualbox.org/virtualbox/debian bionic contrib
+		<<<
+
+- vermits ik VBox 5.2 in Bionic geinstalleerd heb vanuit Ubunto repo (CLI, niet USC), geeft "apt policy virtualbox" enkel info over VBox 5; daarom
+	$ apt policy virtualbox-6*
+	- OPM : Heb 5.2 geinstalleerd als virtualbox-qt, maar dan maakt niet uit: virtualbox en virtualbox-qt installeren elkaar (na apt remove virtualbox-qt) :
+	>>>
+		# apt --dry-run install virtualbox-qt
+		...
+		The following additional packages will be installed:
+		  libgsoap-2.8.60 libqt5opengl5 libvncserver1 virtualbox virtualbox-dkms
+		Suggested packages:
+		  vde2 virtualbox-guest-additions-iso
+		...
+		<<<
+		# apt --dry-run install virtualbox
+		...
+		The following additional packages will be installed:
+		  libgsoap-2.8.60 libqt5opengl5 libvncserver1 virtualbox-dkms virtualbox-qt
+		Suggested packages:
+		  vde2 virtualbox-guest-additions-iso
+		...
+	<<<
+
+- 6.1.0 installeren:
+	- de 5.x moet eerst weg (geinstalleerd als virtualbox-qt) :
+		# apt remove virtualbox-qt
+		- zoals aanbevolen :
+		# apt autoremove
+		- in de deb zit ineens guest additions die naar /usr/share/virtualbox/VBoxGuestAdditions.iso wordt geinstalleerd, is misschien te voorkomen door die vooraf van (http://download.virtualbox.org/virtualbox/) te downloaden naar GEZIPTE.PRG/UBUNTU, en symlink ernaar zetten :
+			$ cd /media/sdata/GEZIPTE.PRG/UBUNTU ; ln -s VBoxGuestAdditions_6.1.0.iso VBoxGuestAdditions.iso
+			- OPGELET voor WXP VMs voorlopig Guest Additions 5.2 installeren, 6.1.0 kan daar de VBOXSVR-VBOXSRV niet starten voor Shared Folders in XP, zie sectie "bestaande VMs WXP"
+	# apt install virtualbox-6.1
+			# ln -s /media/sdata/GEZIPTE.PRG/UBUNTU/VBoxGuestAdditions.iso /usr/share/virtualbox/VBoxGuestAdditions.iso
+			[# chmod -w /usr/share/virtualbox/VBoxGuestAdditions.iso]
+				- ???? werkt dat zoals verwacht met symlinks
+		- docu (pdf en chm) in "/usr/share/doc/virtualbox-6.1"
+	- nieuw extension pack installeren :
+		- download van (http://download.virtualbox.org/virtualbox/) (naar /tmp of /media/ramdisk is OK) : Oracle_VM_VirtualBox_Extension_Pack-6.1.0-135406.vbox-extpack
+		- VBox (heet eig. VBox Manager) opstarten:
+			- preferences, extensions :
+				- komt in /usr/lib/virtualbox/ExtensionPacks/Oracle_VM_VirtualBox_Extension_Pack, dus root-paswoord nodig
+				- oude verwijderen
+				- nieuwe toevoegen: selecteer de download
+
+==== bestaande VMs ====
+- OPM Guest Additions in XP : zie sectie "bestaande VMs WXP"
+
+- nieuwe Graphics controller VBoxSVGA :
+	>>> https://www.virtualbox.org/wiki/Changelog-6.1
+		Graphics: New style 3D support (with VBoxSVGA and VMSVGA) remains, old style 3D support (with VBoxVGA) has been completely removed
+	<<<
+	>>> https://www.virtualbox.org/manual/ch03.html#settings-display
+		VMSVGA: default graphics controller for Linux guests; emulates a VMware SVGA graphics device
+		VBoxSVGA: default graphics controller for new VMs that use Windows 7 or later.
+		VBoxVGA: default graphics controller for legacy guest OSes, Windows <7 and for Oracle Solaris; 3D acceleration "is not" (voorlopig wel) supported for this graphics controller
+	<<<
+	- in 6.1 heeft VBoxVGA nog 3D, en die van VBoxSVGA is nog gammel; maar aangezien ik die toch niet gebruik, misschien beter ineens overstappen op VBoxSVGA zonder 3D :
+		- controller werd in 5.2 niet opgegeven als dat de default was (VboxVGA)
+		- in alle VMs (.vbox)
+			- NIET WXP zie sectie "bestaande VMs WXP"
+			"<Display (.*)accelerate3D="(true|false)"(.*)/>"
+			vervangen door
+			"<Display controller="VBoxSVGA" \1accelerate3D="false"\3/>"
+			$ cd /opt/.virtualbox
+			- test
+				$ sed -Ee 's/<Display (.*)accelerate3D="(true|false)"(.*)\/>/<Display controller="VBoxSVGA" \1accelerate3D="false"\3\/>/' **/*.vbox | grep "<Display"
+			$ sed -ivbx5 -Ee 's/<Display (.*)accelerate3D="(true|false)"(.*)\/>/<Display controller="VBoxSVGA" \1accelerate3D="false"\3\/>/' **/*.vbox
+		-  alleen nieuwe Graphics driver installeren in VM, b.v. WinXP x86
+			- x86.exe van CD Guest Additions met 7-zip uitpakken naar ramdisk
+			- van daar manueel laten installeren
+
+==== bestaande VMs W7x86 ====
+- met VBoxSVGA-driver ofwel geen 3D installeren, ofwel geen Aero
+- met Guest Additions 6.1: shared folders gewenste schijfletter geven als mountpoint, anders tellen ze af van Z:
+
+==== bestaande VMs WXP ====
+
+- NIET Guest Additions 6.1.0 installeren, kan server VBOXSRV-VBOXSVR met de shared folders niet meer starten
+	- VBoxVGA zal "altijd" blijven werken (is default < Win7 en niet-Windows|linux)
+		- alleen 3D deprecated, gebruik ik toch niet in XP
+	- VBoxSVGA werkt ook met de driver oude Guest Additions 5.2
+		- desgewenst enkel de video driver uit 6.1.0 installeren :
+			- $GuestCD/VBoxWindowsAdditions-x86.exe uitpakken (Engrampa en 7Zip kunnen zowel iso als .exe uitpakken) :
+				- VBoxVGA :
+					-zie "GEZIPTE.PRG/UBUNTU/VBoxGuestAdditions_6.1.0 VBoxVGA driver.zip"
+					>>>
+					VBoxVideo.inf
+					VBoxVideo.sys
+					VBoxDisp.dll
+					VBoxDispD3D.dll
+					>>>
+				- VBoxSVGA :
+					-zie "GEZIPTE.PRG/UBUNTU/VBoxGuestAdditions_6.1.0 VBoxSVGA WDDM driver.zip"
+				- muis :
+					-zie "GEZIPTE.PRG/UBUNTU/VBoxGuestAdditions_6.1.0 muisdriver.zip"
+
+- Alle WXP-VM's
+	- wschlk. Britannica2015 weg uit startmenu "Opzoeken" (Java8 zou nochtans kunnen op XP)
+	- 7-zip uit G:\PROGRAMS bij in startmenu "gereedschap"
+
+- WXP Coreldraw , WXP OCR Abby :
+	>>> D:\SETTINGS\LoadFonts.lst
+		PSFONTS
+	<<<
